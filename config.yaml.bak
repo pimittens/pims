@@ -426,7 +426,7 @@ server:
     MOUNT_EXHAUST_COUNT: 1             #Number of proc counts (1 per minute) on the exhaust schedule for tiredness.
 
     #Pet Hunger Configuration
-    PETS_NEVER_HUNGRY: true        #If true, pets and mounts will never grow hungry.
+    PETS_NEVER_HUNGRY: false        #If true, pets and mounts will never grow hungry.
     GM_PETS_NEVER_HUNGRY: true      #If true, pets and mounts owned by GMs will never grow hungry.
 
     #Event Configuration

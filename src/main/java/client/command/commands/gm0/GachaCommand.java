@@ -43,26 +43,41 @@ public class GachaCommand extends Command {
         int[] ids = {NpcId.GACHAPON_HENESYS, NpcId.GACHAPON_ELLINIA, NpcId.GACHAPON_PERION, NpcId.GACHAPON_KERNING,
                 NpcId.GACHAPON_SLEEPYWOOD, NpcId.GACHAPON_MUSHROOM_SHRINE, NpcId.GACHAPON_SHOWA_MALE,
                 NpcId.GACHAPON_SHOWA_FEMALE, NpcId.GACHAPON_NLC, NpcId.GACHAPON_NAUTILUS};
-        for (int i = 0; i < names.length; i++) {
-            if (search.equalsIgnoreCase(names[i])) {
-                gachaName = names[i];
-                gacha = Gachapon.GachaponType.getByNpcId(ids[i]);
+        if (search.equalsIgnoreCase("Global") || search.equalsIgnoreCase("Common")) {
+            gacha = Gachapon.GachaponType.GLOBAL;
+        } else {
+            for (int i = 0; i < names.length; i++) {
+                if (search.equalsIgnoreCase(names[i])) {
+                    gachaName = names[i];
+                    gacha = Gachapon.GachaponType.getByNpcId(ids[i]);
+                }
             }
         }
         if (gacha == null) {
             c.getPlayer().yellowMessage("Please use @gacha <name> where name corresponds to one of the below:");
+            c.getPlayer().yellowMessage("Global");
             for (String name : names) {
                 c.getPlayer().yellowMessage(name);
             }
             return;
         }
         String talkStr = "The #b" + gachaName + "#k Gachapon contains the following items.\r\n\r\n";
-        for (int i = 0; i < 2; i++) {
-            for (int id : gacha.getItems(i)) {
-                talkStr += "-" + ItemInformationProvider.getInstance().getName(id) + "\r\n";
-            }
+        talkStr += "\r\nrare items:\r\n";
+        for (int id : gacha.getItems(2)) {
+            talkStr += "#i" + id + "#-" + "#z" + id + "#" + "\r\n";
         }
-        talkStr += "\r\nPlease keep in mind that there are items that are in all gachapons and are not listed here.";
+        talkStr += "\r\nuncommon items:\r\n";
+        for (int id : gacha.getItems(1)) {
+            talkStr += "#i" + id + "#-" + "#z" + id + "#" + "\r\n";
+        }
+        talkStr += "\r\ncommon items:\r\n";
+        for (int id : gacha.getItems(0)) {
+            talkStr += "#i" + id + "#-" + "#z" + id + "#" + "\r\n";
+        }
+
+        if (gacha != Gachapon.GachaponType.GLOBAL) {
+            talkStr += "\r\nPlease keep in mind that there are items that are in all gachapons and are not listed here.";
+        }
 
         c.getAbstractPlayerInteraction().npcTalk(NpcId.MAPLE_ADMINISTRATOR, talkStr);
     }
