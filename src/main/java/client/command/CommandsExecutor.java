@@ -203,6 +203,7 @@ public class CommandsExecutor {
         addCommand("mobhp", MobHpCommand.class);
         addCommand("whatdropsfrom", WhatDropsFromCommand.class);
         addCommand("whodrops", WhoDropsCommand.class);
+        addCommand("save", SaveCharacterCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }
