@@ -1086,8 +1086,7 @@ public class ItemInformationProvider {
                         break;
                 }
 
-                if ((scrollId == ItemId.CLEAN_SLATE_1 || scrollId == ItemId.CLEAN_SLATE_3 || scrollId == ItemId.CLEAN_SLATE_5
-                        || scrollId == ItemId.CLEAN_SLATE_20) && canUseCleanSlate(nEquip)) {
+                if (ItemConstants.isCleanSlate(scrollId) && canUseCleanSlate(nEquip)) {
                     prop += 50.0f;
                 }
 
