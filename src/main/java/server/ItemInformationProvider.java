@@ -1086,6 +1086,11 @@ public class ItemInformationProvider {
                         break;
                 }
 
+                if ((scrollId == ItemId.CLEAN_SLATE_1 || scrollId == ItemId.CLEAN_SLATE_3 || scrollId == ItemId.CLEAN_SLATE_5
+                        || scrollId == ItemId.CLEAN_SLATE_20) && canUseCleanSlate(nEquip)) {
+                    prop += 50.0f;
+                }
+
                 if (assertGM || rollSuccessChance(prop)) {
                     short flag = nEquip.getFlag();
                     switch (scrollId) {
@@ -1101,9 +1106,9 @@ public class ItemInformationProvider {
                         case ItemId.CLEAN_SLATE_3:
                         case ItemId.CLEAN_SLATE_5:
                         case ItemId.CLEAN_SLATE_20:
-                            if (canUseCleanSlate(nEquip)) {
-                                nEquip.setUpgradeSlots((byte) (nEquip.getUpgradeSlots() + 1));
-                            }
+                            // if (canUseCleanSlate(nEquip)) {
+                            nEquip.setUpgradeSlots((byte) (nEquip.getUpgradeSlots() + 1));
+                            // }
                             break;
                         case ItemId.CHAOS_SCROll_60:
                         case ItemId.LIAR_TREE_SAP:
