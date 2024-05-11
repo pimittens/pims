@@ -8,10 +8,10 @@ worlds:
     event_message: Scania!
     why_am_i_recommended: Welcome to Scania!
     channels: 3
-    exp_rate: 1
-    meso_rate: 1
-    drop_rate: 1
-    boss_drop_rate: 1                      #NOTE: Boss drop rate OVERRIDES common drop rate, for bosses-only.
+    exp_rate: 2
+    meso_rate: 2
+    drop_rate: 2
+    boss_drop_rate: 5                      #NOTE: Boss drop rate OVERRIDES common drop rate, for bosses-only.
     quest_rate: 5                           #Multiplier for Exp & Meso gains when completing a quest. Only available when USE_QUEST_RATE is true. Stacks with server Exp & Meso rates.
     fishing_rate: 10                        #Multiplier for success likelihood on meso thrown during fishing.
     travel_rate: 10                         #Means of transportation rides/departs using 1/N of the default time.
@@ -161,8 +161,8 @@ server:
     #Database Configuration
     DB_URL_FORMAT: "jdbc:mysql://%s:3306/cosmic" # If the docker ENV for DB_HOST is anything but "db", this string format should be changed from 3306 to 3307 (or whichever port it was changed to in docker) 
     DB_HOST: "localhost" 
-    DB_USER: "cosmic_server"
-    DB_PASS: "snailshell"
+    DB_USER: "root"
+    DB_PASS: "root"
     INIT_CONNECTION_POOL_TIMEOUT: 90    # Seconds
 
     #Login Configuration
@@ -178,8 +178,8 @@ server:
     COUPON_INTERVAL: 3600000            #60 minutes, 3600000.
     UPDATE_INTERVAL: 777                #Dictates the frequency on which the "centralized server time" is updated.
 
-    ENABLE_PIC: true               #Pick true/false to enable or disable Pic. Delete character requires PIC available.
-    ENABLE_PIN: true               #Pick true/false to enable or disable Pin.
+    ENABLE_PIC: false               #Pick true/false to enable or disable Pic. Delete character requires PIC available.
+    ENABLE_PIN: false               #Pick true/false to enable or disable Pin.
 
     BYPASS_PIC_EXPIRATION: 20           #Enables PIC bypass, which will remain active for that account by that client machine for N minutes. Set 0 to disable.
     BYPASS_PIN_EXPIRATION: 15           #Enables PIN bypass, which will remain active for that account by that client machine for N minutes. Set 0 to disable.
@@ -218,7 +218,7 @@ server:
     USE_MAXRANGE: true                  #Will send and receive packets from all events on a map, rather than those of only view range.
     USE_MAXRANGE_ECHO_OF_HERO: true
     USE_MTS: false
-    USE_CPQ: true                       #Renders the CPQ available or not.
+    USE_CPQ: true                        #Renders the CPQ available or not.
     USE_AUTOHIDE_GM: true              #When enabled, GMs are automatically hidden when joining. Thanks to Steven Deblois (steven1152).
     USE_BUYBACK_SYSTEM: false            #Enables the HeavenMS-builtin buyback system, to be used by dead players when clicking the MTS button.
     USE_FIXED_RATIO_HPMP_UPDATE: false   #Enables the HeavenMS-builtin HPMP update based on the current pool to max pool ratio.
