@@ -44,6 +44,7 @@ public enum SendOpcode {
     CHANGE_CHANNEL(0x10),
     PING(0x11),
     KOREAN_INTERNET_CAFE_SHIT(0x12),//Useless ignore it.
+    CHAR_SELECTED(0x13),
     CHANNEL_SELECTED(0x14),
     HACKSHIELD_REQUEST(0x15),//maybe this is RELOG_RESPONSE, can't care less
     RELOG_RESPONSE(0x16),

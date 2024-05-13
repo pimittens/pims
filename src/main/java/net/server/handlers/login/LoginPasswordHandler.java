@@ -55,6 +55,7 @@ public final class LoginPasswordHandler implements PacketHandler {
 
     @Override
     public final void handlePacket(InPacket p, Client c) {
+        System.out.println("loginpw packet: " + p);
         String remoteHost = c.getRemoteAddress();
         if (remoteHost.contentEquals("null")) {
             c.sendPacket(PacketCreator.getLoginFailed(14));          // thanks Alchemist for noting remoteHost could be null

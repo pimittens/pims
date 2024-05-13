@@ -132,12 +132,15 @@ public class Client extends ChannelInboundHandlerAdapter {
     private long lastPacket = System.currentTimeMillis();
     private int lang = 0;
 
+    private boolean isBotClient = false;
+
     public enum Type {
         LOGIN,
         CHANNEL
     }
 
     public Client(Type type, long sessionId, String remoteAddress, PacketProcessor packetProcessor, int world, int channel) {
+        System.out.println("Client: " + sessionId + ", " + remoteAddress + ", " + packetProcessor + ", " + world + ", " + channel);
         this.type = type;
         this.sessionId = sessionId;
         this.remoteAddress = remoteAddress;
@@ -148,11 +151,13 @@ public class Client extends ChannelInboundHandlerAdapter {
 
     public static Client createLoginClient(long sessionId, String remoteAddress, PacketProcessor packetProcessor,
                                            int world, int channel) {
+        System.out.println("createLoginClient: " + sessionId + ", " + remoteAddress + ", " + packetProcessor + ", " + world + ", " + channel);
         return new Client(Type.LOGIN, sessionId, remoteAddress, packetProcessor, world, channel);
     }
 
     public static Client createChannelClient(long sessionId, String remoteAddress, PacketProcessor packetProcessor,
                                              int world, int channel) {
+        System.out.println("createChannelClient: " + sessionId + ", " + remoteAddress + ", " + packetProcessor + ", " + world + ", " + channel);
         return new Client(Type.CHANNEL, sessionId, remoteAddress, packetProcessor, world, channel);
     }
 
@@ -1445,6 +1450,9 @@ public class Client extends ChannelInboundHandlerAdapter {
     }
 
     public void sendPacket(Packet packet) {
+        if (isBotClient) {
+            return;
+        }
         announcerLock.lock();
         try {
             ioChannel.writeAndFlush(packet);
@@ -1580,5 +1588,13 @@ public class Client extends ChannelInboundHandlerAdapter {
 
     public void setLanguage(int lingua) {
         this.lang = lingua;
+    }
+
+    public void handlePacket(InPacket p, short packetID) {
+        packetProcessor.getHandler(packetID).handlePacket(p, this);
+    }
+
+    public void setBotClient() {
+        isBotClient = true;
     }
 }

@@ -7408,4 +7408,73 @@ public class PacketCreator {
         return p;
     }
 
+    public static InPacket createCharSelectedPacket(int charID) {
+        final InPacket p = InPacket.create(SendOpcode.CHAR_SELECTED);
+        p.writeInt(charID);
+        p.writeString("10-68-38-68-E9-1E");
+        p.writeString("10683868E91F_A9071648");
+        p.skip(2);
+        System.out.println("charselected packet: " + p);
+        return p;
+    }
+
+    public static InPacket createLoginPacket(int charID) {
+        final InPacket p = InPacket.create(SendOpcode.CHANNEL_SELECTED);
+        p.writeInt(charID);
+        p.writeShort(0); // idk what this does or if it should ever be nonzero
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createPartySearchUpdatePacket() {
+        final InPacket p = InPacket.create(SendOpcode.SPAWN_GUIDE);
+        p.skip(2);
+        System.out.println("partysearchupdate packet: " + p);
+        return p;
+    }
+
+    public static InPacket createPlayerMapTransitionPacket() {
+        final InPacket p = InPacket.create(SendOpcode.DOJO_WARP_UP);
+        p.skip(2);
+        System.out.println("playermaptransition packet: " + p);
+        return p;
+    }
+
+    public static InPacket createLoginPasswordPacket() {
+        final InPacket p = InPacket.create(SendOpcode.GUEST_ID_LOGIN);
+        p.writeString("bottest"); // login
+        p.writeString("bottest"); // password
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // these get skipped
+        p.writeByte(-87);
+        p.writeByte(7);
+        p.writeByte(22);
+        p.writeByte(72); // hwidNibbles
+        p.skip(2);
+        System.out.println("loginpassword packet: " + p);
+        return p;
+    }
+
+    public static InPacket createServerListRequestPacket() {
+        final InPacket p = InPacket.create(SendOpcode.CHARLIST);
+        p.skip(2);
+        System.out.println("serverlist packet: " + p);
+        return p;
+    }
+
+    public static InPacket createCharListRequestPacket() {
+        final InPacket p = InPacket.create(SendOpcode.CONFIRM_EULA_RESULT);
+        p.writeByte(0); // not sure if this is used for anything
+        p.writeByte(0); // world
+        p.writeByte(0); // channel - 1
+        p.writeInt(0); // not sure if this is used for anything
+        p.skip(2);
+        System.out.println("charlistrequest packet: " + p);
+        return p;
+    }
+
 }

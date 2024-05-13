@@ -12,6 +12,7 @@ public record Hwid(String hwid) {
     }
 
     public static Hwid fromHostString(String hostString) throws IllegalArgumentException {
+        System.out.println("hostString: " + hostString);
         if (hostString == null || !isValidHostString(hostString)) {
             throw new IllegalArgumentException("hostString has invalid format");
         }

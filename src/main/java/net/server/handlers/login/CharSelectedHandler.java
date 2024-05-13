@@ -51,6 +51,7 @@ public final class CharSelectedHandler extends AbstractPacketHandler {
 
     @Override
     public final void handlePacket(InPacket p, Client c) {
+        System.out.println("charselectedpacket: " + p);
         int charId = p.readInt();
 
         String macs = p.readString();

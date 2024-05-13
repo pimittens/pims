@@ -21,10 +21,8 @@
  */
 package net.server;
 
+import client.*;
 import client.Character;
-import client.Client;
-import client.Family;
-import client.SkillFactory;
 import client.command.CommandsExecutor;
 import client.inventory.Item;
 import client.inventory.ItemFactory;
@@ -85,6 +83,8 @@ import static java.util.concurrent.TimeUnit.*;
 public class Server {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
     private static Server instance = null;
+
+    private List<CharacterBot> bots;
 
     public static Server getInstance() {
         if (instance == null) {
@@ -919,6 +919,8 @@ public class Server {
         for (Channel ch : this.getAllChannels()) {
             ch.reloadEventScriptManager();
         }
+
+        startBots();
     }
 
     private ChannelDependencies registerChannelDependencies() {
@@ -966,6 +968,7 @@ public class Server {
         tMan.register(new DueyFredrickTask(channelDependencies.fredrickProcessor()), HOURS.toMillis(1), timeLeft);
         tMan.register(new InvitationTask(), SECONDS.toMillis(30), SECONDS.toMillis(30));
         tMan.register(new RespawnTask(), YamlConfig.config.server.RESPAWN_INTERVAL, YamlConfig.config.server.RESPAWN_INTERVAL);
+        tMan.register(new UpdateBotsTask(), SECONDS.toMillis(1), SECONDS.toMillis(60));
 
         timeLeft = getTimeLeftForNextDay();
         ExpeditionBossLog.resetBossLogTable();
@@ -1948,5 +1951,22 @@ public class Server {
             instance = null;
             getInstance().init();//DID I DO EVERYTHING?! D:
         }
+    }
+
+    private void startBots() {
+        bots = new ArrayList<>();
+        // todo: select some number of bots from the db, login each of those characters, send them to a specific map
+        bots.add(new CharacterBot());
+        for (CharacterBot bot : bots) {
+            try {
+                bot.login();
+            } catch (SQLException e) {
+                System.out.println("failed to login a bot");
+            }
+        }
+    }
+
+    public List<CharacterBot> getBots() {
+        return bots;
     }
 }

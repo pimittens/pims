@@ -33,6 +33,7 @@ public final class CharlistRequestHandler extends AbstractPacketHandler {
 
     @Override
     public final void handlePacket(InPacket p, Client c) {
+        System.out.println("charlistrequest packet: " + p);
         p.readByte();
         int world = p.readByte();
 
