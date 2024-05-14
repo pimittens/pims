@@ -7139,7 +7139,7 @@ public class Character extends AbstractCharacterObject {
             ret.autoban = new AutobanManager(ret);
 
             // Blessing of the Fairy
-            try (PreparedStatement ps = con.prepareStatement("SELECT name, level FROM characters WHERE accountid = ? AND id != ? ORDER BY level DESC limit 1")) {
+            try (PreparedStatement ps = con.prepareStatement("SELECT name, level, job FROM characters WHERE accountid = ? AND id != ? ORDER BY level DESC limit 1")) {
                 ps.setInt(1, ret.accountid);
                 ps.setInt(2, charid);
 
@@ -7147,6 +7147,9 @@ public class Character extends AbstractCharacterObject {
                     if (rs.next()) {
                         ret.linkedName = rs.getString("name");
                         ret.linkedLevel = rs.getInt("level");
+                        if (ret.linkedLevel >= 40 && rs.getInt("job") / 1000 == 1) { // cygnus knights give double the skill level for blessing starting at level 40 so that it maxes blessing of the fairy when they reach level 120
+                            ret.linkedLevel = (ret.linkedLevel - 20) * 2; // choose 40 because that's when the two formulas line up
+                        }
                     }
                 }
             }
