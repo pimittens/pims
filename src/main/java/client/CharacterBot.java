@@ -14,8 +14,6 @@ public class CharacterBot {
 
     private Character following = null;
 
-    private Character me;
-
     private Client c;
 
     public void setFollowing(Character following) {
@@ -34,7 +32,12 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createLoginPacket(2), (short) 20);
         c.handlePacket(PacketCreator.createPartySearchUpdatePacket(), (short) 223);
         c.handlePacket(PacketCreator.createPlayerMapTransitionPacket(), (short) 207);
-        me = c.getPlayer();
+        //character will be floating at this point, so update position so that they are on the ground and send a packet to change their state
+
+    }
+
+    private void moveBot() {
+        c.handlePacket(PacketCreator.createPlayerMovementPacket(), (short) 41);
     }
 
     public boolean isFollower() {
@@ -42,6 +45,6 @@ public class CharacterBot {
     }
 
     public void update() {
-
+        moveBot();
     }
 }

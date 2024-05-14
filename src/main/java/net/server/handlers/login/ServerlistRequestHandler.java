@@ -35,7 +35,6 @@ public final class ServerlistRequestHandler extends AbstractPacketHandler {
 
     @Override
     public final void handlePacket(InPacket p, Client c) {
-        System.out.println("serverlistrequest packet: " + p);
         Server server = Server.getInstance();
         List<World> worlds = server.getWorlds();
         c.requestedServerlist(worlds.size());

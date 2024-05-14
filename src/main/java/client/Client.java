@@ -140,7 +140,6 @@ public class Client extends ChannelInboundHandlerAdapter {
     }
 
     public Client(Type type, long sessionId, String remoteAddress, PacketProcessor packetProcessor, int world, int channel) {
-        System.out.println("Client: " + sessionId + ", " + remoteAddress + ", " + packetProcessor + ", " + world + ", " + channel);
         this.type = type;
         this.sessionId = sessionId;
         this.remoteAddress = remoteAddress;
@@ -151,13 +150,11 @@ public class Client extends ChannelInboundHandlerAdapter {
 
     public static Client createLoginClient(long sessionId, String remoteAddress, PacketProcessor packetProcessor,
                                            int world, int channel) {
-        System.out.println("createLoginClient: " + sessionId + ", " + remoteAddress + ", " + packetProcessor + ", " + world + ", " + channel);
         return new Client(Type.LOGIN, sessionId, remoteAddress, packetProcessor, world, channel);
     }
 
     public static Client createChannelClient(long sessionId, String remoteAddress, PacketProcessor packetProcessor,
                                              int world, int channel) {
-        System.out.println("createChannelClient: " + sessionId + ", " + remoteAddress + ", " + packetProcessor + ", " + world + ", " + channel);
         return new Client(Type.CHANNEL, sessionId, remoteAddress, packetProcessor, world, channel);
     }
 

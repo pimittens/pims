@@ -7414,7 +7414,6 @@ public class PacketCreator {
         p.writeString("10-68-38-68-E9-1E");
         p.writeString("10683868E91F_A9071648");
         p.skip(2);
-        System.out.println("charselected packet: " + p);
         return p;
     }
 
@@ -7429,14 +7428,12 @@ public class PacketCreator {
     public static InPacket createPartySearchUpdatePacket() {
         final InPacket p = InPacket.create(SendOpcode.SPAWN_GUIDE);
         p.skip(2);
-        System.out.println("partysearchupdate packet: " + p);
         return p;
     }
 
     public static InPacket createPlayerMapTransitionPacket() {
         final InPacket p = InPacket.create(SendOpcode.DOJO_WARP_UP);
         p.skip(2);
-        System.out.println("playermaptransition packet: " + p);
         return p;
     }
 
@@ -7454,15 +7451,14 @@ public class PacketCreator {
         p.writeByte(7);
         p.writeByte(22);
         p.writeByte(72); // hwidNibbles
+        // the actual packets have more data after this but the server doesn't appear to use them for anything
         p.skip(2);
-        System.out.println("loginpassword packet: " + p);
         return p;
     }
 
     public static InPacket createServerListRequestPacket() {
         final InPacket p = InPacket.create(SendOpcode.CHARLIST);
         p.skip(2);
-        System.out.println("serverlist packet: " + p);
         return p;
     }
 
@@ -7473,7 +7469,43 @@ public class PacketCreator {
         p.writeByte(0); // channel - 1
         p.writeInt(0); // not sure if this is used for anything
         p.skip(2);
-        System.out.println("charlistrequest packet: " + p);
+        return p;
+    }
+
+    /* character states:
+     2 - walk right
+     3 - walk left
+     4 - stand facing right
+     5 - stand facing left
+     6 - jump/fall facing right
+     7 - jump/fall facing left */
+
+    public static InPacket createPlayerMovementPacket() {
+        final InPacket p = InPacket.create(SendOpcode.MEMO_RESULT);
+        Random random = new Random(System.currentTimeMillis());
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // these get skipped
+        p.writeByte(1); // number of commands
+        p.writeByte(0); // command type
+        p.writeShort(28 + random.nextInt(100)); // xpos
+        p.writeShort(410); // ypos
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(4); // new state, see states above
+        p.writeShort(0); // duration
+        p.skip(2);
+        System.out.println("created movement packet: " + p);
         return p;
     }
 
