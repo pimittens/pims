@@ -151,15 +151,15 @@ public abstract class AbstractMovementPacketHandler extends AbstractPacketHandle
     }
 
     protected void updatePosition(InPacket p, AnimatedMapObject target, int yOffset) throws EmptyMovementException {
-        //System.out.println("start updatePosition: " + p);
+        System.out.println("start updatePosition, current time: " + System.currentTimeMillis());
         byte numCommands = p.readByte();
         if (numCommands < 1) {
             throw new EmptyMovementException(p);
         }
-        //System.out.println("numCommands: " + numCommands);
+        System.out.println("numCommands: " + numCommands);
         for (byte i = 0; i < numCommands; i++) {
             byte command = p.readByte();
-            //System.out.println("command " + i + ": " + command);
+            System.out.println("command " + i + ": " + command);
             switch (command) {
                 case 0: // normal move
                 case 5:
@@ -171,8 +171,8 @@ public abstract class AbstractMovementPacketHandler extends AbstractPacketHandle
                     p.skip(6); //xwobble = lea.readShort(); ywobble = lea.readShort(); fh = lea.readShort();
                     byte newstate = p.readByte();
                     target.setStance(newstate);
-                    p.readShort(); //duration
-                    //System.out.println("xpos: " + xpos + ", ypos: " + ypos + ", newstate: " + newstate + ", duration: " + duration);
+                    short duration = p.readShort(); //duration
+                    System.out.println("xpos: " + xpos + ", ypos: " + ypos + ", newstate: " + newstate + ", duration: " + duration);
                     break;
                 }
                 case 1:

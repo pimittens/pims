@@ -216,4 +216,14 @@ public class FootholdTree {
     public int getMinDropX() {
         return minDropX;
     }
+
+    public Foothold getByID(int id) {
+        for (Foothold fh : footholds) {
+            if (fh.getId() == id) {
+                return fh;
+            }
+        }
+        System.out.println("foothold " + id + " not found");
+        return footholds.get(0);
+    }
 }

@@ -968,7 +968,8 @@ public class Server {
         tMan.register(new DueyFredrickTask(channelDependencies.fredrickProcessor()), HOURS.toMillis(1), timeLeft);
         tMan.register(new InvitationTask(), SECONDS.toMillis(30), SECONDS.toMillis(30));
         tMan.register(new RespawnTask(), YamlConfig.config.server.RESPAWN_INTERVAL, YamlConfig.config.server.RESPAWN_INTERVAL);
-        tMan.register(new UpdateBotsTask(), SECONDS.toMillis(1), SECONDS.toMillis(60));
+        tMan.register(new UpdateBotsTask(), 500, SECONDS.toMillis(30));
+        //tMan.register(new ManageBotLoginsTask(), MINUTES.toMillis(30), MINUTES.toMillis(1)); todo: add this
 
         timeLeft = getTimeLeftForNextDay();
         ExpeditionBossLog.resetBossLogTable();

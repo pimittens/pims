@@ -11239,4 +11239,10 @@ public class Character extends AbstractCharacterObject {
     public void setChasing(boolean chasing) {
         this.chasing = chasing;
     }
+
+    public int getMastery() {
+        int mastery = 10;
+        // todo: update this so it calculates mastery level based on skills
+        return mastery;
+    }
 }

@@ -266,11 +266,15 @@ public class Client extends ChannelInboundHandlerAdapter {
     }
 
     public void closeSession() {
-        ioChannel.close();
+        if (!isBotClient) {
+            ioChannel.close();
+        }
     }
 
     public void disconnectSession() {
-        ioChannel.disconnect();
+        if (!isBotClient) {
+            ioChannel.disconnect();
+        }
     }
 
     public Hwid getHwid() {

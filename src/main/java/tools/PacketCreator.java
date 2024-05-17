@@ -7478,11 +7478,13 @@ public class PacketCreator {
      4 - stand facing right
      5 - stand facing left
      6 - jump/fall facing right
-     7 - jump/fall facing left */
+     7 - jump/fall facing left
+     8 - regular attack facing right
+     9 - regular attack facing left
+     16 - climbing ladder */
 
-    public static InPacket createPlayerMovementPacket() {
+    public static InPacket createPlayerMovementPacket(short xpos, short ypos, byte state, short duration) {
         final InPacket p = InPacket.create(SendOpcode.MEMO_RESULT);
-        Random random = new Random(System.currentTimeMillis());
         p.writeByte(0);
         p.writeByte(0);
         p.writeByte(0);
@@ -7494,18 +7496,64 @@ public class PacketCreator {
         p.writeByte(0); // these get skipped
         p.writeByte(1); // number of commands
         p.writeByte(0); // command type
-        p.writeShort(28 + random.nextInt(100)); // xpos
-        p.writeShort(410); // ypos
+        p.writeShort(xpos); // xpos
+        p.writeShort(ypos); // ypos
         p.writeByte(0);
         p.writeByte(0);
         p.writeByte(0);
         p.writeByte(0);
         p.writeByte(0);
         p.writeByte(0); // skipped
-        p.writeByte(4); // new state, see states above
-        p.writeShort(0); // duration
+        p.writeByte(state); // new state, see states above
+        p.writeShort(duration); // duration
         p.skip(2);
-        System.out.println("created movement packet: " + p);
+        return p;
+    }
+
+    public static InPacket createPickupItemPacket(int oid) {
+        final InPacket p = InPacket.create(SendOpcode.GUILD_NAME_CHANGED);
+        p.writeInt(0); // timestamp
+        p.writeByte(0); // skipped
+        p.writeShort(0); // xpos
+        p.writeShort(0); // ypos
+        p.writeInt(oid); // oid
+        p.skip(2);
+        System.out.println("pickup item packet generated: " + p);
+        return p;
+    }
+
+    public static InPacket createRegularAttackPacket(int monsteroid, int damage) {
+        final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
+        p.writeByte(0); // skipped
+        p.writeByte(17); // num attacked and damage
+        p.writeInt(0); // skill
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(0); // display
+        p.writeByte(7); // direction
+        p.writeByte(-128); // stance
+        p.writeByte(0); // skipped
+        p.writeByte(2); // speed
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeInt(monsteroid); // oid of the target monster
+        for (int i = 0; i < 14; i++) {
+            p.writeByte(0); //skipped
+        }
+        p.writeInt(damage); // damage
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.skip(2);
         return p;
     }
 

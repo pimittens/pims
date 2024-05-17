@@ -42,6 +42,7 @@ public final class CloseRangeDamageHandler extends AbstractDealDamageHandler {
 
     @Override
     public final void handlePacket(InPacket p, Client c) {
+        System.out.println("attack packet: " + p);
         Character chr = c.getPlayer();
         
         /*long timeElapsed = currentServerTime() - chr.getAutobanManager().getLastSpam(8);
