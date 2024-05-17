@@ -377,10 +377,10 @@ public class Character extends AbstractCharacterObject {
         ret.accountid = c.getAccID();
         ret.buddylist = new BuddyList(20);
         ret.maplemount = null;
-        ret.getInventory(InventoryType.EQUIP).setSlotLimit(24);
-        ret.getInventory(InventoryType.USE).setSlotLimit(24);
-        ret.getInventory(InventoryType.SETUP).setSlotLimit(24);
-        ret.getInventory(InventoryType.ETC).setSlotLimit(24);
+        ret.getInventory(InventoryType.EQUIP).setSlotLimit(96);
+        ret.getInventory(InventoryType.USE).setSlotLimit(96);
+        ret.getInventory(InventoryType.SETUP).setSlotLimit(96);
+        ret.getInventory(InventoryType.ETC).setSlotLimit(96);
 
         // Select a keybinding method
         int[] selectedKey;
