@@ -970,6 +970,7 @@ public class Server {
         tMan.register(new RespawnTask(), YamlConfig.config.server.RESPAWN_INTERVAL, YamlConfig.config.server.RESPAWN_INTERVAL);
         tMan.register(new UpdateBotsTask(), 500, SECONDS.toMillis(30));
         //tMan.register(new ManageBotLoginsTask(), MINUTES.toMillis(30), MINUTES.toMillis(1)); todo: add this
+        //tMan.register(new UpdateFollowerBotsTask(), 500, SECONDS.toMillis(30)); todo: maybe have followers update more often since there will be fewer of them
 
         timeLeft = getTimeLeftForNextDay();
         ExpeditionBossLog.resetBossLogTable();
