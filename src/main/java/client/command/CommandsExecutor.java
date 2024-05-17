@@ -204,6 +204,7 @@ public class CommandsExecutor {
         addCommand("whatdropsfrom", WhatDropsFromCommand.class);
         addCommand("whodrops", WhoDropsCommand.class);
         addCommand("save", SaveCharacterCommand.class);
+        addCommand("goto", GotoCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }
@@ -213,7 +214,6 @@ public class CommandsExecutor {
         levelCommandsCursor = new Pair<>(new ArrayList<String>(), new ArrayList<String>());
 
         addCommand("buffme", 1, BuffMeCommand.class);
-        addCommand("goto", 1, GotoCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }
