@@ -1,11 +1,6 @@
 package client;
 
-import client.inventory.Item;
-import io.netty.buffer.Unpooled;
-import io.netty.channel.ChannelHandlerContext;
 import net.PacketProcessor;
-import net.opcodes.SendOpcode;
-import net.packet.*;
 import server.life.Monster;
 import server.maps.Foothold;
 import server.maps.MapItem;
@@ -13,13 +8,9 @@ import server.maps.MapObject;
 import tools.PacketCreator;
 import tools.Randomizer;
 
-import java.awt.*;
 import java.sql.SQLException;
-import java.util.Random;
 
 public class CharacterBot {
-
-    private static Random random = new Random(System.currentTimeMillis());
 
     private Character following = null;
     private Foothold foothold;
@@ -59,7 +50,7 @@ public class CharacterBot {
     public void update() {
         int time = 500 + leftovertime; // amount of time for actions
         hasTargetItem = false;
-        if (c.getPlayer().getMap().getItems().size() > 0) {
+        if (!c.getPlayer().getMap().getItems().isEmpty()) {
             for (MapObject it : c.getPlayer().getMap().getItems()) {
                 if (((MapItem) it).canBePickedBy(c.getPlayer())) {
                     targetItem = it;
@@ -69,8 +60,8 @@ public class CharacterBot {
             }
         }
         if (!hasTargetMonster || !targetMonster.isAlive()) {
-            if (c.getPlayer().getMap().getAllMonsters().size() > 0) {
-                targetMonster = c.getPlayer().getMap().getAllMonsters().get(random.nextInt(c.getPlayer().getMap().getAllMonsters().size()));
+            if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) {
+                targetMonster = c.getPlayer().getMap().getAllMonsters().get(Randomizer.nextInt(c.getPlayer().getMap().getAllMonsters().size()));
                 hasTargetMonster = true;
             } else {
                 hasTargetMonster = false;
@@ -176,13 +167,33 @@ public class CharacterBot {
     }
 
     private void attack() {
-        c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), calcRegularAttackDamage()), (short) 44);
+        int monsterAvoid = targetMonster.getStats().getEva();
+        int playerAccuracy = 1000; // todo: calc player accuracy
+        int leveldelta = Math.max(0, targetMonster.getLevel() - c.getPlayer().getLevel());
+        if (Randomizer.nextDouble() < calculateHitchance(leveldelta, playerAccuracy, monsterAvoid)) {
+            // todo: criticals
+            c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), calcRegularAttackDamage(leveldelta)), (short) 44);
+        } else {
+            //didn't hit, todo: send miss packet
+        }
         //return time;
     }
 
-    private int calcRegularAttackDamage() {
+    private int calcRegularAttackDamage(int leveldelta) {
         int maxDamage = c.getPlayer().calculateMaxBaseDamage(c.getPlayer().getTotalWatk());
-        int minDamage = (int) Math.ceil(maxDamage * c.getPlayer().getMastery() / 100.0);
-        return random.nextInt(maxDamage - minDamage) + minDamage;
+        int minDamage = (int) Math.ceil(maxDamage * c.getPlayer().getMastery() / 100.0); // todo: this is probably not accurate
+        int monsterPhysicalDefense = targetMonster.getStats().getPDDamage();
+        minDamage = Math.max(1, (int) (minDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.6));
+        maxDamage = Math.max(1, (int) (maxDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.5));
+        return Randomizer.nextInt(maxDamage - minDamage) + minDamage;
+    }
+
+    private float calculateHitchance(int leveldelta, int playerAccuracy, int avoid) {
+        float faccuracy = (float) playerAccuracy;
+        float hitchance = faccuracy / (((1.84f + 0.07f * leveldelta) * avoid) + 1.0f);
+        if (hitchance < 0.01f) {
+            hitchance = 0.01f;
+        }
+        return hitchance;
     }
 }
