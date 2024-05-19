@@ -182,7 +182,7 @@ public class CharacterBot {
 
     private int calcRegularAttackDamage(int leveldelta) {
         int maxDamage = c.getPlayer().calculateMaxBaseDamage(c.getPlayer().getTotalWatk());
-        int minDamage = (int) Math.ceil(maxDamage * c.getPlayer().getMastery() / 100.0); // todo: this is probably not accurate
+        int minDamage = c.getPlayer().calculateMinBaseDamage(c.getPlayer().getTotalWatk());
         int monsterPhysicalDefense = targetMonster.getStats().getPDDamage();
         minDamage = Math.max(1, (int) (minDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.6));
         maxDamage = Math.max(1, (int) (maxDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.5));

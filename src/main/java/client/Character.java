@@ -726,7 +726,7 @@ public class Character extends AbstractCharacterObject {
                     weapMulti = 4.2;
                 }
 
-                int attack = (int) Math.min(Math.floor((2 * getLevel() + 31) / 3), 31);
+                int attack = (int) Math.min(Math.floor((2 * getLevel() + 31) / 3.0), 31);
                 maxbasedamage = (int) Math.ceil((localstr * weapMulti + localdex) * attack / 100.0);
             } else {
                 maxbasedamage = 1;
@@ -11244,9 +11244,53 @@ public class Character extends AbstractCharacterObject {
         this.chasing = chasing;
     }
 
+    public double getMasteryDouble() {
+        return getMastery() / 100.0;
+    }
+
     public int getMastery() {
         int mastery = 10;
         // todo: update this so it calculates mastery level based on skills
         return mastery;
+    }
+
+    public int calculateMinBaseDamage(int watk) {
+        int minbasedamage;
+        Item weapon_item = getInventory(InventoryType.EQUIPPED).getItem((short) -11);
+        if (weapon_item != null) {
+            minbasedamage = calculateMinBaseDamage(watk, ItemInformationProvider.getInstance().getWeaponType(weapon_item.getItemId()));
+        } else {
+            if (job.isA(Job.PIRATE) || job.isA(Job.THUNDERBREAKER1)) {
+                double weapMulti = 3;
+                if (job.getId() % 100 != 0) {
+                    weapMulti = 4.2;
+                }
+
+                int attack = (int) Math.min(Math.floor((2 * getLevel() + 31) / 3.0), 31);
+                minbasedamage = (int) Math.ceil((localstr * weapMulti * 0.1 * 0.9 + localdex) * attack / 100.0);
+            } else {
+                minbasedamage = 1;
+            }
+        }
+        return minbasedamage;
+    }
+
+    public int calculateMinBaseDamage(int watk, WeaponType weapon) {
+        int mainstat, secondarystat;
+        if (getJob().isA(Job.THIEF) && weapon == WeaponType.DAGGER_OTHER) {
+            weapon = WeaponType.DAGGER_THIEVES;
+        }
+
+        if (weapon == WeaponType.BOW || weapon == WeaponType.CROSSBOW || weapon == WeaponType.GUN) {
+            mainstat = localdex;
+            secondarystat = localstr;
+        } else if (weapon == WeaponType.CLAW || weapon == WeaponType.DAGGER_THIEVES) {
+            mainstat = localluk;
+            secondarystat = localdex + localstr;
+        } else {
+            mainstat = localstr;
+            secondarystat = localdex;
+        }
+        return (int) Math.ceil(((weapon.getMaxDamageMultiplier() * mainstat * 0.9 * getMasteryDouble() + secondarystat) / 100.0) * watk);
     }
 }
