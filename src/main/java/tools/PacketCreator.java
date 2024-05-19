@@ -7522,7 +7522,7 @@ public class PacketCreator {
         return p;
     }
 
-    public static InPacket createRegularAttackPacket(int monsteroid, int damage) {
+    public static InPacket createRegularAttackPacket(int monsteroid, int damage, boolean facingLeft) {
         final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
         p.writeByte(0); // skipped
         p.writeByte(17); // num attacked and damage

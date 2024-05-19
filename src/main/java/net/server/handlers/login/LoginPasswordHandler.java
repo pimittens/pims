@@ -47,7 +47,7 @@ public final class LoginPasswordHandler implements PacketHandler {
         return !c.isLoggedIn();
     }
 
-    private static String hashpwSHA512(String pwd) throws NoSuchAlgorithmException, UnsupportedEncodingException {
+    public static String hashpwSHA512(String pwd) throws NoSuchAlgorithmException, UnsupportedEncodingException {
         MessageDigest digester = MessageDigest.getInstance("SHA-512");
         digester.update(pwd.getBytes(StandardCharsets.UTF_8), 0, pwd.length());
         return HexTool.toHexString(digester.digest()).replace(" ", "").toLowerCase();

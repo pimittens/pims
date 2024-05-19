@@ -21,6 +21,7 @@ public class CharacterBot {
     private MapObject targetItem;
     private boolean hasTargetMonster = false;
     private boolean hasTargetItem = false;
+    private boolean facingLeft = false;
 
     public void setFollowing(Character following) {
         this.following = following;
@@ -96,28 +97,26 @@ public class CharacterBot {
         int xDiff = c.getPlayer().getPosition().x - targetX, yDiff = c.getPlayer().getPosition().y - targetY;
         System.out.println("xDiff: " + xDiff + ", yDiff: " + yDiff);
         if (yDiff < 0) {
+            nextX = (short) (c.getPlayer().getPosition().x);
             if (-8 * yDiff < timeRemaining) {
-                nextX = (short) (c.getPlayer().getPosition().x);
                 nextY = targetY;
                 nextState = 16;
                 c.handlePacket(PacketCreator.createPlayerMovementPacket(nextX, nextY, nextState, (short) timeRemaining), (short) 41);
                 timeRemaining -= -8 * yDiff;
             } else {
-                nextX = (short) (c.getPlayer().getPosition().x);
                 nextY = (short) (c.getPlayer().getPosition().y + timeRemaining / 8.0);
                 nextState = 16;
                 c.handlePacket(PacketCreator.createPlayerMovementPacket(nextX, nextY, nextState, (short) timeRemaining), (short) 41);
                 timeRemaining = 0;
             }
         } else if (yDiff > 0) {
+            nextX = (short) (c.getPlayer().getPosition().x);
             if (8 * yDiff < timeRemaining) {
-                nextX = (short) (c.getPlayer().getPosition().x);
                 nextY = targetY;
                 nextState = 16;
                 c.handlePacket(PacketCreator.createPlayerMovementPacket(nextX, nextY, nextState, (short) timeRemaining), (short) 41);
                 timeRemaining -= 8 * yDiff;
             } else {
-                nextX = (short) (c.getPlayer().getPosition().x);
                 nextY = (short) (c.getPlayer().getPosition().y - timeRemaining / 8.0);
                 nextState = 16;
                 c.handlePacket(PacketCreator.createPlayerMovementPacket(nextX, nextY, nextState, (short) timeRemaining), (short) 41);
@@ -128,6 +127,7 @@ public class CharacterBot {
             return 0;
         }
         if (xDiff < 0) {
+            facingLeft = false;
             if (-8 * xDiff < timeRemaining) {
                 nextX = targetX;
                 nextY = (short) (c.getPlayer().getPosition().y);
@@ -142,6 +142,7 @@ public class CharacterBot {
                 timeRemaining = 0;
             }
         } else if (xDiff > 0) {
+            facingLeft = true;
             if (8 * xDiff < timeRemaining) {
                 nextX = targetX;
                 nextY = (short) (c.getPlayer().getPosition().y);
@@ -157,7 +158,7 @@ public class CharacterBot {
             }
         }
         if (c.getPlayer().getPosition().x == targetX && c.getPlayer().getPosition().y == targetY) {
-            c.handlePacket(PacketCreator.createPlayerMovementPacket((short) (c.getPlayer().getPosition().x), (short) (c.getPlayer().getPosition().y), (byte) (xDiff < 0 ? 4 : 5), (short) 10), (short) 41);
+            c.handlePacket(PacketCreator.createPlayerMovementPacket((short) (c.getPlayer().getPosition().x), (short) (c.getPlayer().getPosition().y), (byte) (facingLeft ? 5 : 4), (short) 10), (short) 41);
         }
         return timeRemaining;
     }
@@ -172,7 +173,7 @@ public class CharacterBot {
         int leveldelta = Math.max(0, targetMonster.getLevel() - c.getPlayer().getLevel());
         if (Randomizer.nextDouble() < calculateHitchance(leveldelta, playerAccuracy, monsterAvoid)) {
             // todo: criticals
-            c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), calcRegularAttackDamage(leveldelta)), (short) 44);
+            c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), calcRegularAttackDamage(leveldelta), facingLeft), (short) 44);
         } else {
             //didn't hit, todo: send miss packet
         }
