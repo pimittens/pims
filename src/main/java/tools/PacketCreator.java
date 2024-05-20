@@ -7439,7 +7439,7 @@ public class PacketCreator {
 
     public static InPacket createLoginPasswordPacket() {
         final InPacket p = InPacket.create(SendOpcode.GUEST_ID_LOGIN);
-        p.writeString("bottest"); // login
+        p.writeString("testbot"); // login
         p.writeString("bottest"); // password
         p.writeByte(0);
         p.writeByte(0);

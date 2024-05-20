@@ -50,6 +50,7 @@ import net.server.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import server.BotFactory;
 import server.CashShop.CashItemFactory;
 import server.SkillbookInformationProvider;
 import server.ThreadManager;
@@ -873,6 +874,7 @@ public class Server {
             log.error("Failed to run all startup-bound database tasks", sqle);
             throw new IllegalStateException(sqle);
         }
+        BotFactory.createBots();
 
         ThreadManager.getInstance().start();
         initializeTimelyTasks(channelDependencies);    // aggregated method for timely tasks thanks to lxconan

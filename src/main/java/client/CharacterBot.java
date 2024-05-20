@@ -33,10 +33,10 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createLoginPasswordPacket(), (short) 1);
         c.handlePacket(PacketCreator.createServerListRequestPacket(), (short) 11);
         c.handlePacket(PacketCreator.createCharListRequestPacket(), (short) 5);
-        c.handlePacket(PacketCreator.createCharSelectedPacket(5), (short) 19);
+        c.handlePacket(PacketCreator.createCharSelectedPacket(2), (short) 19);
         c = Client.createChannelClient(-1, "127.0.0.1", PacketProcessor.getChannelServerProcessor(0, 1), 0, 1);
         c.setBotClient();
-        c.handlePacket(PacketCreator.createLoginPacket(5), (short) 20);
+        c.handlePacket(PacketCreator.createLoginPacket(2), (short) 20);
         c.handlePacket(PacketCreator.createPartySearchUpdatePacket(), (short) 223);
         c.handlePacket(PacketCreator.createPlayerMapTransitionPacket(), (short) 207);
         //character will be floating at this point, so update position so send a packet to change their state and update their position so they are on the ground
@@ -49,6 +49,9 @@ public class CharacterBot {
     }
 
     public void update() {
+        if (true) {
+            return;
+        }
         int time = 500 + leftovertime; // amount of time for actions
         hasTargetItem = false;
         if (!c.getPlayer().getMap().getItems().isEmpty()) {
@@ -186,7 +189,7 @@ public class CharacterBot {
         int monsterPhysicalDefense = targetMonster.getStats().getPDDamage();
         minDamage = Math.max(1, (int) (minDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.6));
         maxDamage = Math.max(1, (int) (maxDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.5));
-        return Randomizer.nextInt(maxDamage - minDamage) + minDamage;
+        return Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage;
     }
 
     private float calculateHitchance(int leveldelta, int playerAccuracy, int avoid) {
