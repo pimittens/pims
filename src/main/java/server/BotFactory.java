@@ -85,9 +85,15 @@ public class BotFactory {
             return;
         }
         if (numAccounts >= 1000) {
-            return; // probably won't need more than this
+            return; // might increase to 5k or 10k if needed
         }
-        int count = Math.min(100, 9999 - numAccounts); // only create up to 100 at a time
+        int count;
+        if (numAccounts == 0) {
+            System.out.println("creating initial bots");
+            count = 200; // setup initial bots
+        } else {
+            count = Math.min(50, 999 - numAccounts); // only create up to 50 at a time
+        }
         int accountID, gender;
         String accountName, characterName;
         for (int i = 0; i < count; i++) {
@@ -98,26 +104,28 @@ public class BotFactory {
                 continue;
             }
             gender = Randomizer.nextInt(2);
-            accountID = createAccount(accountName);
+            accountID = createAccount(accountName, gender);
             if (accountID == -1) {
                 System.out.println("error creating bot account with name " + accountName);
                 continue;
             }
-            if (!createBot(accountID, characterName, gender, pickSkin(gender), pickHair(gender), pickFace(gender))) {
+            if (!createBot(accountID, characterName, gender, pickSkin(), pickHair(gender), pickFace(gender))) {
                 System.out.println("error creating bot character with account name " + accountName + " and character name " + characterName);
             }
             numAccounts++;
         }
     }
 
-    private static int createAccount(String accountName) {
+    private static int createAccount(String accountName, int gender) {
         int accountid;
         try (Connection con = DatabaseConnection.getConnection();
-             PreparedStatement ps = con.prepareStatement("INSERT INTO accounts (name, password, birthday, tempban) VALUES (?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS)) {
+             PreparedStatement ps = con.prepareStatement("INSERT INTO accounts (name, password, birthday, tempban, gender, tos) VALUES (?, ?, ?, ?, ?, ?);", Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, accountName);
             ps.setString(2, YamlConfig.config.server.BCRYPT_MIGRATION ? BCrypt.hashpw("botpw", BCrypt.gensalt(12)) : LoginPasswordHandler.hashpwSHA512("botpw"));
             ps.setDate(3, Date.valueOf(DefaultDates.getBirthday()));
             ps.setTimestamp(4, Timestamp.valueOf(DefaultDates.getTempban()));
+            ps.setInt(5, gender);
+            ps.setInt(6, 1);
             ps.executeUpdate();
 
             try (ResultSet rs = ps.getGeneratedKeys()) {
@@ -248,8 +256,11 @@ public class BotFactory {
         return name;
     }
 
-    private static int pickSkin(int gender) {
-        int skin = Randomizer.nextInt(8);
+    private static int pickSkin() {
+        if (Randomizer.nextInt(4) < 3) {
+            return 0; // 75% to have normal skin since that was the most popular
+        }
+        int skin = Randomizer.nextInt(7) + 1;
         if (skin > 5) {
             skin += 3;
         }
@@ -259,11 +270,11 @@ public class BotFactory {
     private static int pickHair(int gender) {
         if (gender == 0) {
             if (Randomizer.nextInt(colorHairsMale.length + noColorHairsMale.length) < noColorHairsMale.length) {
-                return 30000 + noColorHairsMale[Randomizer.nextInt(noColorHairsMale.length)];
+                return 30000 + noColorHairsMale[Randomizer.nextInt(noColorHairsMale.length)] * 10;
             }
-            return 30000 + colorHairsMale[Randomizer.nextInt(colorHairsMale.length)] + Randomizer.nextInt(8);
+            return 30000 + colorHairsMale[Randomizer.nextInt(colorHairsMale.length)] * 10 + Randomizer.nextInt(8);
         }
-        return 31000 + colorHairsFemale[Randomizer.nextInt(colorHairsFemale.length)] + Randomizer.nextInt(8);
+        return 30000 + colorHairsFemale[Randomizer.nextInt(colorHairsFemale.length)] * 10 + Randomizer.nextInt(8);
     }
 
     private static int pickFace(int gender) {

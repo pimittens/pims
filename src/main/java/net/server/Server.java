@@ -29,6 +29,7 @@ import client.inventory.ItemFactory;
 import client.inventory.manipulator.CashIdGenerator;
 import client.newyear.NewYearCardRecord;
 import client.processor.npc.FredrickProcessor;
+import com.oracle.truffle.js.runtime.util.Triple;
 import config.YamlConfig;
 import constants.game.GameConstants;
 import constants.inventory.ItemConstants;
@@ -85,7 +86,7 @@ public class Server {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
     private static Server instance = null;
 
-    private List<CharacterBot> bots;
+    private final List<CharacterBot> bots = new ArrayList<>(), followers = new ArrayList<>();
 
     public static Server getInstance() {
         if (instance == null) {
@@ -921,8 +922,6 @@ public class Server {
         for (Channel ch : this.getAllChannels()) {
             ch.reloadEventScriptManager();
         }
-
-        startBots();
     }
 
     private ChannelDependencies registerChannelDependencies() {
@@ -970,8 +969,8 @@ public class Server {
         tMan.register(new DueyFredrickTask(channelDependencies.fredrickProcessor()), HOURS.toMillis(1), timeLeft);
         tMan.register(new InvitationTask(), SECONDS.toMillis(30), SECONDS.toMillis(30));
         tMan.register(new RespawnTask(), YamlConfig.config.server.RESPAWN_INTERVAL, YamlConfig.config.server.RESPAWN_INTERVAL);
-        tMan.register(new UpdateBotsTask(), 500, SECONDS.toMillis(30));
-        //tMan.register(new ManageBotLoginsTask(), MINUTES.toMillis(30), MINUTES.toMillis(1)); todo: add this
+        tMan.register(new UpdateBotsTask(), 1000, MINUTES.toMillis(2));
+        tMan.register(new ManageBotLoginsTask(), MINUTES.toMillis(15), MINUTES.toMillis(1));
         //tMan.register(new UpdateFollowerBotsTask(), 500, SECONDS.toMillis(30)); todo: maybe have followers update more often since there will be fewer of them
 
         timeLeft = getTimeLeftForNextDay();
@@ -1957,20 +1956,25 @@ public class Server {
         }
     }
 
-    private void startBots() {
-        bots = new ArrayList<>();
-        // todo: select some number of bots from the db, login each of those characters, send them to a specific map
-        bots.add(new CharacterBot());
-        for (CharacterBot bot : bots) {
+    public void loginBots(List<Pair<String, Integer>> data) {
+        CharacterBot nextBot;
+        for (Pair<String, Integer> t : data) {
+            nextBot = new CharacterBot();
             try {
-                bot.login();
+                nextBot.login(t.getLeft(), t.getRight());
             } catch (SQLException e) {
                 System.out.println("failed to login a bot");
+                continue;
             }
+            bots.add(nextBot);
         }
     }
 
     public List<CharacterBot> getBots() {
+        return bots;
+    }
+
+    public List<CharacterBot> getFollowers() {
         return bots;
     }
 }

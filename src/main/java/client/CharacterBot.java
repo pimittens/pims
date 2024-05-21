@@ -22,21 +22,25 @@ public class CharacterBot {
     private boolean hasTargetMonster = false;
     private boolean hasTargetItem = false;
     private boolean facingLeft = false;
+    private String login;
+    private int charID;
 
     public void setFollowing(Character following) {
         this.following = following;
     }
 
-    public void login() throws SQLException {
+    public void login(String login, int charID) throws SQLException {
+        this.login = login;
+        this.charID = charID;
         c = Client.createLoginClient(-1, "127.0.0.1", PacketProcessor.getLoginServerProcessor(), 0, 1);
         c.setBotClient();
-        c.handlePacket(PacketCreator.createLoginPasswordPacket(), (short) 1);
+        c.handlePacket(PacketCreator.createLoginPasswordPacket(login), (short) 1);
         c.handlePacket(PacketCreator.createServerListRequestPacket(), (short) 11);
         c.handlePacket(PacketCreator.createCharListRequestPacket(), (short) 5);
-        c.handlePacket(PacketCreator.createCharSelectedPacket(2), (short) 19);
+        c.handlePacket(PacketCreator.createCharSelectedPacket(charID), (short) 19);
         c = Client.createChannelClient(-1, "127.0.0.1", PacketProcessor.getChannelServerProcessor(0, 1), 0, 1);
         c.setBotClient();
-        c.handlePacket(PacketCreator.createLoginPacket(2), (short) 20);
+        c.handlePacket(PacketCreator.createLoginPacket(charID), (short) 20);
         c.handlePacket(PacketCreator.createPartySearchUpdatePacket(), (short) 223);
         c.handlePacket(PacketCreator.createPlayerMapTransitionPacket(), (short) 207);
         //character will be floating at this point, so update position so send a packet to change their state and update their position so they are on the ground
@@ -49,9 +53,6 @@ public class CharacterBot {
     }
 
     public void update() {
-        if (true) {
-            return;
-        }
         int time = 500 + leftovertime; // amount of time for actions
         hasTargetItem = false;
         if (!c.getPlayer().getMap().getItems().isEmpty()) {
