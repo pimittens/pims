@@ -2,20 +2,24 @@ package client;
 
 import net.PacketProcessor;
 import server.life.Monster;
-import server.maps.Foothold;
-import server.maps.MapItem;
-import server.maps.MapObject;
+import server.maps.*;
 import tools.PacketCreator;
 import tools.Randomizer;
 
 import java.sql.SQLException;
 
 public class CharacterBot {
+    private enum Mode {
+        WAITING, // no mode decided
+        SOCIALIZING, // hang out in henesys
+        GRINDING, // pick a map and kill monsters
+        PQ, // do a pq
+        BOSSING // fight a boss
+
+    }
 
     private Character following = null;
     private Foothold foothold;
-    private int xpos, ypos;
-    private int leftovertime;
     private Client c;
     private Monster targetMonster;
     private MapObject targetItem;
@@ -24,6 +28,8 @@ public class CharacterBot {
     private boolean facingLeft = false;
     private String login;
     private int charID;
+    private Mode currentMode = Mode.WAITING;
+    long previousAction = System.currentTimeMillis();
 
     public void setFollowing(Character following) {
         this.following = following;
@@ -53,42 +59,15 @@ public class CharacterBot {
     }
 
     public void update() {
-        int time = 500 + leftovertime; // amount of time for actions
-        hasTargetItem = false;
-        if (!c.getPlayer().getMap().getItems().isEmpty()) {
-            for (MapObject it : c.getPlayer().getMap().getItems()) {
-                if (((MapItem) it).canBePickedBy(c.getPlayer())) {
-                    targetItem = it;
-                    hasTargetItem = true;
-                    break;
+        switch (currentMode) {
+            case WAITING -> {
+                chooseMode();
+                if (currentMode != Mode.WAITING) {
+                    update();
                 }
             }
+            case GRINDING -> grind();
         }
-        if (!hasTargetMonster || !targetMonster.isAlive()) {
-            if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) {
-                targetMonster = c.getPlayer().getMap().getAllMonsters().get(Randomizer.nextInt(c.getPlayer().getMap().getAllMonsters().size()));
-                hasTargetMonster = true;
-            } else {
-                hasTargetMonster = false;
-            }
-        }
-        if (hasTargetItem) {
-            if (!c.getPlayer().getPosition().equals(targetItem.getPosition())) {
-                time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
-            }
-            if (c.getPlayer().getPosition().equals(targetItem.getPosition())) {
-                pickupItem();
-            }
-        } else if (hasTargetMonster) {
-            if (!c.getPlayer().getPosition().equals(targetMonster.getPosition())) {
-                time = moveBot((short) targetMonster.getPosition().x, (short) targetMonster.getPosition().y, time);
-            }
-            if (c.getPlayer().getPosition().equals(targetMonster.getPosition()) && time > 400) {
-                attack();
-            }
-        }
-
-        leftovertime = Math.min(100, time);
     }
 
     private int moveBot(short targetX, short targetY, int time) {
@@ -164,7 +143,7 @@ public class CharacterBot {
         if (c.getPlayer().getPosition().x == targetX && c.getPlayer().getPosition().y == targetY) {
             c.handlePacket(PacketCreator.createPlayerMovementPacket((short) (c.getPlayer().getPosition().x), (short) (c.getPlayer().getPosition().y), (byte) (facingLeft ? 5 : 4), (short) 10), (short) 41);
         }
-        return timeRemaining;
+        return timeRemaining - 10;
     }
 
     private void pickupItem() {
@@ -200,5 +179,68 @@ public class CharacterBot {
             hitchance = 0.01f;
         }
         return hitchance;
+    }
+
+    private void chooseMode() {
+        if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
+            currentMode = Mode.GRINDING;
+            pickMap();
+        }
+    }
+
+    private void pickMap() {
+        if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
+            MapleMap target = c.getChannelServer().getMapFactory().getMap(104000100 + Randomizer.nextInt(3) * 100);
+            Portal targetPortal = target.getRandomPlayerSpawnpoint();
+            c.getPlayer().changeMap(target, targetPortal);
+        }
+    }
+
+    private void grind() {
+        int time = (int) (System.currentTimeMillis() - previousAction); // amount of time for actions
+        previousAction = System.currentTimeMillis();
+        boolean didAction = true;
+        while (time > 0 && didAction) {
+            System.out.println("time left: " + time);
+            didAction = false;
+            hasTargetItem = false;
+            if (!c.getPlayer().getMap().getItems().isEmpty()) { // todo: only try to pick up items if appropriate inventory is not full
+                for (MapObject it : c.getPlayer().getMap().getItems()) {
+                    if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer())) {
+                        targetItem = it;
+                        hasTargetItem = true;
+                        break;
+                    }
+                }
+            }
+            if (!hasTargetMonster || !targetMonster.isAlive()) {
+                if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) {
+                    targetMonster = c.getPlayer().getMap().getAllMonsters().get(Randomizer.nextInt(c.getPlayer().getMap().getAllMonsters().size()));
+                    hasTargetMonster = true;
+                } else {
+                    hasTargetMonster = false;
+                }
+            }
+            if (hasTargetItem) {
+                if (!c.getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
+                    didAction = true;
+                }
+                if (c.getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    pickupItem();
+                    didAction = true;
+                }
+            } else if (hasTargetMonster) {
+                if (!c.getPlayer().getPosition().equals(targetMonster.getPosition())) {
+                    time = moveBot((short) targetMonster.getPosition().x, (short) targetMonster.getPosition().y, time);
+                    didAction = true;
+                }
+                if (c.getPlayer().getPosition().equals(targetMonster.getPosition()) && time > 500) {
+                    attack();
+                    time -= 500; // todo: make this accurate
+                    didAction = true;
+                }
+            }
+        }
     }
 }

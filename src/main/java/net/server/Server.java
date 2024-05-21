@@ -969,7 +969,7 @@ public class Server {
         tMan.register(new DueyFredrickTask(channelDependencies.fredrickProcessor()), HOURS.toMillis(1), timeLeft);
         tMan.register(new InvitationTask(), SECONDS.toMillis(30), SECONDS.toMillis(30));
         tMan.register(new RespawnTask(), YamlConfig.config.server.RESPAWN_INTERVAL, YamlConfig.config.server.RESPAWN_INTERVAL);
-        tMan.register(new UpdateBotsTask(), 1000, MINUTES.toMillis(2));
+        tMan.register(new UpdateBotsTask(), 1000, MINUTES.toMillis(1));
         tMan.register(new ManageBotLoginsTask(), MINUTES.toMillis(15), MINUTES.toMillis(1));
         //tMan.register(new UpdateFollowerBotsTask(), 500, SECONDS.toMillis(30)); todo: maybe have followers update more often since there will be fewer of them
 

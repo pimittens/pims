@@ -133,6 +133,10 @@ public class MapItem extends AbstractMapObject {
     }
 
     public final boolean canBePickedBy(Character chr) {
+        if (!chr.needQuestItem(questid, getItemId())) {
+            return false;
+        }
+
         if (character_ownerid <= 0 || isFFADrop()) {
             return true;
         }
