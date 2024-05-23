@@ -6290,6 +6290,21 @@ public class Character extends AbstractCharacterObject {
         return spGain;
     }
 
+    private int getTotalSpToMax(Job job) {
+        int jobId = job.getId();
+        int spLeft = 0;
+
+        for (Entry<Skill, SkillEntry> s : this.getSkills().entrySet()) {
+            Skill skill = s.getKey();
+
+            if (GameConstants.isInJobTree(skill.getId(), jobId) && !skill.isBeginnerSkill()) {
+                spLeft += skill.getMaxLevel();
+            }
+        }
+
+        return spLeft;
+    }
+
     private void levelUpGainSp() {
         if (GameConstants.getJobBranch(job) == 0) {
             return;
@@ -6298,6 +6313,10 @@ public class Character extends AbstractCharacterObject {
         int spGain = 3;
         if (YamlConfig.config.server.USE_ENFORCE_JOB_SP_RANGE && !GameConstants.hasSPTable(job)) {
             spGain = getSpGain(spGain, job);
+        }
+
+        if (level == 30 || level == 70 || level == 120 || level == 200) {
+            spGain = getTotalSpToMax(job) - getUsedSp(job) - getRemainingSp(); // give enough sp to max everything, note - doesn't see level 0 skills
         }
 
         if (spGain > 0) {
