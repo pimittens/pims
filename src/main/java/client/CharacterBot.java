@@ -1,5 +1,9 @@
 package client;
 
+import client.inventory.InventoryType;
+import client.inventory.WeaponType;
+import client.inventory.manipulator.InventoryManipulator;
+import constants.inventory.ItemConstants;
 import net.PacketProcessor;
 import server.life.Monster;
 import server.maps.*;
@@ -30,6 +34,7 @@ public class CharacterBot {
     private int charID;
     private Mode currentMode = Mode.WAITING;
     long previousAction = System.currentTimeMillis();
+    private int level;
 
     public void setFollowing(Character following) {
         this.following = following;
@@ -52,6 +57,7 @@ public class CharacterBot {
         //character will be floating at this point, so update position so send a packet to change their state and update their position so they are on the ground
         foothold = c.getPlayer().getMap().getFootholds().findBelow(c.getPlayer().getPosition());
         c.handlePacket(PacketCreator.createPlayerMovementPacket((short) c.getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
+        level = c.getPlayer().getLevel();
     }
 
     public boolean isFollower() {
@@ -59,14 +65,18 @@ public class CharacterBot {
     }
 
     public void update() {
+        if (true) {
+            return; // disable bots for testing purposes
+        }
+        if (c.getPlayer().getLevel() > level) {
+            levelup();
+            return;
+        }
+        int time = (int) (System.currentTimeMillis() - previousAction); // amount of time for actions
+        previousAction = System.currentTimeMillis();
         switch (currentMode) {
-            case WAITING -> {
-                chooseMode();
-                if (currentMode != Mode.WAITING) {
-                    update();
-                }
-            }
-            case GRINDING -> grind();
+            case WAITING -> chooseMode();
+            case GRINDING -> grind(time);
         }
     }
 
@@ -196,12 +206,9 @@ public class CharacterBot {
         }
     }
 
-    private void grind() {
-        int time = (int) (System.currentTimeMillis() - previousAction); // amount of time for actions
-        previousAction = System.currentTimeMillis();
+    private boolean grind(int time) {
         boolean didAction = true;
         while (time > 0 && didAction) {
-            System.out.println("time left: " + time);
             didAction = false;
             hasTargetItem = false;
             if (!c.getPlayer().getMap().getItems().isEmpty()) { // todo: only try to pick up items if appropriate inventory is not full
@@ -242,5 +249,149 @@ public class CharacterBot {
                 }
             }
         }
+        return didAction;
+    }
+
+    private void levelup() {
+        this.level = c.getPlayer().getLevel();
+        if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
+            if (level == 8 && Randomizer.nextInt(5) == 0) { // 1/5 chance to choose magician
+                jobAdvance(Job.MAGICIAN);
+            } else if (level == 10 && Randomizer.nextInt(500) != 0) {
+                // randomly pick between the 4 non-magician explorer jobs
+                // 1/500 chance to be a perma beginner, technically this makes mages slightly more common than the other 4, but it's negligible on this scale
+                Job[] jobs = {Job.WARRIOR, Job.BOWMAN, Job.THIEF, Job.PIRATE};
+                jobAdvance(jobs[Randomizer.nextInt(jobs.length)]);
+            }
+        } else if (c.getPlayer().getLevel() == 30) { // note: these assume the bot will not gain more than 1 level between updates
+            // todo: second job
+        } else if (c.getPlayer().getLevel() == 70) {
+            // todo: third job
+        } else if (c.getPlayer().getLevel() == 120) {
+            // todo: fourth job
+        }
+        int remainingAP = c.getPlayer().getRemainingAp(), nextAP;
+        if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
+            if (c.getPlayer().getTotalDex() < 60) {
+                nextAP = Math.min(remainingAP, 60 - c.getPlayer().getTotalDex());
+                remainingAP -= nextAP;
+                c.getPlayer().assignDex(nextAP);
+            }
+            c.getPlayer().assignStr(remainingAP);
+        } else if (c.getPlayer().getJob().getId() / 100 == 1) { // warrior
+            if (c.getPlayer().getTotalDex() < 60 && c.getPlayer().getTotalDex() < c.getPlayer().getLevel() + 10) {
+                nextAP = Math.min(Math.min(remainingAP, 60 - c.getPlayer().getTotalDex()), c.getPlayer().getLevel() + 10 - c.getPlayer().getTotalDex());
+                remainingAP -= nextAP;
+                c.getPlayer().assignDex(nextAP);
+            }
+            c.getPlayer().assignStr(remainingAP);
+        } else if (c.getPlayer().getJob().getId() / 100 == 2) { // magician
+            if (c.getPlayer().getTotalLuk() < 123 && c.getPlayer().getTotalLuk() < c.getPlayer().getLevel() + 3) {
+                nextAP = Math.min(Math.min(remainingAP, 123 - c.getPlayer().getTotalLuk()), c.getPlayer().getLevel() + 3 - c.getPlayer().getTotalLuk());
+                remainingAP -= nextAP;
+                c.getPlayer().assignLuk(nextAP);
+            }
+            c.getPlayer().assignInt(remainingAP);
+        } else if (c.getPlayer().getJob().getId() / 100 == 3) { // bowman
+            if (c.getPlayer().getWeaponType().equals(WeaponType.BOW)) {
+                if (c.getPlayer().getTotalStr() < 125 && c.getPlayer().getTotalStr() < c.getPlayer().getLevel() + 5) {
+                    nextAP = Math.min(Math.min(remainingAP, 125 - c.getPlayer().getTotalStr()), c.getPlayer().getLevel() + 5 - c.getPlayer().getTotalStr());
+                    remainingAP -= nextAP;
+                    c.getPlayer().assignStr(nextAP);
+                }
+            } else { // crossbow
+                if (c.getPlayer().getTotalStr() < 120 && c.getPlayer().getTotalStr() < c.getPlayer().getLevel()) {
+                    nextAP = Math.min(Math.min(remainingAP, 120 - c.getPlayer().getTotalStr()), c.getPlayer().getLevel() - c.getPlayer().getTotalStr());
+                    remainingAP -= nextAP;
+                    c.getPlayer().assignStr(nextAP);
+                }
+            }
+            c.getPlayer().assignDex(remainingAP);
+        } else if (c.getPlayer().getJob().getId() / 100 == 4) { // thief
+            if (c.getPlayer().getTotalDex() < 160 && c.getPlayer().getTotalDex() < c.getPlayer().getLevel() + 40) {
+                nextAP = Math.min(Math.min(remainingAP, 160 - c.getPlayer().getTotalDex()), c.getPlayer().getLevel() + 40 - c.getPlayer().getTotalDex());
+                remainingAP -= nextAP;
+                c.getPlayer().assignDex(nextAP);
+            }
+            /*if (weaponType.equals(WeaponType.DAGGER_THIEVES)) {
+                // todo: str daggers
+            }*/
+            c.getPlayer().assignLuk(remainingAP);
+        } else if (c.getPlayer().getJob().getId() / 100 == 5) { // pirate
+            if (c.getPlayer().getWeaponType().equals(WeaponType.GUN)) {
+                if (c.getPlayer().getTotalStr() < 120 && c.getPlayer().getTotalStr() < c.getPlayer().getLevel()) {
+                    nextAP = Math.min(Math.min(remainingAP, 120 - c.getPlayer().getTotalStr()), c.getPlayer().getLevel() - c.getPlayer().getTotalStr());
+                    remainingAP -= nextAP;
+                    c.getPlayer().assignStr(nextAP);
+                }
+                c.getPlayer().assignDex(remainingAP);
+            } else { // knuckle
+                if (c.getPlayer().getTotalDex() < 120 && c.getPlayer().getTotalDex() < c.getPlayer().getLevel()) {
+                    nextAP = Math.min(Math.min(remainingAP, 120 - c.getPlayer().getTotalDex()), c.getPlayer().getLevel() - c.getPlayer().getTotalDex());
+                    remainingAP -= nextAP;
+                    c.getPlayer().assignDex(nextAP);
+                }
+                c.getPlayer().assignStr(remainingAP);
+            }
+        }
+        assignSP();
+    }
+
+    private void jobAdvance(Job newJob) {
+        boolean firstJob = c.getPlayer().getJob().equals(Job.BEGINNER);
+        c.getPlayer().changeJob(newJob);
+        if (firstJob) {
+            c.getPlayer().resetStats();
+            switch (newJob) {
+                case WARRIOR -> gainAndEquip(1302077);
+                case MAGICIAN -> gainAndEquip(1372043);
+                case BOWMAN -> {
+                    gainAndEquip(1452051);
+                    gainItem(2060000, (short) 1000); // arrows
+                }
+                case THIEF -> {
+                    gainAndEquip(1472061);
+                    gainItem(2070015, (short) 500); // stars
+                }
+                case PIRATE -> {
+                    if (Randomizer.nextInt(2) == 0) {
+                        gainAndEquip(1492000);
+                        gainItem(2330000, (short) 1000);
+                    } else {
+                        gainAndEquip(1482000);
+                    }
+                }
+            }
+        }
+    }
+
+    private void assignSP() {
+        // todo
+    }
+
+    private void gainItem(int itemId, short quantity) {
+        InventoryType inventoryType = ItemConstants.getInventoryType(itemId);
+        while (!InventoryManipulator.checkSpace(c, itemId, quantity, "")) {
+            // make sure not to give a quantity that can't fit in their inventory or this will get stuck
+            short lowestValueItemPos = getLowestValueItemPos(inventoryType);
+            InventoryManipulator.drop(c, inventoryType, lowestValueItemPos, InventoryManipulator.getQuantity(c, inventoryType, lowestValueItemPos));
+        }
+        InventoryManipulator.addById(c, itemId, quantity);
+    }
+
+    private void gainAndEquip(int itemId) {
+        if (!ItemConstants.getInventoryType(itemId).equals(InventoryType.EQUIP)) {
+            return; // check that it actually is an equip
+        }
+        if (!InventoryManipulator.checkSpace(c, itemId, 1, "")) {
+            InventoryManipulator.drop(c, InventoryType.EQUIP, getLowestValueItemPos(InventoryType.EQUIP), (short) 1);
+        }
+        InventoryManipulator.addById(c, itemId, (short) 1);
+        InventoryManipulator.equip(c, InventoryManipulator.getPosition(c, itemId), (short) -11);
+    }
+
+    private short getLowestValueItemPos(InventoryType inventoryType) {
+        // todo
+        return 1;
     }
 }

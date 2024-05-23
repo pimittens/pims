@@ -652,4 +652,19 @@ public class Inventory implements Iterable<Item> {
     public void dispose() {
         owner = null;
     }
+
+    public short getSlot(int itemId) {
+        // return first slot containing an item with the given id, or -1 if no such item is found
+        lock.lock();
+        try {
+            for (short i = 1; i <= slotLimit; i++) {
+                if (inventory.get(i).getItemId() == itemId) {
+                    return i;
+                }
+            }
+            return -1;
+        } finally {
+            lock.unlock();
+        }
+    }
 }

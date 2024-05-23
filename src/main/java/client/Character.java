@@ -11313,4 +11313,12 @@ public class Character extends AbstractCharacterObject {
 
         return (maxbasedamage * 107) / 100;
     }
+
+    public WeaponType getWeaponType() {
+        Item weapon_item = getInventory(InventoryType.EQUIPPED).getItem((short) -11);
+        if (weapon_item != null) {
+            return ItemInformationProvider.getInstance().getWeaponType(weapon_item.getItemId());
+        }
+        return WeaponType.NOT_A_WEAPON;
+    }
 }
