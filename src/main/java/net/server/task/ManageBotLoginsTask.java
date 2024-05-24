@@ -15,6 +15,7 @@ public class ManageBotLoginsTask implements Runnable {
 
     @Override
     public void run() {
+        // todo: decide which bots to login based on levels
         List<String> loggedIn = new ArrayList<>();
         try (Connection con = DatabaseConnection.getConnection()) {
             try (PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts WHERE name LIKE \"bot%\" AND loggedin = 2;");

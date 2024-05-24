@@ -205,6 +205,7 @@ public class CommandsExecutor {
         addCommand("whodrops", WhoDropsCommand.class);
         addCommand("save", SaveCharacterCommand.class);
         addCommand("goto", GotoCommand.class);
+        addCommand("follower", AddFollowerCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }

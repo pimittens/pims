@@ -3,7 +3,9 @@ package client;
 import client.inventory.InventoryType;
 import client.inventory.WeaponType;
 import client.inventory.manipulator.InventoryManipulator;
+import client.processor.stat.AssignSPProcessor;
 import constants.inventory.ItemConstants;
+import constants.skills.*;
 import net.PacketProcessor;
 import server.life.Monster;
 import server.maps.*;
@@ -11,6 +13,8 @@ import tools.PacketCreator;
 import tools.Randomizer;
 
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CharacterBot {
     private enum Mode {
@@ -22,8 +26,10 @@ public class CharacterBot {
 
     }
 
+    private static Map<Job, int[][]> skillOrders = new HashMap<>();
+
     private Character following = null;
-    private Foothold foothold;
+    //private Foothold foothold;
     private Client c;
     private Monster targetMonster;
     private MapObject targetItem;
@@ -35,17 +41,20 @@ public class CharacterBot {
     private Mode currentMode = Mode.WAITING;
     long previousAction = System.currentTimeMillis();
     private int level;
+    private int singleTargetAttack = -1, mobAttack = -1;  // skill id used for attacks, -1 is regular attack
+    private long currentModeStartTime;
+    private boolean loggedOut = false;
 
     public void setFollowing(Character following) {
         this.following = following;
     }
 
-    public void login(String login, int charID) throws SQLException {
+    public void login(String login, String password, int charID) throws SQLException {
         this.login = login;
         this.charID = charID;
         c = Client.createLoginClient(-1, "127.0.0.1", PacketProcessor.getLoginServerProcessor(), 0, 1);
         c.setBotClient();
-        c.handlePacket(PacketCreator.createLoginPasswordPacket(login), (short) 1);
+        c.handlePacket(PacketCreator.createLoginPasswordPacket(login, password), (short) 1);
         c.handlePacket(PacketCreator.createServerListRequestPacket(), (short) 11);
         c.handlePacket(PacketCreator.createCharListRequestPacket(), (short) 5);
         c.handlePacket(PacketCreator.createCharSelectedPacket(charID), (short) 19);
@@ -55,9 +64,16 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createPartySearchUpdatePacket(), (short) 223);
         c.handlePacket(PacketCreator.createPlayerMapTransitionPacket(), (short) 207);
         //character will be floating at this point, so update position so send a packet to change their state and update their position so they are on the ground
-        foothold = c.getPlayer().getMap().getFootholds().findBelow(c.getPlayer().getPosition());
+        Foothold foothold = c.getPlayer().getMap().getFootholds().findBelow(c.getPlayer().getPosition());
         c.handlePacket(PacketCreator.createPlayerMovementPacket((short) c.getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
         level = c.getPlayer().getLevel();
+        decideAttackSkills();
+        chooseMode();
+    }
+
+    public void logout() {
+        loggedOut = true;
+        c.disconnect(false, false);
     }
 
     public boolean isFollower() {
@@ -65,8 +81,8 @@ public class CharacterBot {
     }
 
     public void update() {
-        if (true) {
-            return; // disable bots for testing purposes
+        if (loggedOut || true) { // temporarily disabled bot updates for testing purposes
+            return;
         }
         if (c.getPlayer().getLevel() > level) {
             levelup();
@@ -78,6 +94,22 @@ public class CharacterBot {
             case WAITING -> chooseMode();
             case GRINDING -> grind(time);
         }
+    }
+
+    public void followerUpdate() {
+        if (loggedOut) {
+            return;
+        }
+        if (c.getPlayer().getMapId() != following.getMapId()) {
+            MapleMap target = following.getMap();
+            Portal targetPortal = target.getRandomPlayerSpawnpoint();
+            c.getPlayer().changeMap(target, targetPortal);
+            return;
+        }
+        // todo: pqs
+        int time = (int) (System.currentTimeMillis() - previousAction); // amount of time for actions
+        previousAction = System.currentTimeMillis();
+        grind(time);
     }
 
     private int moveBot(short targetX, short targetY, int time) {
@@ -160,7 +192,35 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createPickupItemPacket(targetItem.getObjectId()), (short) 202);
     }
 
+    private void decideAttackSkills() {
+
+    }
+
     private void attack() {
+        if (targetMonster.isBoss()) {
+            doSingleTargetAttack();
+        } else {
+            doMobAttack();
+        }
+    }
+
+    private void doSingleTargetAttack() {
+        if (singleTargetAttack == -1) {
+            doRegularAttack();
+            return;
+        }
+        // todo: use single target attack skill
+    }
+
+    private void doMobAttack() {
+        if (mobAttack == -1) {
+            doRegularAttack();
+            return;
+        }
+        // todo: use mob attack skill
+    }
+
+    private void doRegularAttack() {
         int monsterAvoid = targetMonster.getStats().getEva();
         int playerAccuracy = 1000; // todo: calc player accuracy
         int leveldelta = Math.max(0, targetMonster.getLevel() - c.getPlayer().getLevel());
@@ -192,10 +252,15 @@ public class CharacterBot {
     }
 
     private void chooseMode() {
+        currentModeStartTime = System.currentTimeMillis();
         if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
             currentMode = Mode.GRINDING;
             pickMap();
+            return;
         }
+        // todo: pick mode randomly
+        currentMode = Mode.GRINDING;
+        pickMap();
     }
 
     private void pickMap() {
@@ -254,6 +319,7 @@ public class CharacterBot {
 
     private void levelup() {
         this.level = c.getPlayer().getLevel();
+        assignSP(); // do this before doing job advance
         if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
             if (level == 8 && Randomizer.nextInt(5) == 0) { // 1/5 chance to choose magician
                 jobAdvance(Job.MAGICIAN);
@@ -268,9 +334,10 @@ public class CharacterBot {
         } else if (c.getPlayer().getLevel() == 70) {
             // todo: third job
         } else if (c.getPlayer().getLevel() == 120) {
-            // todo: fourth job
+            // todo: fourth job, probably have it give them max skill levels also
         }
         int remainingAP = c.getPlayer().getRemainingAp(), nextAP;
+        // todo: even with max secondary stat, they may be unable to equip the highest level items if the item being replaced give the stat, need to address this eventually
         if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
             if (c.getPlayer().getTotalDex() < 60) {
                 nextAP = Math.min(remainingAP, 60 - c.getPlayer().getTotalDex());
@@ -314,7 +381,7 @@ public class CharacterBot {
                 c.getPlayer().assignDex(nextAP);
             }
             /*if (weaponType.equals(WeaponType.DAGGER_THIEVES)) {
-                // todo: str daggers
+                // todo: str daggers?
             }*/
             c.getPlayer().assignLuk(remainingAP);
         } else if (c.getPlayer().getJob().getId() / 100 == 5) { // pirate
@@ -334,7 +401,6 @@ public class CharacterBot {
                 c.getPlayer().assignStr(remainingAP);
             }
         }
-        assignSP();
     }
 
     private void jobAdvance(Job newJob) {
@@ -363,10 +429,23 @@ public class CharacterBot {
                 }
             }
         }
+        assignSP();
     }
 
     private void assignSP() {
-        // todo
+        int remainingSP = c.getPlayer().getRemainingSp(), i = 0;
+        putSkillOrder(c.getPlayer().getJob()); // put skill order if it hasn't been added yet
+        int[][] skillOrder = skillOrders.get(c.getPlayer().getJob());
+        while (i < skillOrder.length) {
+            if (c.getPlayer().getSkillLevel(skillOrder[i][0]) < skillOrder[i][1]) {
+                AssignSPProcessor.SPAssignAction(c, skillOrder[i][0]);
+            }
+            if (remainingSP == c.getPlayer().getRemainingSp()) {
+                i++;
+            } else {
+                remainingSP = c.getPlayer().getRemainingSp();
+            }
+        }
     }
 
     private void gainItem(int itemId, short quantity) {
@@ -393,5 +472,105 @@ public class CharacterBot {
     private short getLowestValueItemPos(InventoryType inventoryType) {
         // todo
         return 1;
+    }
+
+    public Character getFollowing() {
+        return following;
+    }
+
+    private static void putSkillOrder(Job job) {
+        switch (job) {
+            case WARRIOR -> skillOrders.putIfAbsent(Job.WARRIOR, new int[][]{
+                    {Warrior.IMPROVED_HPREC, 5},
+                    {Warrior.IMPROVED_MAXHP, 10},
+                    {Warrior.POWER_STRIKE, 1},
+                    {Warrior.SLASH_BLAST, 20},
+                    {Warrior.ENDURE, 3},
+                    {Warrior.IRON_BODY, 1},
+                    {Warrior.POWER_STRIKE, 20},
+                    {Warrior.IMPROVED_HPREC, 16},
+                    {Warrior.IRON_BODY, 20},
+                    {Warrior.ENDURE, 8}
+            });
+            case FIGHTER -> skillOrders.putIfAbsent(Job.FIGHTER, new int[][]{}); // todo
+            case PAGE -> skillOrders.putIfAbsent(Job.PAGE, new int[][]{}); // todo
+            case SPEARMAN -> skillOrders.putIfAbsent(Job.SPEARMAN, new int[][]{}); // todo
+            case CRUSADER -> skillOrders.putIfAbsent(Job.CRUSADER, new int[][]{}); // todo
+            case WHITEKNIGHT -> skillOrders.putIfAbsent(Job.WHITEKNIGHT, new int[][]{}); // todo
+            case DRAGONKNIGHT -> skillOrders.putIfAbsent(Job.DRAGONKNIGHT, new int[][]{}); // todo
+            case HERO -> skillOrders.putIfAbsent(Job.HERO, new int[][]{}); // todo
+            case PALADIN -> skillOrders.putIfAbsent(Job.PALADIN, new int[][]{}); // todo
+            case DARKKNIGHT -> skillOrders.putIfAbsent(Job.DARKKNIGHT, new int[][]{}); // todo
+            case MAGICIAN -> skillOrders.putIfAbsent(Job.MAGICIAN, new int[][]{
+                    {Magician.ENERGY_BOLT, 1},
+                    {Magician.IMPROVED_MP_RECOVERY, 5},
+                    {Magician.IMPROVED_MAX_MP_INCREASE, 10},
+                    {Magician.MAGIC_CLAW, 20},
+                    {Magician.MAGIC_GUARD, 20},
+                    {Magician.MAGIC_ARMOR, 20},
+                    {Magician.IMPROVED_MP_RECOVERY, 16},
+                    {Magician.ENERGY_BOLT, 20}
+            });
+            case FP_WIZARD -> skillOrders.putIfAbsent(Job.FP_WIZARD, new int[][]{}); // todo
+            case IL_WIZARD -> skillOrders.putIfAbsent(Job.IL_WIZARD, new int[][]{}); // todo
+            case CLERIC -> skillOrders.putIfAbsent(Job.CLERIC, new int[][]{}); // todo
+            case FP_MAGE -> skillOrders.putIfAbsent(Job.FP_MAGE, new int[][]{}); // todo
+            case IL_MAGE -> skillOrders.putIfAbsent(Job.IL_MAGE, new int[][]{}); // todo
+            case PRIEST -> skillOrders.putIfAbsent(Job.PRIEST, new int[][]{}); // todo
+            case FP_ARCHMAGE -> skillOrders.putIfAbsent(Job.FP_ARCHMAGE, new int[][]{}); // todo
+            case IL_ARCHMAGE -> skillOrders.putIfAbsent(Job.IL_ARCHMAGE, new int[][]{}); // todo
+            case BISHOP -> skillOrders.putIfAbsent(Job.BISHOP, new int[][]{}); // todo
+            case BOWMAN -> skillOrders.putIfAbsent(Job.BOWMAN, new int[][]{
+                    {Archer.ARROW_BLOW, 1},
+                    {Archer.DOUBLE_SHOT, 20},
+                    {Archer.BLESSING_OF_AMAZON, 3},
+                    {Archer.EYE_OF_AMAZON, 8},
+                    {Archer.FOCUS, 1},
+                    {Archer.CRITICAL_SHOT, 20},
+                    {Archer.BLESSING_OF_AMAZON, 16},
+                    {Archer.FOCUS, 20},
+                    {Archer.ARROW_BLOW, 20}
+            });
+            case HUNTER -> skillOrders.putIfAbsent(Job.HUNTER, new int[][]{}); // todo
+            case CROSSBOWMAN -> skillOrders.putIfAbsent(Job.CROSSBOWMAN, new int[][]{}); // todo
+            case RANGER -> skillOrders.putIfAbsent(Job.RANGER, new int[][]{}); // todo
+            case SNIPER -> skillOrders.putIfAbsent(Job.SNIPER, new int[][]{}); // todo
+            case BOWMASTER -> skillOrders.putIfAbsent(Job.BOWMASTER, new int[][]{}); // todo
+            case MARKSMAN -> skillOrders.putIfAbsent(Job.MARKSMAN, new int[][]{}); // todo
+            case THIEF -> skillOrders.putIfAbsent(Job.THIEF, new int[][]{
+                    {Rogue.LUCKY_SEVEN, 20}, // all thieves will use claws until lv 30 when some become bandits
+                    {Rogue.NIMBLE_BODY, 3},
+                    {Rogue.KEEN_EYES, 8},
+                    {Rogue.DISORDER, 3},
+                    {Rogue.DARK_SIGHT, 1},
+                    {Rogue.DOUBLE_STAB, 20},
+                    {Rogue.NIMBLE_BODY, 20},
+                    {Rogue.DARK_SIGHT, 20},
+                    {Rogue.DISORDER, 20}
+            });
+            case ASSASSIN -> skillOrders.putIfAbsent(Job.ASSASSIN, new int[][]{}); // todo
+            case BANDIT -> skillOrders.putIfAbsent(Job.BANDIT, new int[][]{}); // todo
+            case HERMIT -> skillOrders.putIfAbsent(Job.HERMIT, new int[][]{}); // todo
+            case CHIEFBANDIT -> skillOrders.putIfAbsent(Job.CHIEFBANDIT, new int[][]{}); // todo
+            case NIGHTLORD -> skillOrders.putIfAbsent(Job.NIGHTLORD, new int[][]{}); // todo
+            case SHADOWER -> skillOrders.putIfAbsent(Job.SHADOWER, new int[][]{}); // todo
+            case PIRATE -> skillOrders.putIfAbsent(Job.PIRATE, new int[][]{
+                    {Pirate.DOUBLE_SHOT, 1},
+                    {Pirate.FLASH_FIST, 1},
+                    {Pirate.SOMERSAULT_KICK, 20},
+                    {Pirate.BULLET_TIME, 1},
+                    {Pirate.DASH, 1},
+                    {Pirate.DOUBLE_SHOT, 20},
+                    {Pirate.FLASH_FIST, 20},
+                    {Pirate.BULLET_TIME, 20},
+                    {Pirate.DASH, 10}
+            });
+            case BRAWLER -> skillOrders.putIfAbsent(Job.BRAWLER, new int[][]{}); // todo
+            case GUNSLINGER -> skillOrders.putIfAbsent(Job.GUNSLINGER, new int[][]{}); // todo
+            case MARAUDER -> skillOrders.putIfAbsent(Job.MARAUDER, new int[][]{}); // todo
+            case OUTLAW -> skillOrders.putIfAbsent(Job.OUTLAW, new int[][]{}); // todo
+            case BUCCANEER -> skillOrders.putIfAbsent(Job.BUCCANEER, new int[][]{}); // todo
+            case CORSAIR -> skillOrders.putIfAbsent(Job.CORSAIR, new int[][]{}); // todo
+        }
     }
 }

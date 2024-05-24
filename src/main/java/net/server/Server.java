@@ -971,7 +971,7 @@ public class Server {
         tMan.register(new RespawnTask(), YamlConfig.config.server.RESPAWN_INTERVAL, YamlConfig.config.server.RESPAWN_INTERVAL);
         tMan.register(new UpdateBotsTask(), 1000, MINUTES.toMillis(1));
         tMan.register(new ManageBotLoginsTask(), MINUTES.toMillis(15), MINUTES.toMillis(1));
-        //tMan.register(new UpdateFollowerBotsTask(), 500, SECONDS.toMillis(30)); todo: maybe have followers update more often since there will be fewer of them
+        tMan.register(new UpdateFollowerBotsTask(), 500, SECONDS.toMillis(30));
 
         timeLeft = getTimeLeftForNextDay();
         ExpeditionBossLog.resetBossLogTable();
@@ -1961,7 +1961,7 @@ public class Server {
         for (Pair<String, Integer> t : data) {
             nextBot = new CharacterBot();
             try {
-                nextBot.login(t.getLeft(), t.getRight());
+                nextBot.login(t.getLeft(), "botpw", t.getRight());
             } catch (SQLException e) {
                 System.out.println("failed to login a bot");
                 continue;
@@ -1975,6 +1975,78 @@ public class Server {
     }
 
     public List<CharacterBot> getFollowers() {
-        return bots;
+        return followers;
+    }
+
+    public void createFollower(Character character) {
+        // todo: choose random bot in level range
+        character.message("This mode is not yet implemented");
+    }
+
+    public void createFollower(Character character, String job) {
+        // todo: find a bot with the specified job in level range, if none exist then call createFollower(character);
+        character.message("This mode is not yet implemented");
+    }
+
+    public void createFollower(Character character, String login, String password, String characterName) {
+        int accountId;
+        try (Connection con = DatabaseConnection.getConnection()) {
+            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts WHERE name = \"" + login + "\";");
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    if (rs.getInt("loggedin") == 0) {
+                        accountId = rs.getInt("id");
+                    } else {
+                        character.message("The specified account is already logged in.");
+                        return;
+                    }
+                } else {
+                    character.message("The specified account does not exist.");
+                    return;
+                }
+            }
+        } catch (SQLException se) {
+            System.out.println("error - add follower command could not access database");
+            character.message("There was an error trying to access the database.");
+            return;
+        }
+        int charId;
+        try (Connection con = DatabaseConnection.getConnection()) {
+            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM characters WHERE accountid = " + accountId + " AND name = \"" + characterName + "\";");
+                 ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    charId = rs.getInt("id");
+                } else {
+                    character.message("The specified character was not found.");
+                    return;
+                }
+            }
+        } catch (SQLException se) {
+            System.out.println("error - add follower command could not access database");
+            character.message("There was an error trying to access the database.");
+            return;
+        }
+        CharacterBot follower = new CharacterBot();
+        try {
+            follower.login(login, password, charId);
+        } catch (SQLException e) {
+            character.message("There was an error trying to log in the follower.");
+            return;
+        }
+        follower.setFollowing(character);
+        followers.add(follower);
+    }
+
+    public void dismissFollower(Character character, String name) {
+
+    }
+
+    public void dismissFollowers(Character character) {
+        for (CharacterBot bot : followers) {
+            if (bot.getFollowing().equals(character)) {
+                bot.logout();
+                followers.remove(bot);
+            }
+        }
     }
 }
