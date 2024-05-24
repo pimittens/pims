@@ -13,7 +13,9 @@ import tools.PacketCreator;
 import tools.Randomizer;
 
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CharacterBot {
@@ -42,6 +44,7 @@ public class CharacterBot {
     long previousAction = System.currentTimeMillis();
     private int level;
     private int singleTargetAttack = -1, mobAttack = -1;  // skill id used for attacks, -1 is regular attack
+    private List<Integer> buffSkills = new ArrayList<>(); // skill ids of the buff skills available to use
     private long currentModeStartTime;
     private boolean loggedOut = false;
 
@@ -68,6 +71,7 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createPlayerMovementPacket((short) c.getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
         level = c.getPlayer().getLevel();
         decideAttackSkills();
+        putBuffSkills();
         chooseMode();
     }
 
@@ -86,8 +90,11 @@ public class CharacterBot {
         }
         if (c.getPlayer().getLevel() > level) {
             levelup();
+            decideAttackSkills();
+            putBuffSkills();
             return;
         }
+        // todo: use buffs
         int time = (int) (System.currentTimeMillis() - previousAction); // amount of time for actions
         previousAction = System.currentTimeMillis();
         switch (currentMode) {
@@ -100,12 +107,19 @@ public class CharacterBot {
         if (loggedOut) {
             return;
         }
+        if (c.getPlayer().getLevel() > level) {
+            levelup();
+            decideAttackSkills();
+            putBuffSkills();
+            return;
+        }
         if (c.getPlayer().getMapId() != following.getMapId()) {
             MapleMap target = following.getMap();
             Portal targetPortal = target.getRandomPlayerSpawnpoint();
             c.getPlayer().changeMap(target, targetPortal);
             return;
         }
+        // todo: use buffs
         // todo: pqs
         int time = (int) (System.currentTimeMillis() - previousAction); // amount of time for actions
         previousAction = System.currentTimeMillis();
@@ -193,7 +207,197 @@ public class CharacterBot {
     }
 
     private void decideAttackSkills() {
+        switch (c.getPlayer().getJob()) {
+            case WARRIOR:
+            case FIGHTER:
+            case PAGE:
+            case SPEARMAN:
+                if (c.getPlayer().getSkillLevel(Warrior.POWER_STRIKE) > 0) {
+                    singleTargetAttack = Warrior.POWER_STRIKE;
+                }
+                if (c.getPlayer().getSkillLevel(Warrior.SLASH_BLAST) > 0) {
+                    mobAttack = Warrior.SLASH_BLAST;
+                }
+                break;
+            case CRUSADER:
+            case WHITEKNIGHT:
+            case DRAGONKNIGHT:
+            case HERO:
+            case PALADIN:
+            case DARKKNIGHT:
+                break; // todo
+            case MAGICIAN:
+                if (c.getPlayer().getSkillLevel(Magician.MAGIC_CLAW) > 0) {
+                    singleTargetAttack = Magician.MAGIC_CLAW;
+                    mobAttack = Magician.MAGIC_CLAW;
+                } else if (c.getPlayer().getSkillLevel(Magician.ENERGY_BOLT) > 0) {
+                    singleTargetAttack = Magician.ENERGY_BOLT;
+                    mobAttack = Magician.ENERGY_BOLT;
+                }
+                break;
+            case FP_WIZARD:
+            case IL_WIZARD:
+            case CLERIC:
+            case FP_MAGE:
+            case IL_MAGE:
+            case PRIEST:
+            case FP_ARCHMAGE:
+            case IL_ARCHMAGE:
+            case BISHOP:
+                break; // todo
+            case BOWMAN:
+                if (c.getPlayer().getSkillLevel(Archer.DOUBLE_SHOT) > 0) {
+                    singleTargetAttack = Archer.DOUBLE_SHOT;
+                    mobAttack = Archer.DOUBLE_SHOT;
+                } else if (c.getPlayer().getSkillLevel(Archer.ARROW_BLOW) > 0) {
+                    singleTargetAttack = Archer.ARROW_BLOW;
+                    mobAttack = Archer.ARROW_BLOW;
+                }
+                break;
+            case HUNTER:
+            case CROSSBOWMAN:
+            case RANGER:
+            case SNIPER:
+            case BOWMASTER:
+            case MARKSMAN:
+                break; // todo
+            case THIEF:
+                if (c.getPlayer().getSkillLevel(Rogue.LUCKY_SEVEN) > 0) {
+                    singleTargetAttack = Rogue.LUCKY_SEVEN;
+                    mobAttack = Rogue.LUCKY_SEVEN;
+                }
+                break;
+            case ASSASSIN:
+            case BANDIT:
+            case HERMIT:
+            case CHIEFBANDIT:
+            case NIGHTLORD:
+            case SHADOWER:
+                break; // todo
+            case PIRATE:
+                if (c.getPlayer().getSkillLevel(Pirate.SOMERSAULT_KICK) > 0) {
+                    mobAttack = Pirate.SOMERSAULT_KICK;
+                }
+                if (c.getPlayer().getWeaponType().equals(WeaponType.GUN)) {
+                    if (c.getPlayer().getSkillLevel(Pirate.DOUBLE_SHOT) > 0) {
+                        singleTargetAttack = Pirate.DOUBLE_SHOT;
+                    }
+                } else {
+                    if (c.getPlayer().getSkillLevel(Pirate.FLASH_FIST) > 0) {
+                        singleTargetAttack = Pirate.FLASH_FIST;
+                    }
+                }
+                break;
+            case BRAWLER:
+            case GUNSLINGER:
+            case MARAUDER:
+            case OUTLAW:
+            case BUCCANEER:
+            case CORSAIR:
+                break; // todo
+        }
+    }
 
+    private void putBuffSkills() {
+        buffSkills = new ArrayList<>();
+        switch (c.getPlayer().getJob()) {
+            case WARRIOR:
+                if (c.getPlayer().getSkillLevel(Warrior.IRON_BODY) > 0) {
+                    buffSkills.add(Warrior.IRON_BODY);
+                }
+                break;
+            case HERO: // todo
+            case CRUSADER:
+            case FIGHTER:
+                buffSkills.add(Warrior.IRON_BODY);
+                if (c.getPlayer().getSkillLevel(Fighter.RAGE) > 0) {
+                    buffSkills.add(Fighter.RAGE);
+                }
+                if (c.getPlayer().getSkillLevel(Fighter.POWER_GUARD) > 9) { // don't use if it will last less than 30 seconds
+                    buffSkills.add(Fighter.POWER_GUARD);
+                }
+                if (c.getPlayer().getSkillLevel(Fighter.SWORD_BOOSTER) > 2) {
+                    buffSkills.add(Fighter.SWORD_BOOSTER);
+                }
+                if (c.getPlayer().getSkillLevel(Fighter.AXE_BOOSTER) > 2) {
+                    buffSkills.add(Fighter.AXE_BOOSTER);
+                }
+                break;
+            case PALADIN: // todo
+            case WHITEKNIGHT:
+            case PAGE:
+                buffSkills.add(Warrior.IRON_BODY);
+                if (c.getPlayer().getSkillLevel(Page.POWER_GUARD) > 9) {
+                    buffSkills.add(Page.POWER_GUARD);
+                }
+                if (c.getPlayer().getSkillLevel(Page.SWORD_BOOSTER) > 2) {
+                    buffSkills.add(Page.SWORD_BOOSTER);
+                }
+                if (c.getPlayer().getSkillLevel(Page.BW_BOOSTER) > 2) {
+                    buffSkills.add(Page.BW_BOOSTER);
+                }
+            case DARKKNIGHT: // todo
+            case DRAGONKNIGHT:
+            case SPEARMAN:
+                buffSkills.add(Warrior.IRON_BODY);
+                if (c.getPlayer().getSkillLevel(Spearman.SPEAR_BOOSTER) > 2) {
+                    buffSkills.add(Spearman.SPEAR_BOOSTER);
+                }
+                if (c.getPlayer().getSkillLevel(Spearman.POLEARM_BOOSTER) > 2) {
+                    buffSkills.add(Spearman.POLEARM_BOOSTER);
+                }
+                if (c.getPlayer().getSkillLevel(Spearman.IRON_WILL) > 1) {
+                    buffSkills.add(Spearman.IRON_WILL);
+                }
+                if (c.getPlayer().getSkillLevel(Spearman.HYPER_BODY) > 2) {
+                    buffSkills.add(Spearman.HYPER_BODY);
+                }
+                break;
+            case MAGICIAN:
+                if (c.getPlayer().getSkillLevel(Magician.MAGIC_GUARD) > 0) {
+                    buffSkills.add(Magician.MAGIC_GUARD);
+                }
+                if (c.getPlayer().getSkillLevel(Magician.MAGIC_ARMOR) > 0) {
+                    buffSkills.add(Magician.MAGIC_ARMOR);
+                }
+                break;
+            case FP_ARCHMAGE:
+            case FP_MAGE:
+            case FP_WIZARD:
+            case IL_ARCHMAGE:
+            case IL_MAGE:
+            case IL_WIZARD:
+            case BISHOP:
+            case PRIEST:
+            case CLERIC:
+                break; // todo
+            case BOWMAN:
+                if (c.getPlayer().getSkillLevel(Archer.FOCUS) > 0) {
+                    buffSkills.add(Archer.FOCUS);
+                }
+                break;
+            case BOWMASTER:
+            case RANGER:
+            case HUNTER:
+            case MARKSMAN:
+            case SNIPER:
+            case CROSSBOWMAN:
+                break; // todo
+            case NIGHTLORD:
+            case HERMIT:
+            case ASSASSIN:
+            case SHADOWER:
+            case CHIEFBANDIT:
+            case BANDIT:
+                break; // todo
+            case BUCCANEER:
+            case MARAUDER:
+            case BRAWLER:
+            case CORSAIR:
+            case OUTLAW:
+            case GUNSLINGER:
+                break; // todo
+        }
     }
 
     private void attack() {
@@ -258,7 +462,7 @@ public class CharacterBot {
             pickMap();
             return;
         }
-        // todo: pick mode randomly
+        // todo: pick mode randomly, maybe have a pq manager task that creates a party if enough bots are waiting for a pq
         currentMode = Mode.GRINDING;
         pickMap();
     }
@@ -286,7 +490,7 @@ public class CharacterBot {
                 }
             }
             if (!hasTargetMonster || !targetMonster.isAlive()) {
-                if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) {
+                if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) { // todo: pick monster closest to character probably
                     targetMonster = c.getPlayer().getMap().getAllMonsters().get(Randomizer.nextInt(c.getPlayer().getMap().getAllMonsters().size()));
                     hasTargetMonster = true;
                 } else {
@@ -318,7 +522,6 @@ public class CharacterBot {
     }
 
     private void levelup() {
-        this.level = c.getPlayer().getLevel();
         assignSP(); // do this before doing job advance
         if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
             if (level == 8 && Randomizer.nextInt(5) == 0) { // 1/5 chance to choose magician
@@ -401,6 +604,7 @@ public class CharacterBot {
                 c.getPlayer().assignStr(remainingAP);
             }
         }
+        this.level = c.getPlayer().getLevel();
     }
 
     private void jobAdvance(Job newJob) {
