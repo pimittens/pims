@@ -40,7 +40,6 @@ public final class MagicDamageHandler extends AbstractDealDamageHandler {
     @Override
     public final void handlePacket(InPacket p, Client c) {
         Character chr = c.getPlayer();
-
 		/*long timeElapsed = currentServerTime() - chr.getAutobanManager().getLastSpam(8);
 		if(timeElapsed < 300) {
 			AutobanFactory.FAST_ATTACK.alert(chr, "Time: " + timeElapsed);

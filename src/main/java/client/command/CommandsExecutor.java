@@ -206,6 +206,8 @@ public class CommandsExecutor {
         addCommand("save", SaveCharacterCommand.class);
         addCommand("goto", GotoCommand.class);
         addCommand("follower", AddFollowerCommand.class);
+        addCommand("party", JoinPartyCommand.class);
+        addCommand("dismiss", DismissFollowerCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }

@@ -129,8 +129,8 @@ public class Character extends AbstractCharacterObject {
     private int omokwins, omokties, omoklosses, matchcardwins, matchcardties, matchcardlosses;
     private int owlSearch;
     private long lastfametime, lastUsedCashItem, lastExpression = 0, lastHealed, lastBuyback = 0, lastDeathtime, jailExpiration = -1;
-    private transient int localstr, localdex, localluk, localint_, localmagic, localwatk;
-    private transient int equipmaxhp, equipmaxmp, equipstr, equipdex, equipluk, equipint_, equipmagic, equipwatk, localchairhp, localchairmp;
+    private transient int localstr, localdex, localluk, localint_, localmagic, localwatk, localacc;
+    private transient int equipmaxhp, equipmaxmp, equipstr, equipdex, equipluk, equipint_, equipmagic, equipwatk, equipacc, localchairhp, localchairmp;
     private int localchairrate;
     private boolean hidden, equipchanged = true, berserk, hasMerchant, hasSandboxItem = false, whiteChat = false, canRecvPartySearchInvite = true;
     private boolean equippedMesoMagnet = false, equippedItemPouch = false, equippedPetItemIgnore = false;
@@ -7655,6 +7655,7 @@ public class Character extends AbstractCharacterObject {
             equipwatk = 0;
             //equipspeed = 0;
             //equipjump = 0;
+            equipacc = 0;
 
             for (Item item : getInventory(InventoryType.EQUIPPED)) {
                 Equip equip = (Equip) item;
@@ -7668,6 +7669,7 @@ public class Character extends AbstractCharacterObject {
                 equipwatk += equip.getWatk();
                 //equipspeed += equip.getSpeed();
                 //equipjump += equip.getJump();
+                equipacc = equip.getAcc();
             }
 
             equipchanged = false;
@@ -7681,6 +7683,7 @@ public class Character extends AbstractCharacterObject {
         localluk += equipluk;
         localmagic += equipmagic;
         localwatk += equipwatk;
+        localacc += equipacc;
     }
 
     private void reapplyLocalStats() {
@@ -7697,6 +7700,7 @@ public class Character extends AbstractCharacterObject {
             localmagic = localint_;
             localwatk = 0;
             localchairrate = -1;
+            localacc = 0;
 
             recalcEquipStats();
 
@@ -7766,6 +7770,11 @@ public class Character extends AbstractCharacterObject {
                 localjump += jumpbuff.intValue();
             }
             */
+
+            Integer accbuff = getBuffedValue(BuffStat.ACC);
+            if (accbuff != null) {
+                localacc += accbuff.intValue();
+            }
 
             Integer blessing = getSkillLevel(10000000 * getJobType() + 12);
             if (blessing > 0) {
@@ -11339,5 +11348,22 @@ public class Character extends AbstractCharacterObject {
             return ItemInformationProvider.getInstance().getWeaponType(weapon_item.getItemId());
         }
         return WeaponType.NOT_A_WEAPON;
+    }
+
+    public float getAccuracy() {
+        if (job.getId() / 100 == 5 && job.getId() % 100 / 10 == 1) {
+            return 0.9f * getTotalDex() + 0.3f * getTotalLuk() + localacc;
+        }
+        if (job.getId() / 100 == 3 || job.getId() / 100 == 4 || job.getId() / 100 == 5) {
+            return 0.6f * getTotalDex() + 0.3f * getTotalLuk() + localacc;
+        }
+        return 0.8f * getTotalDex() + 0.5f * getTotalLuk() + localacc;
+    }
+
+    public long getExpirationTime(int skillId) {
+        if (buffExpires.get(skillId) == null) {
+            return -1;
+        }
+        return buffExpires.get(skillId);
     }
 }

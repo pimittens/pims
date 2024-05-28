@@ -49,6 +49,7 @@ import net.packet.Packet;
 import net.server.PlayerCoolDownValueHolder;
 import net.server.Server;
 import net.server.channel.Channel;
+import net.server.channel.handlers.AbstractDealDamageHandler;
 import net.server.channel.handlers.PlayerInteractionHandler;
 import net.server.channel.handlers.SummonDamageHandler.SummonAttackEntry;
 import net.server.channel.handlers.WhisperHandler;
@@ -7518,7 +7519,6 @@ public class PacketCreator {
         p.writeShort(0); // ypos
         p.writeInt(oid); // oid
         p.skip(2);
-        System.out.println("pickup item packet generated: " + p);
         return p;
     }
 
@@ -7553,6 +7553,33 @@ public class PacketCreator {
         p.writeByte(0);
         p.writeByte(0);
         p.writeByte(0); // skipped
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createUseBuffPacket(int skillId, int skillLevel) {
+        final InPacket p = InPacket.create(SendOpcode.PARTY_VALUE);
+        p.writeInt(0); // skipped
+        p.writeInt(skillId); // skill id
+        p.writeByte(skillLevel); // skill level
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createMagicAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
+        final InPacket p = InPacket.create(SendOpcode.CLAIM_AVAILABLE_TIME);
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createRangedAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
+        final InPacket p = InPacket.create(SendOpcode.CLAIM_RESULT);
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createCloseRangeAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
+        final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
         p.skip(2);
         return p;
     }

@@ -50,6 +50,7 @@ public final class RangedAttackHandler extends AbstractDealDamageHandler {
 
     @Override
     public void handlePacket(InPacket p, Client c) {
+        System.out.println("ranged attack packet: " + p);
         Character chr = c.getPlayer();
         
         /*long timeElapsed = currentServerTime() - chr.getAutobanManager().getLastSpam(8);

@@ -7,11 +7,15 @@ import client.processor.stat.AssignSPProcessor;
 import constants.inventory.ItemConstants;
 import constants.skills.*;
 import net.PacketProcessor;
+import net.server.channel.handlers.AbstractDealDamageHandler;
+import server.StatEffect;
 import server.life.Monster;
+import server.life.MonsterDropEntry;
 import server.maps.*;
 import tools.PacketCreator;
 import tools.Randomizer;
 
+import java.awt.*;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,6 +33,7 @@ public class CharacterBot {
     }
 
     private static Map<Job, int[][]> skillOrders = new HashMap<>();
+    private static Map<Integer, Integer> skillDelayTimes = new HashMap<>(); // todo: put delay times
 
     private Character following = null;
     //private Foothold foothold;
@@ -47,9 +52,14 @@ public class CharacterBot {
     private List<Integer> buffSkills = new ArrayList<>(); // skill ids of the buff skills available to use
     private long currentModeStartTime;
     private boolean loggedOut = false;
+    private long delay = 0; // delay after using an attack before another can be used
 
     public void setFollowing(Character following) {
         this.following = following;
+    }
+
+    public Character getPlayer() {
+        return c.getPlayer();
     }
 
     public void login(String login, String password, int charID) throws SQLException {
@@ -88,15 +98,22 @@ public class CharacterBot {
         if (loggedOut || true) { // temporarily disabled bot updates for testing purposes
             return;
         }
-        if (c.getPlayer().getLevel() > level) {
+        if (c.getPlayer().getLevel() > level || c.getPlayer().getRemainingSp() > 0) {
             levelup();
             decideAttackSkills();
             putBuffSkills();
             return;
         }
-        // todo: use buffs
-        int time = (int) (System.currentTimeMillis() - previousAction); // amount of time for actions
+        // todo: use mp pots
+        for (int i : buffSkills) {
+            if (c.getPlayer().getExpirationTime(i) - System.currentTimeMillis() < 10000 && c.getPlayer().getMp() > SkillFactory.getSkill(i).getEffect(c.getPlayer().getSkillLevel(i)).getMpCon()) {
+                useBuff(i);
+                return;
+            }
+        }
+        int time = (int) (System.currentTimeMillis() - previousAction - delay); // amount of time for actions
         previousAction = System.currentTimeMillis();
+        delay = 0;
         switch (currentMode) {
             case WAITING -> chooseMode();
             case GRINDING -> grind(time);
@@ -107,22 +124,27 @@ public class CharacterBot {
         if (loggedOut) {
             return;
         }
-        if (c.getPlayer().getLevel() > level) {
+        if (c.getPlayer().getLevel() > level || c.getPlayer().getRemainingSp() > 0) {
             levelup();
             decideAttackSkills();
             putBuffSkills();
             return;
         }
         if (c.getPlayer().getMapId() != following.getMapId()) {
-            MapleMap target = following.getMap();
-            Portal targetPortal = target.getRandomPlayerSpawnpoint();
-            c.getPlayer().changeMap(target, targetPortal);
+            changeMap(following.getMap(), following.getMap().findClosestPortal(following.getPosition()));
             return;
         }
-        // todo: use buffs
+        // todo: use mp pots
+        for (int i : buffSkills) {
+            if (c.getPlayer().getExpirationTime(i) - System.currentTimeMillis() < 10000 && c.getPlayer().getMp() > SkillFactory.getSkill(i).getEffect(c.getPlayer().getSkillLevel(i)).getMpCon()) {
+                useBuff(i);
+                return;
+            }
+        }
         // todo: pqs
-        int time = (int) (System.currentTimeMillis() - previousAction); // amount of time for actions
+        int time = (int) (System.currentTimeMillis() - previousAction - delay); // amount of time for actions
         previousAction = System.currentTimeMillis();
+        delay = 0;
         grind(time);
     }
 
@@ -204,6 +226,7 @@ public class CharacterBot {
 
     private void pickupItem() {
         c.handlePacket(PacketCreator.createPickupItemPacket(targetItem.getObjectId()), (short) 202);
+        hasTargetItem = false;
     }
 
     private void decideAttackSkills() {
@@ -400,41 +423,109 @@ public class CharacterBot {
         }
     }
 
-    private void attack() {
+    private void useBuff(int skillId) {
+        c.handlePacket(PacketCreator.createUseBuffPacket(skillId, c.getPlayer().getSkillLevel(skillId)), (short) 91);
+        c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their mp after using a buff
+    }
+
+    private void attack(int time) {
         if (targetMonster.isBoss()) {
-            doSingleTargetAttack();
+            doAttack(time, singleTargetAttack);
         } else {
-            doMobAttack();
+            doAttack(time, mobAttack);
         }
     }
 
-    private void doSingleTargetAttack() {
-        if (singleTargetAttack == -1) {
+    private void doAttack(int time, int skillId) {
+        if (skillId == -1) {
             doRegularAttack();
+            delay = System.currentTimeMillis() + 500 - time; // todo: accurate delay
             return;
         }
         // todo: use single target attack skill
+        List<Monster> targets = new ArrayList<>();
+        targets.add(targetMonster);
+        StatEffect effect = SkillFactory.getSkill(skillId).getEffect(c.getPlayer().getSkillLevel(skillId));
+        if (effect.getMobCount() > 1) {
+            boolean added;
+            for (int i = 0; i < effect.getMobCount() - 1; i++) {
+                added = false;
+                for (Monster m : c.getPlayer().getMap().getAllMonsters()) {
+                    if (!targets.contains(m) && c.getPlayer().getPosition().distance(m.getPosition()) < 1000) { // todo: accurate range
+                        targets.add(m);
+                        added = true;
+                        break;
+                    }
+                }
+                if (!added) {
+                    break;
+                }
+            }
+        }
+        // todo: stance, direction, ranged direction, charge, display, speed, position, handle shadow partner
+        AbstractDealDamageHandler.AttackInfo attack = new AbstractDealDamageHandler.AttackInfo();
+        attack.skill = skillId;
+        attack.skilllevel = c.getPlayer().getSkillLevel(skillId);
+        attack.numAttacked = targets.size();
+        attack.numDamage = Math.max(effect.getAttackCount(), effect.getBulletCount());
+        attack.numAttackedAndDamage = attack.numAttacked * 16 + attack.numDamage;
+        attack.allDamage = new HashMap<>();
+        List<Integer> damageNumbers;
+        if (effect.getMatk() > 0) {
+            attack.magic = true;
+            for (Monster m : targets) {
+                damageNumbers = new ArrayList<>();
+                for (int i = 0; i < attack.numDamage; i++) {
+                    damageNumbers.add(calcMagicDamage());
+                }
+                attack.allDamage.put(m.getObjectId(), damageNumbers);
+            }
+            c.handlePacket(PacketCreator.createMagicAttackPacket(attack), (short) 46);
+        } else if (isRangedJob()) {
+            attack.ranged = true;
+            for (Monster m : targets) {
+                damageNumbers = new ArrayList<>();
+                for (int i = 0; i < attack.numDamage; i++) {
+                    damageNumbers.add(calcRangedDamage());
+                }
+                attack.allDamage.put(m.getObjectId(), damageNumbers);
+            }
+            c.handlePacket(PacketCreator.createRangedAttackPacket(attack), (short) 45);
+        } else {
+            for (Monster m : targets) {
+                damageNumbers = new ArrayList<>();
+                for (int i = 0; i < attack.numDamage; i++) {
+                    damageNumbers.add(calcCloseRangeDamage());
+                }
+                attack.allDamage.put(m.getObjectId(), damageNumbers);
+            }
+            c.handlePacket(PacketCreator.createCloseRangeAttackPacket(attack), (short) 44);
+        }
+        delay = System.currentTimeMillis() + 500 - time; // todo: accurate delay
     }
 
-    private void doMobAttack() {
-        if (mobAttack == -1) {
-            doRegularAttack();
-            return;
-        }
-        // todo: use mob attack skill
+    private static int calcMagicDamage() {
+        return 0; // todo
+    }
+
+    private static int calcRangedDamage() {
+        return 0; // todo
+    }
+
+    private static int calcCloseRangeDamage() {
+        return 0; // todo
     }
 
     private void doRegularAttack() {
         int monsterAvoid = targetMonster.getStats().getEva();
-        int playerAccuracy = 1000; // todo: calc player accuracy
+        float playerAccuracy = c.getPlayer().getAccuracy();
         int leveldelta = Math.max(0, targetMonster.getLevel() - c.getPlayer().getLevel());
         if (Randomizer.nextDouble() < calculateHitchance(leveldelta, playerAccuracy, monsterAvoid)) {
             // todo: criticals
             c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), calcRegularAttackDamage(leveldelta), facingLeft), (short) 44);
         } else {
-            //didn't hit, todo: send miss packet
+            c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), 0, facingLeft), (short) 44);
         }
-        //return time;
     }
 
     private int calcRegularAttackDamage(int leveldelta) {
@@ -446,9 +537,8 @@ public class CharacterBot {
         return Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage;
     }
 
-    private float calculateHitchance(int leveldelta, int playerAccuracy, int avoid) {
-        float faccuracy = (float) playerAccuracy;
-        float hitchance = faccuracy / (((1.84f + 0.07f * leveldelta) * avoid) + 1.0f);
+    private static float calculateHitchance(int leveldelta, float playerAccuracy, int avoid) {
+        float hitchance = playerAccuracy / (((1.84f + 0.07f * leveldelta) * avoid) + 1.0f);
         if (hitchance < 0.01f) {
             hitchance = 0.01f;
         }
@@ -469,29 +559,50 @@ public class CharacterBot {
 
     private void pickMap() {
         if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
-            MapleMap target = c.getChannelServer().getMapFactory().getMap(104000100 + Randomizer.nextInt(3) * 100);
-            Portal targetPortal = target.getRandomPlayerSpawnpoint();
-            c.getPlayer().changeMap(target, targetPortal);
+            changeMap(c.getChannelServer().getMapFactory().getMap(104000100 + Randomizer.nextInt(3) * 100));
+        } else {
+            changeMap(c.getChannelServer().getMapFactory().getMap(104000100 + Randomizer.nextInt(3) * 100)); // todo: pick map based on level
         }
+    }
+
+    private void changeMap(MapleMap target) {
+        changeMap(target, target.getRandomPlayerSpawnpoint());
+    }
+
+    private void changeMap(MapleMap target, Portal targetPortal) {
+        c.getPlayer().changeMap(target, targetPortal);
+        Foothold foothold = c.getPlayer().getMap().getFootholds().findBelow(c.getPlayer().getPosition());
+        c.handlePacket(PacketCreator.createPlayerMovementPacket((short) c.getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
+        hasTargetItem = false;
+        hasTargetMonster = false;
     }
 
     private boolean grind(int time) {
         boolean didAction = true;
         while (time > 0 && didAction) {
             didAction = false;
-            hasTargetItem = false;
-            if (!c.getPlayer().getMap().getItems().isEmpty()) { // todo: only try to pick up items if appropriate inventory is not full
-                for (MapObject it : c.getPlayer().getMap().getItems()) {
-                    if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer())) {
-                        targetItem = it;
-                        hasTargetItem = true;
-                        break;
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+                if (!c.getPlayer().getMap().getItems().isEmpty()) {
+                    for (MapObject it : c.getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer()) && InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                            targetItem = it;
+                            hasTargetItem = true;
+                            break;
+                        }
                     }
                 }
             }
             if (!hasTargetMonster || !targetMonster.isAlive()) {
-                if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) { // todo: pick monster closest to character probably
-                    targetMonster = c.getPlayer().getMap().getAllMonsters().get(Randomizer.nextInt(c.getPlayer().getMap().getAllMonsters().size()));
+                if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) { // pick closest monster to the character
+                    double minDistance = c.getPlayer().getPosition().distance(c.getPlayer().getMap().getAllMonsters().getFirst().getPosition()), nextDistance;
+                    targetMonster = c.getPlayer().getMap().getAllMonsters().getFirst();
+                    for (Monster m : c.getPlayer().getMap().getAllMonsters()) {
+                        nextDistance = c.getPlayer().getPosition().distance(m.getPosition());
+                        if (nextDistance < minDistance) {
+                            minDistance = nextDistance;
+                            targetMonster = m;
+                        }
+                    }
                     hasTargetMonster = true;
                 } else {
                     hasTargetMonster = false;
@@ -507,13 +618,12 @@ public class CharacterBot {
                     didAction = true;
                 }
             } else if (hasTargetMonster) {
-                if (!c.getPlayer().getPosition().equals(targetMonster.getPosition())) {
-                    time = moveBot((short) targetMonster.getPosition().x, (short) targetMonster.getPosition().y, time);
+                if (c.getPlayer().getPosition().distance(targetMonster.getPosition()) < 500) { // todo: accurate range
+                    attack(time);
+                    time = 0;
                     didAction = true;
-                }
-                if (c.getPlayer().getPosition().equals(targetMonster.getPosition()) && time > 500) {
-                    attack();
-                    time -= 500; // todo: make this accurate
+                } else {
+                    time = moveBot((short) targetMonster.getPosition().x, (short) targetMonster.getPosition().y, time);
                     didAction = true;
                 }
             }
@@ -605,6 +715,7 @@ public class CharacterBot {
             }
         }
         this.level = c.getPlayer().getLevel();
+        currentMode = Mode.WAITING; // pick new map
     }
 
     private void jobAdvance(Job newJob) {
@@ -638,17 +749,15 @@ public class CharacterBot {
 
     private void assignSP() {
         int remainingSP = c.getPlayer().getRemainingSp(), i = 0;
-        putSkillOrder(c.getPlayer().getJob()); // put skill order if it hasn't been added yet
         int[][] skillOrder = skillOrders.get(c.getPlayer().getJob());
-        while (i < skillOrder.length) {
+        while (i < skillOrder.length && remainingSP > 0) {
             if (c.getPlayer().getSkillLevel(skillOrder[i][0]) < skillOrder[i][1]) {
                 AssignSPProcessor.SPAssignAction(c, skillOrder[i][0]);
             }
             if (remainingSP == c.getPlayer().getRemainingSp()) {
                 i++;
-            } else {
-                remainingSP = c.getPlayer().getRemainingSp();
             }
+            remainingSP = c.getPlayer().getRemainingSp();
         }
     }
 
@@ -678,103 +787,109 @@ public class CharacterBot {
         return 1;
     }
 
+    private boolean isRangedJob() {
+        int jobId = c.getPlayer().getJob().getId();
+        return jobId / 100 == 3 || (jobId / 100 == 4 && jobId % 100 / 10 == 1) || (jobId / 100 == 5 && jobId % 100 / 10 == 2);
+    }
+
     public Character getFollowing() {
         return following;
     }
 
-    private static void putSkillOrder(Job job) {
-        switch (job) {
-            case WARRIOR -> skillOrders.putIfAbsent(Job.WARRIOR, new int[][]{
-                    {Warrior.IMPROVED_HPREC, 5},
-                    {Warrior.IMPROVED_MAXHP, 10},
-                    {Warrior.POWER_STRIKE, 1},
-                    {Warrior.SLASH_BLAST, 20},
-                    {Warrior.ENDURE, 3},
-                    {Warrior.IRON_BODY, 1},
-                    {Warrior.POWER_STRIKE, 20},
-                    {Warrior.IMPROVED_HPREC, 16},
-                    {Warrior.IRON_BODY, 20},
-                    {Warrior.ENDURE, 8}
-            });
-            case FIGHTER -> skillOrders.putIfAbsent(Job.FIGHTER, new int[][]{}); // todo
-            case PAGE -> skillOrders.putIfAbsent(Job.PAGE, new int[][]{}); // todo
-            case SPEARMAN -> skillOrders.putIfAbsent(Job.SPEARMAN, new int[][]{}); // todo
-            case CRUSADER -> skillOrders.putIfAbsent(Job.CRUSADER, new int[][]{}); // todo
-            case WHITEKNIGHT -> skillOrders.putIfAbsent(Job.WHITEKNIGHT, new int[][]{}); // todo
-            case DRAGONKNIGHT -> skillOrders.putIfAbsent(Job.DRAGONKNIGHT, new int[][]{}); // todo
-            case HERO -> skillOrders.putIfAbsent(Job.HERO, new int[][]{}); // todo
-            case PALADIN -> skillOrders.putIfAbsent(Job.PALADIN, new int[][]{}); // todo
-            case DARKKNIGHT -> skillOrders.putIfAbsent(Job.DARKKNIGHT, new int[][]{}); // todo
-            case MAGICIAN -> skillOrders.putIfAbsent(Job.MAGICIAN, new int[][]{
-                    {Magician.ENERGY_BOLT, 1},
-                    {Magician.IMPROVED_MP_RECOVERY, 5},
-                    {Magician.IMPROVED_MAX_MP_INCREASE, 10},
-                    {Magician.MAGIC_CLAW, 20},
-                    {Magician.MAGIC_GUARD, 20},
-                    {Magician.MAGIC_ARMOR, 20},
-                    {Magician.IMPROVED_MP_RECOVERY, 16},
-                    {Magician.ENERGY_BOLT, 20}
-            });
-            case FP_WIZARD -> skillOrders.putIfAbsent(Job.FP_WIZARD, new int[][]{}); // todo
-            case IL_WIZARD -> skillOrders.putIfAbsent(Job.IL_WIZARD, new int[][]{}); // todo
-            case CLERIC -> skillOrders.putIfAbsent(Job.CLERIC, new int[][]{}); // todo
-            case FP_MAGE -> skillOrders.putIfAbsent(Job.FP_MAGE, new int[][]{}); // todo
-            case IL_MAGE -> skillOrders.putIfAbsent(Job.IL_MAGE, new int[][]{}); // todo
-            case PRIEST -> skillOrders.putIfAbsent(Job.PRIEST, new int[][]{}); // todo
-            case FP_ARCHMAGE -> skillOrders.putIfAbsent(Job.FP_ARCHMAGE, new int[][]{}); // todo
-            case IL_ARCHMAGE -> skillOrders.putIfAbsent(Job.IL_ARCHMAGE, new int[][]{}); // todo
-            case BISHOP -> skillOrders.putIfAbsent(Job.BISHOP, new int[][]{}); // todo
-            case BOWMAN -> skillOrders.putIfAbsent(Job.BOWMAN, new int[][]{
-                    {Archer.ARROW_BLOW, 1},
-                    {Archer.DOUBLE_SHOT, 20},
-                    {Archer.BLESSING_OF_AMAZON, 3},
-                    {Archer.EYE_OF_AMAZON, 8},
-                    {Archer.FOCUS, 1},
-                    {Archer.CRITICAL_SHOT, 20},
-                    {Archer.BLESSING_OF_AMAZON, 16},
-                    {Archer.FOCUS, 20},
-                    {Archer.ARROW_BLOW, 20}
-            });
-            case HUNTER -> skillOrders.putIfAbsent(Job.HUNTER, new int[][]{}); // todo
-            case CROSSBOWMAN -> skillOrders.putIfAbsent(Job.CROSSBOWMAN, new int[][]{}); // todo
-            case RANGER -> skillOrders.putIfAbsent(Job.RANGER, new int[][]{}); // todo
-            case SNIPER -> skillOrders.putIfAbsent(Job.SNIPER, new int[][]{}); // todo
-            case BOWMASTER -> skillOrders.putIfAbsent(Job.BOWMASTER, new int[][]{}); // todo
-            case MARKSMAN -> skillOrders.putIfAbsent(Job.MARKSMAN, new int[][]{}); // todo
-            case THIEF -> skillOrders.putIfAbsent(Job.THIEF, new int[][]{
-                    {Rogue.LUCKY_SEVEN, 20}, // all thieves will use claws until lv 30 when some become bandits
-                    {Rogue.NIMBLE_BODY, 3},
-                    {Rogue.KEEN_EYES, 8},
-                    {Rogue.DISORDER, 3},
-                    {Rogue.DARK_SIGHT, 1},
-                    {Rogue.DOUBLE_STAB, 20},
-                    {Rogue.NIMBLE_BODY, 20},
-                    {Rogue.DARK_SIGHT, 20},
-                    {Rogue.DISORDER, 20}
-            });
-            case ASSASSIN -> skillOrders.putIfAbsent(Job.ASSASSIN, new int[][]{}); // todo
-            case BANDIT -> skillOrders.putIfAbsent(Job.BANDIT, new int[][]{}); // todo
-            case HERMIT -> skillOrders.putIfAbsent(Job.HERMIT, new int[][]{}); // todo
-            case CHIEFBANDIT -> skillOrders.putIfAbsent(Job.CHIEFBANDIT, new int[][]{}); // todo
-            case NIGHTLORD -> skillOrders.putIfAbsent(Job.NIGHTLORD, new int[][]{}); // todo
-            case SHADOWER -> skillOrders.putIfAbsent(Job.SHADOWER, new int[][]{}); // todo
-            case PIRATE -> skillOrders.putIfAbsent(Job.PIRATE, new int[][]{
-                    {Pirate.DOUBLE_SHOT, 1},
-                    {Pirate.FLASH_FIST, 1},
-                    {Pirate.SOMERSAULT_KICK, 20},
-                    {Pirate.BULLET_TIME, 1},
-                    {Pirate.DASH, 1},
-                    {Pirate.DOUBLE_SHOT, 20},
-                    {Pirate.FLASH_FIST, 20},
-                    {Pirate.BULLET_TIME, 20},
-                    {Pirate.DASH, 10}
-            });
-            case BRAWLER -> skillOrders.putIfAbsent(Job.BRAWLER, new int[][]{}); // todo
-            case GUNSLINGER -> skillOrders.putIfAbsent(Job.GUNSLINGER, new int[][]{}); // todo
-            case MARAUDER -> skillOrders.putIfAbsent(Job.MARAUDER, new int[][]{}); // todo
-            case OUTLAW -> skillOrders.putIfAbsent(Job.OUTLAW, new int[][]{}); // todo
-            case BUCCANEER -> skillOrders.putIfAbsent(Job.BUCCANEER, new int[][]{}); // todo
-            case CORSAIR -> skillOrders.putIfAbsent(Job.CORSAIR, new int[][]{}); // todo
-        }
+    public static void putSkillOrdersAndDelayTimes() {
+        skillOrders.putIfAbsent(Job.WARRIOR, new int[][]{
+                {Warrior.IMPROVED_HPREC, 5},
+                {Warrior.IMPROVED_MAXHP, 10},
+                {Warrior.POWER_STRIKE, 1},
+                {Warrior.SLASH_BLAST, 20},
+                {Warrior.ENDURE, 3},
+                {Warrior.IRON_BODY, 1},
+                {Warrior.POWER_STRIKE, 20},
+                {Warrior.IMPROVED_HPREC, 16},
+                {Warrior.IRON_BODY, 20},
+                {Warrior.ENDURE, 8}
+        });
+        skillOrders.putIfAbsent(Job.FIGHTER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.PAGE, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.SPEARMAN, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.CRUSADER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.WHITEKNIGHT, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.DRAGONKNIGHT, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.HERO, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.PALADIN, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.DARKKNIGHT, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.MAGICIAN, new int[][]{
+                {Magician.ENERGY_BOLT, 1},
+                {Magician.IMPROVED_MP_RECOVERY, 5},
+                {Magician.IMPROVED_MAX_MP_INCREASE, 10},
+                {Magician.MAGIC_CLAW, 20},
+                {Magician.MAGIC_GUARD, 20},
+                {Magician.MAGIC_ARMOR, 20},
+                {Magician.IMPROVED_MP_RECOVERY, 16},
+                {Magician.ENERGY_BOLT, 20}
+        });
+        skillOrders.putIfAbsent(Job.FP_WIZARD, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.IL_WIZARD, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.CLERIC, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.FP_MAGE, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.IL_MAGE, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.PRIEST, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.FP_ARCHMAGE, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.IL_ARCHMAGE, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.BISHOP, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.BOWMAN, new int[][]{
+                {Archer.ARROW_BLOW, 1},
+                {Archer.DOUBLE_SHOT, 20},
+                {Archer.BLESSING_OF_AMAZON, 3},
+                {Archer.EYE_OF_AMAZON, 8},
+                {Archer.FOCUS, 1},
+                {Archer.CRITICAL_SHOT, 20},
+                {Archer.BLESSING_OF_AMAZON, 16},
+                {Archer.FOCUS, 20},
+                {Archer.ARROW_BLOW, 20}
+        });
+        skillOrders.putIfAbsent(Job.HUNTER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.CROSSBOWMAN, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.RANGER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.SNIPER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.BOWMASTER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.MARKSMAN, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.THIEF, new int[][]{
+                {Rogue.LUCKY_SEVEN, 20}, // all thieves will use claws until lv 30 when some become bandits
+                {Rogue.NIMBLE_BODY, 3},
+                {Rogue.KEEN_EYES, 8},
+                {Rogue.DISORDER, 3},
+                {Rogue.DARK_SIGHT, 1},
+                {Rogue.DOUBLE_STAB, 20},
+                {Rogue.NIMBLE_BODY, 20},
+                {Rogue.DARK_SIGHT, 20},
+                {Rogue.DISORDER, 20}
+        });
+        skillOrders.putIfAbsent(Job.ASSASSIN, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.BANDIT, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.HERMIT, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.CHIEFBANDIT, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.NIGHTLORD, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.SHADOWER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.PIRATE, new int[][]{
+                {Pirate.DOUBLE_SHOT, 1},
+                {Pirate.FLASH_FIST, 1},
+                {Pirate.SOMERSAULT_KICK, 20},
+                {Pirate.BULLET_TIME, 1},
+                {Pirate.DASH, 1},
+                {Pirate.DOUBLE_SHOT, 20},
+                {Pirate.FLASH_FIST, 20},
+                {Pirate.BULLET_TIME, 20},
+                {Pirate.DASH, 10}
+        });
+        skillOrders.putIfAbsent(Job.BRAWLER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.GUNSLINGER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.MARAUDER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.OUTLAW, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.BUCCANEER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.CORSAIR, new int[][]{}); // todo
+
+        // todo: delay times, decide what to do for different speeds
+        // skillDelayTimes.putIfAbsent(-1, );
     }
 }

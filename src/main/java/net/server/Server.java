@@ -47,6 +47,7 @@ import net.server.guild.Alliance;
 import net.server.guild.Guild;
 import net.server.guild.GuildCharacter;
 import net.server.task.*;
+import net.server.world.Party;
 import net.server.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.slf4j.Logger;
@@ -855,6 +856,7 @@ public class Server {
         futures.add(initExecutor.submit(CashItemFactory::loadAllCashItems));
         futures.add(initExecutor.submit(Quest::loadAllQuests));
         futures.add(initExecutor.submit(SkillbookInformationProvider::loadAllSkillbookInformation));
+        futures.add(initExecutor.submit(CharacterBot::putSkillOrdersAndDelayTimes));
         initExecutor.shutdown();
 
         TimeZone.setDefault(TimeZone.getTimeZone(YamlConfig.config.server.TIMEZONE));
@@ -2038,7 +2040,14 @@ public class Server {
     }
 
     public void dismissFollower(Character character, String name) {
-
+        for (CharacterBot bot : followers) {
+            if (bot.getFollowing().equals(character) && bot.getPlayer().getName().equals(name)) {
+                bot.logout();
+                followers.remove(bot);
+                return;
+            }
+        }
+        character.message("That name does not match any of your followers.");
     }
 
     public void dismissFollowers(Character character) {
@@ -2046,6 +2055,27 @@ public class Server {
             if (bot.getFollowing().equals(character)) {
                 bot.logout();
                 followers.remove(bot);
+            }
+        }
+    }
+
+    public int getNumFollowers(Character character) {
+        int ret = 0;
+        for (CharacterBot bot : followers) {
+            if (bot.getFollowing().equals(character)) {
+                ret++;
+            }
+        }
+        return ret;
+    }
+
+    public void partyCommand(Character character) {
+        for (CharacterBot bot : followers) {
+            if (character.getParty().getMembers().size() > 5) {
+                return;
+            }
+            if (bot.getFollowing().equals(character)) {
+                Party.joinParty(bot.getPlayer(), character.getPartyId(), false);
             }
         }
     }

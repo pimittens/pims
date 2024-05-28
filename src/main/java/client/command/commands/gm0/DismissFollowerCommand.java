@@ -25,27 +25,19 @@ package client.command.commands.gm0;
 
 import client.Client;
 import client.command.Command;
-import client.processor.action.BuybackProcessor;
 import net.server.Server;
 
-public class AddFollowerCommand extends Command {
+public class DismissFollowerCommand extends Command {
     {
-        setDescription("Summon a follower.");
+        setDescription("Dismiss a follower.");
     }
 
     @Override
     public void execute(Client c, String[] params) {
-        if (Server.getInstance().getNumFollowers(c.getPlayer()) >= 5) {
-            c.getPlayer().message("You have reached the maximum number of followers.");
-            return;
-        }
         if (params.length < 1) {
-            Server.getInstance().createFollower(c.getPlayer());
-        } else if (params.length < 3) {
-            params[0].contentEquals("now");
-            Server.getInstance().createFollower(c.getPlayer(), params[0]);
+            Server.getInstance().dismissFollowers(c.getPlayer());
         } else {
-            Server.getInstance().createFollower(c.getPlayer(), params[0], params[1], params[2]);
+            Server.getInstance().dismissFollower(c.getPlayer(), params[0]);
         }
     }
 }
