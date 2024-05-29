@@ -436,13 +436,12 @@ public class CharacterBot {
         }
     }
 
-    private void doAttack(int time, int skillId) {
+    private void doAttack(int time, int skillId) { // todo: combo orbs, arrow bomb, shadow partner, paladin charges, bucc stuff, are star att bonuses being use?
         if (skillId == -1) {
             doRegularAttack();
             delay = System.currentTimeMillis() + 500 - time; // todo: accurate delay
             return;
         }
-        // todo: use single target attack skill
         List<Monster> targets = new ArrayList<>();
         targets.add(targetMonster);
         StatEffect effect = SkillFactory.getSkill(skillId).getEffect(c.getPlayer().getSkillLevel(skillId));
@@ -462,7 +461,7 @@ public class CharacterBot {
                 }
             }
         }
-        // todo: stance, direction, ranged direction, charge, display, speed, position, handle shadow partner and other damage modifiers
+        // todo: stance, direction, ranged direction, charge, display, speed, position
         AbstractDealDamageHandler.AttackInfo attack = new AbstractDealDamageHandler.AttackInfo();
         attack.skill = skillId;
         attack.skilllevel = c.getPlayer().getSkillLevel(skillId);
@@ -476,7 +475,7 @@ public class CharacterBot {
             for (Monster m : targets) {
                 damageNumbers = new ArrayList<>();
                 for (int i = 0; i < attack.numDamage; i++) {
-                    damageNumbers.add(calcMagicDamage());
+                    damageNumbers.add(calcMagicDamage(skillId, m));
                 }
                 attack.allDamage.put(m.getObjectId(), damageNumbers);
             }
@@ -486,7 +485,7 @@ public class CharacterBot {
             for (Monster m : targets) {
                 damageNumbers = new ArrayList<>();
                 for (int i = 0; i < attack.numDamage; i++) {
-                    damageNumbers.add(calcRangedDamage());
+                    damageNumbers.add(calcRangedDamage(skillId, m));
                 }
                 attack.allDamage.put(m.getObjectId(), damageNumbers);
             }
@@ -495,7 +494,7 @@ public class CharacterBot {
             for (Monster m : targets) {
                 damageNumbers = new ArrayList<>();
                 for (int i = 0; i < attack.numDamage; i++) {
-                    damageNumbers.add(calcCloseRangeDamage());
+                    damageNumbers.add(calcCloseRangeDamage(skillId, m));
                 }
                 attack.allDamage.put(m.getObjectId(), damageNumbers);
             }
@@ -504,16 +503,73 @@ public class CharacterBot {
         delay = System.currentTimeMillis() + 500 - time; // todo: accurate delay
     }
 
-    private static int calcMagicDamage() {
-        return 10; // todo
+    private int calcMagicDamage(int skillId, Monster target) {
+        int leveldelta = Math.max(0, target.getLevel() - c.getPlayer().getLevel());
+        if (Randomizer.nextDouble() >= calculateMagicHitchance(leveldelta,
+                c.getPlayer().getTotalInt(), c.getPlayer().getTotalLuk(), target.getStats().getEva())) {
+            return 0;
+        }
+        int minDamage = c.getPlayer().calculateMinBaseMagicAttackDamage(skillId),
+                maxDamage = c.getPlayer().calculateMaxBaseMagicAttackDamage(skillId);
+        int monsterMagicDefense = target.getStats().getMDDamage();
+        maxDamage = (int) (maxDamage - monsterMagicDefense * 0.5 * (1 + 0.01 * leveldelta));
+        minDamage = (int) (minDamage - monsterMagicDefense * 0.6 * (1 + 0.01 * leveldelta));
+        if (c.getPlayer().getJob() == Job.IL_ARCHMAGE || c.getPlayer().getJob() == Job.IL_MAGE) {
+            int skillLvl = c.getPlayer().getSkillLevel(ILMage.ELEMENT_AMPLIFICATION);
+            if (skillLvl > 0) {
+                maxDamage = (int) (maxDamage * SkillFactory.getSkill(ILMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100.0);
+                minDamage = (int) (minDamage * SkillFactory.getSkill(ILMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100.0);
+            }
+        } else if (c.getPlayer().getJob() == Job.FP_ARCHMAGE || c.getPlayer().getJob() == Job.FP_MAGE) {
+            int skillLvl = c.getPlayer().getSkillLevel(FPMage.ELEMENT_AMPLIFICATION);
+            if (skillLvl > 0) {
+                maxDamage = (int) (maxDamage * SkillFactory.getSkill(FPMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100.0);
+                minDamage = (int) (minDamage * SkillFactory.getSkill(FPMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100.0);
+            }
+        }
+        return Math.max((Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage), 1);
     }
 
-    private static int calcRangedDamage() {
-        return 10; // todo
+    private int calcRangedDamage(int skillId, Monster target) {
+        int leveldelta = Math.max(0, target.getLevel() - c.getPlayer().getLevel());
+        if (Randomizer.nextDouble() >= calculateHitchance(leveldelta,
+                c.getPlayer().getAccuracy(), target.getStats().getEva())) {
+            return 0;
+        }
+        int minDamage, maxDamage;
+        if (skillId == Rogue.LUCKY_SEVEN || skillId == NightLord.TRIPLE_THROW) {
+            maxDamage = (int) ((c.getPlayer().getTotalLuk() * 5) * Math.ceil(c.getPlayer().getTotalWatk() / 100.0));
+            minDamage = (int) ((c.getPlayer().getTotalLuk() * 2.5) * Math.ceil(c.getPlayer().getTotalWatk() / 100.0));
+        } else {
+            minDamage = c.getPlayer().calculateMinBaseDamage(c.getPlayer().getTotalWatk());
+            maxDamage = c.getPlayer().calculateMaxBaseDamage(c.getPlayer().getTotalWatk());
+        }
+        double multiplier = SkillFactory.getSkill(skillId).getEffect(c.getPlayer().getSkillLevel(skillId)).getDamage() / 100.0;
+        int monsterPhysicalDefense = target.getStats().getPDDamage();
+        if (Randomizer.nextDouble() < c.getPlayer().getCritRate()) {
+            multiplier += c.getPlayer().getCritBonus();
+        }
+        minDamage = (int) (minDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.6);
+        maxDamage = (int) (maxDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.5);
+        return Math.max((int) ((Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage) * multiplier), 1);
     }
 
-    private static int calcCloseRangeDamage() {
-        return 10; // todo
+    private int calcCloseRangeDamage(int skillId, Monster target) {
+        int leveldelta = Math.max(0, target.getLevel() - c.getPlayer().getLevel());
+        if (Randomizer.nextDouble() >= calculateHitchance(leveldelta,
+                c.getPlayer().getAccuracy(), target.getStats().getEva())) {
+            return 0;
+        }
+        int minDamage = c.getPlayer().calculateMinBaseDamage(c.getPlayer().getTotalWatk()),
+                maxDamage = c.getPlayer().calculateMaxBaseDamage(c.getPlayer().getTotalWatk());
+        int monsterPhysicalDefense = target.getStats().getPDDamage();
+        double multiplier = SkillFactory.getSkill(skillId).getEffect(c.getPlayer().getSkillLevel(skillId)).getDamage() / 100.0;
+        if (Randomizer.nextDouble() < c.getPlayer().getCritRate()) {
+            multiplier += c.getPlayer().getCritBonus();
+        }
+        minDamage = (int) (minDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.6);
+        maxDamage = (int) (maxDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.5);
+        return Math.max((int) ((Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage) * multiplier), 1);
     }
 
     private void doRegularAttack() {
@@ -539,6 +595,15 @@ public class CharacterBot {
 
     private static float calculateHitchance(int leveldelta, float playerAccuracy, int avoid) {
         float hitchance = playerAccuracy / (((1.84f + 0.07f * leveldelta) * avoid) + 1.0f);
+        if (hitchance < 0.01f) {
+            hitchance = 0.01f;
+        }
+        return hitchance;
+    }
+
+    private static float calculateMagicHitchance(int leveldelta, int player_int, int playerluk, int avoid) {
+        float x =  (player_int / 10 + playerluk / 10) / (avoid + 1f) * (1 + 0.0415f * leveldelta);
+        float hitchance = -2.5795f * x * x + 5.2343f * x - 1.6749f;
         if (hitchance < 0.01f) {
             hitchance = 0.01f;
         }

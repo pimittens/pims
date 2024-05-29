@@ -37,9 +37,7 @@ import constants.id.ItemId;
 import constants.id.MapId;
 import constants.id.NpcId;
 import constants.inventory.ItemConstants;
-import constants.skills.Buccaneer;
-import constants.skills.Corsair;
-import constants.skills.ThunderBreaker;
+import constants.skills.*;
 import net.encryption.InitializationVector;
 import net.opcodes.SendOpcode;
 import net.packet.ByteBufOutPacket;
@@ -7568,12 +7566,87 @@ public class PacketCreator {
 
     public static InPacket createMagicAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
         final InPacket p = InPacket.create(SendOpcode.CLAIM_AVAILABLE_TIME);
+        p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
+        p.writeInt(attack.skill); // skill
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(attack.display); // display
+        p.writeByte(attack.direction); // direction
+        p.writeByte(attack.stance); // stance
+        p.writeByte(0); // skipped
+        p.writeByte(attack.speed); // speed
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        for (int i : attack.allDamage.keySet()) {
+            p.writeInt(i); // oid of the target monster
+            for (int j = 0; j < 14; j++) {
+                p.writeByte(0); // skipped
+            }
+            for (int k : attack.allDamage.get(i)) {
+                p.writeInt(k); // damage
+            }
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+        }
         p.skip(2);
         return p;
     }
 
     public static InPacket createRangedAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
         final InPacket p = InPacket.create(SendOpcode.CLAIM_RESULT);
+        p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
+        p.writeInt(attack.skill); // skill
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(attack.display); // display
+        p.writeByte(attack.direction); // direction
+        p.writeByte(attack.stance); // stance
+        p.writeByte(0); // skipped
+        p.writeByte(attack.speed); // speed
+        p.writeByte(0); // skipped
+        p.writeByte(attack.rangedirection); // ranged direction
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        if (attack.skill == Bowmaster.HURRICANE || attack.skill == Marksman.PIERCING_ARROW || attack.skill == Corsair.RAPID_FIRE || attack.skill == WindArcher.HURRICANE) {
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+        }
+        for (int i : attack.allDamage.keySet()) {
+            p.writeInt(i); // oid of the target monster
+            for (int j = 0; j < 14; j++) {
+                p.writeByte(0); // skipped
+            }
+            for (int k : attack.allDamage.get(i)) {
+                p.writeInt(k); // damage
+            }
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+        }
         p.skip(2);
         return p;
     }

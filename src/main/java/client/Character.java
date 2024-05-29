@@ -11322,24 +11322,15 @@ public class Character extends AbstractCharacterObject {
         return (int) Math.ceil(((weapon.getMaxDamageMultiplier() * mainstat * 0.9 * getMasteryDouble() + secondarystat) / 100.0) * watk);
     }
 
-    public int calculateMinBaseMagicDamage(int matk) { //todo: this is just copied from max magic damage, need to figure out how it works
-        int maxbasedamage = matk;
-        int totalint = getTotalInt();
+    public int calculateMinBaseMagicAttackDamage(int skillId) {
+        return (int) ((Math.ceil((getTotalMagic() * Math.ceil(getTotalMagic() / 1000.0) + getTotalMagic() *
+                SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMastery() * 0.9) / 30.0) +
+                Math.ceil(getTotalInt() / 200.0)) * SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMatk());
+    }
 
-        if (totalint > 2000) {
-            maxbasedamage -= 2000;
-            maxbasedamage += (int) ((0.09033024267 * totalint) + 3823.8038);
-        } else {
-            maxbasedamage -= totalint;
-
-            if (totalint > 1700) {
-                maxbasedamage += (int) (0.1996049769 * Math.pow(totalint, 1.300631341));
-            } else {
-                maxbasedamage += (int) (0.1996049769 * Math.pow(totalint, 1.290631341));
-            }
-        }
-
-        return (maxbasedamage * 107) / 100;
+    public int calculateMaxBaseMagicAttackDamage(int skillId) {
+        return (int) ((Math.ceil((getTotalMagic() * Math.ceil(getTotalMagic() / 1000.0) + getTotalMagic()) / 30.0) +
+                Math.ceil(getTotalInt() / 200.0)) * SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMatk());
     }
 
     public WeaponType getWeaponType() {
@@ -11365,5 +11356,13 @@ public class Character extends AbstractCharacterObject {
             return -1;
         }
         return buffExpires.get(skillId);
+    }
+
+    public double getCritRate() {
+        return 0; // todo
+    }
+
+    public double getCritBonus() {
+        return 0; // todo
     }
 }

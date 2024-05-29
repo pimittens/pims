@@ -60,7 +60,7 @@ import java.util.*;
  * @author Ronan
  */
 public class StatEffect {
-    private short watk, matk, wdef, mdef, acc, avoid, speed, jump;
+    private short watk, matk, wdef, mdef, acc, avoid, speed, jump, mastery;
     private short hp, mp;
     private double hpR, mpR;
     private short mhpRRate, mmpRRate, mobSkill, mobSkillLevel;
@@ -242,6 +242,7 @@ public class StatEffect {
         ret.mdef = (short) DataTool.getInt("mdd", source, 0);
         ret.acc = (short) DataTool.getIntConvert("acc", source, 0);
         ret.avoid = (short) DataTool.getInt("eva", source, 0);
+        ret.mastery = (short) (10 + DataTool.getInt("mastery", source, 0) * 5);
 
         ret.speed = (short) DataTool.getInt("speed", source, 0);
         ret.jump = (short) DataTool.getInt("jump", source, 0);
@@ -1823,6 +1824,10 @@ public class StatEffect {
 
     public short getWatk() {
         return watk;
+    }
+
+    public short getMastery() {
+        return mastery;
     }
 
     public int getDuration() {
