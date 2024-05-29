@@ -462,7 +462,7 @@ public class CharacterBot {
                 }
             }
         }
-        // todo: stance, direction, ranged direction, charge, display, speed, position, handle shadow partner
+        // todo: stance, direction, ranged direction, charge, display, speed, position, handle shadow partner and other damage modifiers
         AbstractDealDamageHandler.AttackInfo attack = new AbstractDealDamageHandler.AttackInfo();
         attack.skill = skillId;
         attack.skilllevel = c.getPlayer().getSkillLevel(skillId);
@@ -505,15 +505,15 @@ public class CharacterBot {
     }
 
     private static int calcMagicDamage() {
-        return 0; // todo
+        return 10; // todo
     }
 
     private static int calcRangedDamage() {
-        return 0; // todo
+        return 10; // todo
     }
 
     private static int calcCloseRangeDamage() {
-        return 0; // todo
+        return 10; // todo
     }
 
     private void doRegularAttack() {

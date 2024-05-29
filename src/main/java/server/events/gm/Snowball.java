@@ -55,7 +55,7 @@ public class Snowball {
     }
 
     public void startEvent() {
-        if (hittable == true) {
+        if (hittable) {
             return;
         }
 

@@ -77,7 +77,7 @@ public class MonsterCarnivalParty {
     }
 
     public void warpOut() {
-        if (winner == true) {
+        if (winner) {
             warpOut(980000003 + (leader.getMonsterCarnival().getRoom() * 100));
         } else {
             warpOut(980000004 + (leader.getMonsterCarnival().getRoom() * 100));

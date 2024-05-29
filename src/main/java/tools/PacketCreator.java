@@ -7579,7 +7579,39 @@ public class PacketCreator {
     }
 
     public static InPacket createCloseRangeAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
-        final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
+        final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);p.writeByte(0); // skipped
+        p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
+        p.writeInt(attack.skill); // skill
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(attack.display); // display
+        p.writeByte(attack.direction); // direction
+        p.writeByte(attack.stance); // stance
+        p.writeByte(0); // skipped
+        p.writeByte(attack.speed); // speed
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        for (int i : attack.allDamage.keySet()) {
+            p.writeInt(i); // oid of the target monster
+            for (int j = 0; j < 14; j++) {
+                p.writeByte(0); // skipped
+            }
+            for (int k : attack.allDamage.get(i)) {
+                p.writeInt(k); // damage
+            }
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+        }
         p.skip(2);
         return p;
     }
