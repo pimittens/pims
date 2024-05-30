@@ -7566,6 +7566,7 @@ public class PacketCreator {
 
     public static InPacket createMagicAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
         final InPacket p = InPacket.create(SendOpcode.CLAIM_AVAILABLE_TIME);
+        p.writeByte(0); // skipped
         p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
         p.writeInt(attack.skill); // skill
         p.writeByte(0);
@@ -7604,6 +7605,7 @@ public class PacketCreator {
 
     public static InPacket createRangedAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
         final InPacket p = InPacket.create(SendOpcode.CLAIM_RESULT);
+        p.writeByte(0); // skipped
         p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
         p.writeInt(attack.skill); // skill
         p.writeByte(0);
@@ -7652,7 +7654,8 @@ public class PacketCreator {
     }
 
     public static InPacket createCloseRangeAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
-        final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);p.writeByte(0); // skipped
+        final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
+        p.writeByte(0); // skipped
         p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
         p.writeInt(attack.skill); // skill
         p.writeByte(0);

@@ -242,7 +242,7 @@ public class StatEffect {
         ret.mdef = (short) DataTool.getInt("mdd", source, 0);
         ret.acc = (short) DataTool.getIntConvert("acc", source, 0);
         ret.avoid = (short) DataTool.getInt("eva", source, 0);
-        ret.mastery = (short) (10 + DataTool.getInt("mastery", source, 0) * 5);
+        ret.mastery = (short) (DataTool.getInt("mastery", source, 0) * 5);
 
         ret.speed = (short) DataTool.getInt("speed", source, 0);
         ret.jump = (short) DataTool.getInt("jump", source, 0);
@@ -1828,6 +1828,10 @@ public class StatEffect {
 
     public short getMastery() {
         return mastery;
+    }
+
+    public double getProp() {
+        return prop;
     }
 
     public int getDuration() {

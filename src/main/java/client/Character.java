@@ -11278,7 +11278,39 @@ public class Character extends AbstractCharacterObject {
 
     public int getMastery() {
         int mastery = 10;
-        // todo: update this so it calculates mastery level based on skills
+        if (getSkillLevel(Fighter.SWORD_MASTERY) > 0 || getSkillLevel(Fighter.AXE_MASTERY) > 0) {
+            mastery += Math.max(SkillFactory.getSkill(Fighter.SWORD_MASTERY).getEffect(getSkillLevel(Fighter.SWORD_MASTERY)).getMastery(),
+                    SkillFactory.getSkill(Fighter.AXE_MASTERY).getEffect(getSkillLevel(Fighter.AXE_MASTERY)).getMastery());
+        } else if (getSkillLevel(Page.SWORD_MASTERY) > 0 || getSkillLevel(Page.BW_MASTERY) > 0) {
+            mastery += Math.max(SkillFactory.getSkill(Page.SWORD_MASTERY).getEffect(getSkillLevel(Page.SWORD_MASTERY)).getMastery(),
+                    SkillFactory.getSkill(Page.BW_MASTERY).getEffect(getSkillLevel(Page.BW_MASTERY)).getMastery());
+        } else if (getSkillLevel(Spearman.SPEAR_MASTERY) > 0 || getSkillLevel(Spearman.POLEARM_MASTERY) > 0) {
+            mastery += Math.max(SkillFactory.getSkill(Spearman.SPEAR_MASTERY).getEffect(getSkillLevel(Spearman.SPEAR_MASTERY)).getMastery(),
+                    SkillFactory.getSkill(Spearman.POLEARM_MASTERY).getEffect(getSkillLevel(Spearman.POLEARM_MASTERY)).getMastery());
+            if (getSkillLevel(DarkKnight.BEHOLDER) > 0) {
+                mastery += SkillFactory.getSkill(DarkKnight.BEHOLDER).getEffect(getSkillLevel(DarkKnight.BEHOLDER)).getMastery();
+            }
+        } else if (getSkillLevel(Hunter.BOW_MASTERY) > 0) {
+            if (getSkillLevel(Bowmaster.BOW_EXPERT) > 0) {
+                mastery += SkillFactory.getSkill(Bowmaster.BOW_EXPERT).getEffect(getSkillLevel(Bowmaster.BOW_EXPERT)).getMastery();
+            } else {
+                mastery += SkillFactory.getSkill(Hunter.BOW_MASTERY).getEffect(getSkillLevel(Hunter.BOW_MASTERY)).getMastery();
+            }
+        } else if (getSkillLevel(Crossbowman.CROSSBOW_MASTERY) > 0) {
+            if (getSkillLevel(Marksman.MARKSMAN_BOOST) > 0) {
+                mastery += SkillFactory.getSkill(Marksman.MARKSMAN_BOOST).getEffect(getSkillLevel(Marksman.MARKSMAN_BOOST)).getMastery();
+            } else {
+                mastery += SkillFactory.getSkill(Crossbowman.CROSSBOW_MASTERY).getEffect(getSkillLevel(Crossbowman.CROSSBOW_MASTERY)).getMastery();
+            }
+        } else if (getSkillLevel(Assassin.CLAW_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Assassin.CLAW_MASTERY).getEffect(getSkillLevel(Assassin.CLAW_MASTERY)).getMastery();
+        } else if (getSkillLevel(Bandit.DAGGER_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Bandit.DAGGER_MASTERY).getEffect(getSkillLevel(Bandit.DAGGER_MASTERY)).getMastery();
+        } else if (getSkillLevel(Brawler.KNUCKLER_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Brawler.KNUCKLER_MASTERY).getEffect(getSkillLevel(Brawler.KNUCKLER_MASTERY)).getMastery();
+        } else if (getSkillLevel(Gunslinger.GUN_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Gunslinger.GUN_MASTERY).getEffect(getSkillLevel(Gunslinger.GUN_MASTERY)).getMastery();
+        }
         return mastery;
     }
 
@@ -11324,7 +11356,7 @@ public class Character extends AbstractCharacterObject {
 
     public int calculateMinBaseMagicAttackDamage(int skillId) {
         return (int) ((Math.ceil((getTotalMagic() * Math.ceil(getTotalMagic() / 1000.0) + getTotalMagic() *
-                SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMastery() * 0.9) / 30.0) +
+                (10 + SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMastery()) * 0.9) / 30.0) +
                 Math.ceil(getTotalInt() / 200.0)) * SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMatk());
     }
 
@@ -11359,10 +11391,32 @@ public class Character extends AbstractCharacterObject {
     }
 
     public double getCritRate() {
-        return 0; // todo
+        double ret = 0;
+        if (getSkillLevel(Archer.CRITICAL_SHOT) > 0) {
+            ret += SkillFactory.getSkill(Archer.CRITICAL_SHOT).getEffect(getSkillLevel(Archer.CRITICAL_SHOT)).getProp();
+        } else if (getSkillLevel(Assassin.CRITICAL_THROW) > 0) {
+            ret += SkillFactory.getSkill(Assassin.CRITICAL_THROW).getEffect(getSkillLevel(Assassin.CRITICAL_THROW)).getProp();
+        }
+        if (getBuffEffect(BuffStat.SHARP_EYES) != null) {
+            ret += getBuffEffect(BuffStat.SHARP_EYES).getX() / 100.0;
+        }
+        return ret;
     }
 
     public double getCritBonus() {
-        return 0; // todo
+        int ret = 100;
+        if (getSkillLevel(Archer.CRITICAL_SHOT) > 0) {
+            ret = SkillFactory.getSkill(Archer.CRITICAL_SHOT).getEffect(getSkillLevel(Archer.CRITICAL_SHOT)).getDamage();
+        } else if (getSkillLevel(Assassin.CRITICAL_THROW) > 0) {
+            ret = SkillFactory.getSkill(Assassin.CRITICAL_THROW).getEffect(getSkillLevel(Assassin.CRITICAL_THROW)).getDamage();
+        }
+        if (getBuffEffect(BuffStat.SHARP_EYES) != null) {
+            ret += getBuffEffect(BuffStat.SHARP_EYES).getY() - 100;
+        }
+        return ret / 100.0;
+    }
+
+    public int getWeaponSpeed() {
+        return 4; // todo
     }
 }

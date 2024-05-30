@@ -7,8 +7,6 @@ public class UpdateBotsTask implements Runnable {
 
     @Override
     public void run() {
-        for (CharacterBot bot : Server.getInstance().getBots()) {
-            bot.update();
-        }
+        Server.getInstance().getBotManager().updateBots();
     }
 }

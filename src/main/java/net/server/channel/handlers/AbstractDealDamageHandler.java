@@ -539,18 +539,18 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
         AttackInfo ret = new AttackInfo();
         p.readByte();
         ret.numAttackedAndDamage = p.readByte();
-        System.out.println("numattackedanddamage: " + ret.numAttackedAndDamage);
+        //System.out.println("numattackedanddamage: " + ret.numAttackedAndDamage);
         ret.numAttacked = (ret.numAttackedAndDamage >>> 4) & 0xF;
-        System.out.println("numattacked: " + ret.numAttacked);
+        //System.out.println("numattacked: " + ret.numAttacked);
         ret.numDamage = ret.numAttackedAndDamage & 0xF;
-        System.out.println("numdamage: " + ret.numDamage);
+        //System.out.println("numdamage: " + ret.numDamage);
         ret.allDamage = new HashMap<>();
         ret.skill = p.readInt();
-        System.out.println("skill: " + ret.skill);
+        //System.out.println("skill: " + ret.skill);
         ret.ranged = ranged;
-        System.out.println("ranged: " + ranged);
+        //System.out.println("ranged: " + ranged);
         ret.magic = magic;
-        System.out.println("magic: " + magic);
+        //System.out.println("magic: " + magic);
 
         if (ret.skill > 0) {
             ret.skilllevel = chr.getSkillLevel(ret.skill);
@@ -567,11 +567,11 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
 
         p.skip(8);
         ret.display = p.readByte();
-        System.out.println("display: " + ret.display);
+        //System.out.println("display: " + ret.display);
         ret.direction = p.readByte();
-        System.out.println("direction: " + ret.direction);
+        //System.out.println("direction: " + ret.direction);
         ret.stance = p.readByte();
-        System.out.println("stance: " + ret.stance);
+        //System.out.println("stance: " + ret.stance);
         if (ret.skill == ChiefBandit.MESO_EXPLOSION) {
             if (ret.numAttackedAndDamage == 0) {
                 p.skip(10);
@@ -611,8 +611,10 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
         if (ranged) {
             p.readByte();
             ret.speed = p.readByte();
+            //System.out.println("speed: " + ret.speed);
             p.readByte();
             ret.rangedirection = p.readByte();
+            //System.out.println("rangedirection: " + ret.rangedirection);
             p.skip(7);
             if (ret.skill == Bowmaster.HURRICANE || ret.skill == Marksman.PIERCING_ARROW || ret.skill == Corsair.RAPID_FIRE || ret.skill == WindArcher.HURRICANE) {
                 p.skip(4);
@@ -620,7 +622,7 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
         } else {
             p.readByte();
             ret.speed = p.readByte();
-            System.out.println("speed: " + ret.speed);
+            //System.out.println("speed: " + ret.speed);
             p.skip(4);
         }
 
@@ -764,7 +766,7 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
         }
         for (int i = 0; i < ret.numAttacked; i++) {
             int oid = p.readInt();
-            System.out.println("oid: " + oid);
+            //System.out.println("oid: " + oid);
             p.skip(14);
             List<Integer> allDamageNumbers = new ArrayList<>();
             Monster monster = chr.getMap().getMonsterByOid(oid);
@@ -840,7 +842,7 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
 
             for (int j = 0; j < ret.numDamage; j++) {
                 int damage = p.readInt();
-                System.out.println("damage: " + damage);
+                //System.out.println("damage: " + damage);
                 long hitDmgMax = calcDmgMax;
                 if (ret.skill == Buccaneer.BARRAGE || ret.skill == ThunderBreaker.BARRAGE) {
                     if (j > 3) {

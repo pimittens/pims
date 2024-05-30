@@ -35,17 +35,16 @@ public class AddFollowerCommand extends Command {
 
     @Override
     public void execute(Client c, String[] params) {
-        if (Server.getInstance().getNumFollowers(c.getPlayer()) >= 5) {
+        if (Server.getInstance().getBotManager().getNumFollowers(c.getPlayer()) >= 5) {
             c.getPlayer().message("You have reached the maximum number of followers.");
             return;
         }
         if (params.length < 1) {
-            Server.getInstance().createFollower(c.getPlayer());
+            Server.getInstance().getBotManager().createFollower(c.getPlayer());
         } else if (params.length < 3) {
-            params[0].contentEquals("now");
-            Server.getInstance().createFollower(c.getPlayer(), params[0]);
+            Server.getInstance().getBotManager().createFollower(c.getPlayer(), params[0]);
         } else {
-            Server.getInstance().createFollower(c.getPlayer(), params[0], params[1], params[2]);
+            Server.getInstance().getBotManager().createFollower(c.getPlayer(), params[0], params[1], params[2]);
         }
     }
 }

@@ -28,7 +28,7 @@ public class ManageBotLoginsTask implements Runnable {
             System.out.println("error - bot login task could not access database");
             return;
         }
-        if (loggedIn.size() < 50) { // just log in 50 bots at a time for now
+        if (loggedIn.size() < 0) { // just log in 50 bots at a time for now
             List<Pair<String, Integer>> toLogin = new ArrayList<>();
             try (Connection con = DatabaseConnection.getConnection()) {
                 try (PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts WHERE name LIKE \"bot%\" AND loggedin = 0;");
@@ -57,7 +57,7 @@ public class ManageBotLoginsTask implements Runnable {
                     toLogin.remove(pair);
                 }
             }
-            Server.getInstance().loginBots(toLogin);
+            Server.getInstance().getBotManager().loginBots(toLogin);
         }
     }
 }

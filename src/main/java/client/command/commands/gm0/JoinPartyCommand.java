@@ -38,6 +38,6 @@ public class JoinPartyCommand extends Command {
             c.getPlayer().message("You are not in a party");
             return;
         }
-        Server.getInstance().partyCommand(c.getPlayer());
+        Server.getInstance().getBotManager().partyCommand(c.getPlayer());
     }
 }

@@ -69,7 +69,7 @@ public final class PacketProcessor {
     }
 
     public PacketHandler getHandler(short packetId) {
-        System.out.println(packetId);
+        //System.out.println(packetId);
         if (packetId > handlers.length) {
             return null;
         }

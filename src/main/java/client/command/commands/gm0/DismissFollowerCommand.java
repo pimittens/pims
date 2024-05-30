@@ -35,9 +35,9 @@ public class DismissFollowerCommand extends Command {
     @Override
     public void execute(Client c, String[] params) {
         if (params.length < 1) {
-            Server.getInstance().dismissFollowers(c.getPlayer());
+            Server.getInstance().getBotManager().dismissFollowers(c.getPlayer());
         } else {
-            Server.getInstance().dismissFollower(c.getPlayer(), params[0]);
+            Server.getInstance().getBotManager().dismissFollower(c.getPlayer(), params[0]);
         }
     }
 }

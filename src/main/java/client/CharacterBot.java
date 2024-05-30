@@ -95,9 +95,10 @@ public class CharacterBot {
     }
 
     public void update() {
-        if (loggedOut || true) { // temporarily disabled bot updates for testing purposes
+        if (loggedOut || level >= 30 || true) { // temporarily disabled bot updates for testing purposes
             return;
         }
+        c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their mp each update
         if (c.getPlayer().getLevel() > level || c.getPlayer().getRemainingSp() > 0) {
             levelup();
             decideAttackSkills();
@@ -124,6 +125,7 @@ public class CharacterBot {
         if (loggedOut) {
             return;
         }
+        c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their mp each update
         if (c.getPlayer().getLevel() > level || c.getPlayer().getRemainingSp() > 0) {
             levelup();
             decideAttackSkills();
@@ -425,7 +427,6 @@ public class CharacterBot {
 
     private void useBuff(int skillId) {
         c.handlePacket(PacketCreator.createUseBuffPacket(skillId, c.getPlayer().getSkillLevel(skillId)), (short) 91);
-        c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their mp after using a buff
     }
 
     private void attack(int time) {
@@ -450,7 +451,7 @@ public class CharacterBot {
             for (int i = 0; i < effect.getMobCount() - 1; i++) {
                 added = false;
                 for (Monster m : c.getPlayer().getMap().getAllMonsters()) {
-                    if (!targets.contains(m) && c.getPlayer().getPosition().distance(m.getPosition()) < 1000) { // todo: accurate range
+                    if (!targets.contains(m) && c.getPlayer().getPosition().distance(m.getPosition()) < 100) { // todo: accurate range
                         targets.add(m);
                         added = true;
                         break;
@@ -461,7 +462,6 @@ public class CharacterBot {
                 }
             }
         }
-        // todo: stance, direction, ranged direction, charge, display, speed, position
         AbstractDealDamageHandler.AttackInfo attack = new AbstractDealDamageHandler.AttackInfo();
         attack.skill = skillId;
         attack.skilllevel = c.getPlayer().getSkillLevel(skillId);
@@ -469,6 +469,12 @@ public class CharacterBot {
         attack.numDamage = Math.max(effect.getAttackCount(), effect.getBulletCount());
         attack.numAttackedAndDamage = attack.numAttacked * 16 + attack.numDamage;
         attack.allDamage = new HashMap<>();
+        attack.speed = c.getPlayer().getWeaponSpeed();
+        attack.display = 0; // todo: if using any attacks that use diplay update this
+        attack.position = c.getPlayer().getPosition();
+        attack.stance = facingLeft ? -128 : 0;
+        attack.direction = getDirection(skillId);
+        attack.rangedirection = 0; // todo: figure out what this does, seems to increment with each skill usage
         List<Integer> damageNumbers;
         if (effect.getMatk() > 0) {
             attack.magic = true;
@@ -576,12 +582,16 @@ public class CharacterBot {
         int monsterAvoid = targetMonster.getStats().getEva();
         float playerAccuracy = c.getPlayer().getAccuracy();
         int leveldelta = Math.max(0, targetMonster.getLevel() - c.getPlayer().getLevel());
+        int damage;
         if (Randomizer.nextDouble() < calculateHitchance(leveldelta, playerAccuracy, monsterAvoid)) {
-            // todo: criticals
-            c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), calcRegularAttackDamage(leveldelta), facingLeft), (short) 44);
+            damage = calcRegularAttackDamage(leveldelta);
+            if (Randomizer.nextDouble() < c.getPlayer().getCritRate()) {
+                damage = (int) (damage * c.getPlayer().getCritBonus());
+            }
         } else {
-            c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), 0, facingLeft), (short) 44);
+            damage = 0;
         }
+        c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), damage, facingLeft), (short) 44);
     }
 
     private int calcRegularAttackDamage(int leveldelta) {
@@ -649,7 +659,10 @@ public class CharacterBot {
             if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
                 if (!c.getPlayer().getMap().getItems().isEmpty()) {
                     for (MapObject it : c.getPlayer().getMap().getItems()) {
-                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer()) && InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer())) {
+                            if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
                             targetItem = it;
                             hasTargetItem = true;
                             break;
@@ -683,7 +696,7 @@ public class CharacterBot {
                     didAction = true;
                 }
             } else if (hasTargetMonster) {
-                if (c.getPlayer().getPosition().distance(targetMonster.getPosition()) < 500) { // todo: accurate range
+                if (c.getPlayer().getPosition().distance(targetMonster.getPosition()) < 100) { // todo: accurate range
                     attack(time);
                     time = 0;
                     didAction = true;
@@ -699,9 +712,9 @@ public class CharacterBot {
     private void levelup() {
         assignSP(); // do this before doing job advance
         if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
-            if (level == 8 && Randomizer.nextInt(5) == 0) { // 1/5 chance to choose magician
+            if (c.getPlayer().getLevel() == 8 && Randomizer.nextInt(5) == 0) { // 1/5 chance to choose magician
                 jobAdvance(Job.MAGICIAN);
-            } else if (level == 10 && Randomizer.nextInt(500) != 0) {
+            } else if (c.getPlayer().getLevel() == 10 && Randomizer.nextInt(500) != 0) {
                 // randomly pick between the 4 non-magician explorer jobs
                 // 1/500 chance to be a perma beginner, technically this makes mages slightly more common than the other 4, but it's negligible on this scale
                 Job[] jobs = {Job.WARRIOR, Job.BOWMAN, Job.THIEF, Job.PIRATE};
@@ -780,7 +793,7 @@ public class CharacterBot {
             }
         }
         this.level = c.getPlayer().getLevel();
-        currentMode = Mode.WAITING; // pick new map
+        currentMode = Mode.WAITING; // pick new map? todo: only do this if you get into a new level range for maps probably
     }
 
     private void jobAdvance(Job newJob) {
@@ -861,7 +874,68 @@ public class CharacterBot {
         return following;
     }
 
+    private int getDirection(int skillId) {
+        return switch (skillId) {
+            case Warrior.POWER_STRIKE, Warrior.SLASH_BLAST, ChiefBandit.BAND_OF_THIEVES -> {
+                int[] directions = new int[]{5, 6, 7, 16, 17};
+                yield directions[Randomizer.nextInt(directions.length)];
+            }
+            case Hero.BRANDISH -> 63;
+            case Paladin.BLAST -> 71;
+            case DragonKnight.SPEAR_CRUSHER, DragonKnight.POLE_ARM_CRUSHER -> 54;
+            case DragonKnight.SPEAR_DRAGON_FURY, DragonKnight.POLE_ARM_DRAGON_FURY -> Randomizer.nextInt(2) == 0 ? 13 : 14;
+            case Magician.ENERGY_BOLT, Magician.MAGIC_CLAW, ILWizard.COLD_BEAM, ILWizard.THUNDERBOLT  -> Randomizer.nextInt(2) == 0 ? 28 : 29;
+            case FPWizard.FIRE_ARROW, Ranger.INFERNO, Ranger.STRAFE, Ranger.ARROW_RAIN -> 22;
+            case FPWizard.POISON_BREATH -> 7;
+            case FPMage.ELEMENT_COMPOSITION, ILMage.ELEMENT_COMPOSITION -> 48;
+            case FPMage.EXPLOSION -> 51;
+            case FPMage.POISON_MIST -> 42;
+            case FPArchMage.METEOR_SHOWER -> 66;
+            case FPArchMage.PARALYZE -> 67;
+            case ILMage.THUNDER_SPEAR -> 49;
+            case ILMage.ICE_STRIKE -> 50;
+            case ILArchMage.CHAIN_LIGHTNING -> 75;
+            case ILArchMage.BLIZZARD -> 68;
+            case Archer.ARROW_BLOW, Archer.DOUBLE_SHOT -> c.getPlayer().getWeaponType().equals(WeaponType.BOW) ? (Randomizer.nextInt(2) == 0 ? 22 : 27) : 23;
+            case Hunter.ARROW_BOMB -> Randomizer.nextInt(2) == 0 ? 22 : 27;
+            case Crossbowman.IRON_ARROW, Sniper.ARROW_ERUPTION, Sniper.BLIZZARD, Sniper.STRAFE, Marksman.SNIPE -> 23;
+            case Rogue.LUCKY_SEVEN, NightLord.TRIPLE_THROW -> {
+                int[] directions = new int[]{24, 25, 26};
+                yield directions[Randomizer.nextInt(directions.length)];
+            }
+            case Hermit.AVENGER -> 56;
+            case Rogue.DOUBLE_STAB -> Randomizer.nextInt(2) == 0 ? 16 : 17;
+            case Bandit.SAVAGE_BLOW -> 55;
+            case Shadower.BOOMERANG_STEP -> 44;
+            case Pirate.SOMERSAULT_KICK -> 78;
+            case Pirate.DOUBLE_SHOT -> 87;
+            case Pirate.FLASH_FIST -> 79;
+            case Brawler.BACK_SPIN_BLOW -> 81;
+            case Brawler.DOUBLE_UPPERCUT -> 84;
+            case Brawler.CORKSCREW_BLOW -> 83;
+            case Marauder.ENERGY_BLAST -> 80;
+            case Marauder.SHOCKWAVE -> 99;
+            case Buccaneer.DRAGON_STRIKE -> 85;
+            case Buccaneer.BARRAGE -> 97;
+            case Buccaneer.DEMOLITION -> -98;
+            case Buccaneer.SNATCH -> -97;
+            case Buccaneer.ENERGY_ORB -> 82;
+            case Gunslinger.INVISIBLE_SHOT -> 93;
+            case Gunslinger.RECOIL_SHOT -> 92;
+            case Outlaw.FLAME_THROWER -> 95;
+            case Outlaw.ICE_SPLITTER -> 96;
+            case Corsair.AERIAL_STRIKE -> 89;
+            case Corsair.BATTLESHIP_CANNON -> 109;
+            case Corsair.BATTLESHIP_TORPEDO -> 110;
+            default -> 0;
+        };
+    }
+
     public static void putSkillOrdersAndDelayTimes() {
+        skillOrders.putIfAbsent(Job.BEGINNER, new int[][]{
+                {Beginner.THREE_SNAILS, 3},
+                {Beginner.RECOVERY, 3}
+        });
         skillOrders.putIfAbsent(Job.WARRIOR, new int[][]{
                 {Warrior.IMPROVED_HPREC, 5},
                 {Warrior.IMPROVED_MAXHP, 10},
