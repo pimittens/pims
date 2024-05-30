@@ -1363,7 +1363,7 @@ public class ItemInformationProvider {
         }
 
         boolean bRestricted = false;
-        if (itemId != 0) {
+        if (!YamlConfig.config.server.ALL_ITEMS_DROPPABLE && itemId != 0) {
             Data data = getItemData(itemId);
             if (data != null) {
                 bRestricted = DataTool.getIntConvert("info/tradeBlock", data, 0) == 1;
@@ -1397,7 +1397,7 @@ public class ItemInformationProvider {
         }
 
         boolean bRestricted = false;
-        if (itemId != 0) {
+        if (!YamlConfig.config.server.ALL_ITEMS_DROPPABLE && itemId != 0) {
             Data data = getItemData(itemId);
             if (data != null) {
                 bRestricted = DataTool.getIntConvert("info/tradeBlock", data, 0) == 1;
@@ -1421,7 +1421,7 @@ public class ItemInformationProvider {
         }
 
         boolean bRestricted = false;
-        if (itemId != 0) {
+        if (!YamlConfig.config.server.UNIQUE_ITEM_BYPASS && itemId != 0) {
             Data data = getItemData(itemId);
             if (data != null) {
                 bRestricted = DataTool.getIntConvert("info/only", data, 0) == 1;
@@ -1562,7 +1562,7 @@ public class ItemInformationProvider {
         if (onEquipUntradeableCache.containsKey(itemId)) {
             return onEquipUntradeableCache.get(itemId);
         }
-        boolean untradeableOnEquip = DataTool.getIntConvert("info/equipTradeBlock", getItemData(itemId), 0) > 0;
+        boolean untradeableOnEquip = !YamlConfig.config.server.ALL_ITEMS_DROPPABLE || DataTool.getIntConvert("info/equipTradeBlock", getItemData(itemId), 0) > 0;
         onEquipUntradeableCache.put(itemId, untradeableOnEquip);
         return untradeableOnEquip;
     }

@@ -132,6 +132,8 @@ public class Client extends ChannelInboundHandlerAdapter {
     private long lastPacket = System.currentTimeMillis();
     private int lang = 0;
 
+    private boolean isBotClient = false;
+
     public enum Type {
         LOGIN,
         CHANNEL
@@ -264,11 +266,15 @@ public class Client extends ChannelInboundHandlerAdapter {
     }
 
     public void closeSession() {
-        ioChannel.close();
+        if (!isBotClient) {
+            ioChannel.close();
+        }
     }
 
     public void disconnectSession() {
-        ioChannel.disconnect();
+        if (!isBotClient) {
+            ioChannel.disconnect();
+        }
     }
 
     public Hwid getHwid() {
@@ -1445,6 +1451,9 @@ public class Client extends ChannelInboundHandlerAdapter {
     }
 
     public void sendPacket(Packet packet) {
+        if (isBotClient) {
+            return;
+        }
         announcerLock.lock();
         try {
             ioChannel.writeAndFlush(packet);
@@ -1580,5 +1589,13 @@ public class Client extends ChannelInboundHandlerAdapter {
 
     public void setLanguage(int lingua) {
         this.lang = lingua;
+    }
+
+    public void handlePacket(InPacket p, short packetID) {
+        packetProcessor.getHandler(packetID).handlePacket(p, this);
+    }
+
+    public void setBotClient() {
+        isBotClient = true;
     }
 }

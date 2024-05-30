@@ -21,16 +21,15 @@
  */
 package net.server;
 
+import client.*;
 import client.Character;
-import client.Client;
-import client.Family;
-import client.SkillFactory;
 import client.command.CommandsExecutor;
 import client.inventory.Item;
 import client.inventory.ItemFactory;
 import client.inventory.manipulator.CashIdGenerator;
 import client.newyear.NewYearCardRecord;
 import client.processor.npc.FredrickProcessor;
+import com.oracle.truffle.js.runtime.util.Triple;
 import config.YamlConfig;
 import constants.game.GameConstants;
 import constants.inventory.ItemConstants;
@@ -48,10 +47,12 @@ import net.server.guild.Alliance;
 import net.server.guild.Guild;
 import net.server.guild.GuildCharacter;
 import net.server.task.*;
+import net.server.world.Party;
 import net.server.world.World;
 import org.apache.logging.log4j.LogManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import server.BotFactory;
 import server.CashShop.CashItemFactory;
 import server.SkillbookInformationProvider;
 import server.ThreadManager;
@@ -85,6 +86,8 @@ import static java.util.concurrent.TimeUnit.*;
 public class Server {
     private static final Logger log = LoggerFactory.getLogger(Server.class);
     private static Server instance = null;
+
+    private final BotManager bots = new BotManager();
 
     public static Server getInstance() {
         if (instance == null) {
@@ -853,6 +856,7 @@ public class Server {
         futures.add(initExecutor.submit(CashItemFactory::loadAllCashItems));
         futures.add(initExecutor.submit(Quest::loadAllQuests));
         futures.add(initExecutor.submit(SkillbookInformationProvider::loadAllSkillbookInformation));
+        futures.add(initExecutor.submit(CharacterBot::putSkillOrdersAndDelayTimes));
         initExecutor.shutdown();
 
         TimeZone.setDefault(TimeZone.getTimeZone(YamlConfig.config.server.TIMEZONE));
@@ -873,6 +877,7 @@ public class Server {
             log.error("Failed to run all startup-bound database tasks", sqle);
             throw new IllegalStateException(sqle);
         }
+        BotFactory.createBots();
 
         ThreadManager.getInstance().start();
         initializeTimelyTasks(channelDependencies);    // aggregated method for timely tasks thanks to lxconan
@@ -966,6 +971,9 @@ public class Server {
         tMan.register(new DueyFredrickTask(channelDependencies.fredrickProcessor()), HOURS.toMillis(1), timeLeft);
         tMan.register(new InvitationTask(), SECONDS.toMillis(30), SECONDS.toMillis(30));
         tMan.register(new RespawnTask(), YamlConfig.config.server.RESPAWN_INTERVAL, YamlConfig.config.server.RESPAWN_INTERVAL);
+        tMan.register(new UpdateBotsTask(), 1000, MINUTES.toMillis(2));
+        tMan.register(new ManageBotLoginsTask(), MINUTES.toMillis(15), MINUTES.toMillis(1));
+        tMan.register(new UpdateFollowerBotsTask(), 500, SECONDS.toMillis(30));
 
         timeLeft = getTimeLeftForNextDay();
         ExpeditionBossLog.resetBossLogTable();
@@ -1948,5 +1956,9 @@ public class Server {
             instance = null;
             getInstance().init();//DID I DO EVERYTHING?! D:
         }
+    }
+
+    public BotManager getBotManager() {
+        return bots;
     }
 }

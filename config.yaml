@@ -265,6 +265,9 @@ server:
     USE_MAP_OWNERSHIP_SYSTEM: false      #Flag to enable/disable map ownership system
     USE_FISHING_SYSTEM: false            #Flag to enable/disable custom fishing system
     USE_NPCS_SCRIPTABLE: true           #Flag to enable/disable serverside predefined script NPCs.
+    
+    ALL_ITEMS_DROPPABLE: true           # make all items droppable
+    UNIQUE_ITEM_BYPASS: true            # if true multiple copies of unique items can be held
 
     #Events/PQs Configuration
     USE_OLD_GMS_STYLED_PQ_NPCS: true     #Enables PQ NPCs with similar behaviour to old GMS style, that skips info about the PQs and immediately tries to register the party in.
@@ -349,7 +352,7 @@ server:
     USE_ENHANCED_CRAFTING: false     #Apply chaos scroll on every equip crafted.
     SCROLL_CHANCE_ROLLS: 1         #Number of rolls for success on a scroll, set 1 for default.
     CHSCROLL_STAT_RATE: 1               #Number of rolls of stat upgrade on a successfully applied chaos scroll, set 1 for default.
-    CHSCROLL_STAT_RANGE: 6              #Stat upgrade range (-N, N) on chaos scrolls.
+    CHSCROLL_STAT_RANGE: 5              #Stat upgrade range (-N, N) on chaos scrolls.
 
     #Beginner Skills Configuration
     USE_ULTRA_NIMBLE_FEET: false     #Massive speed & jump upgrade.
@@ -358,13 +361,13 @@ server:
 
     #Other Skills Configuration
     USE_FULL_ARAN_SKILLSET: false   #Enables starter availability to all Aran job skills. Suggestion thanks to Masterrulax.
-    USE_FAST_REUSE_HERO_WILL: false  #Greatly reduce cooldown on Hero's Will.
+    USE_FAST_REUSE_HERO_WILL: true  #Greatly reduce cooldown on Hero's Will.
     USE_ANTI_IMMUNITY_CRASH: false   #Crash skills additionally removes the mob's invincibility buffs. Suggestion thanks to Celestial.
     USE_UNDISPEL_HOLY_SHIELD: false  #Holy shield buff also prevents players from suffering dispel from mobs.
     USE_FULL_HOLY_SYMBOL: false      #Holy symbol doesn't require EXP sharers to work in full.
 
     #Character Configuration
-    USE_ADD_SLOTS_BY_LEVEL: true    #Slots are added each 20 levels.
+    USE_ADD_SLOTS_BY_LEVEL: false    #Slots are added each 20 levels.
     USE_ADD_RATES_BY_LEVEL: false    #Rates are added each 20 levels.
     USE_STACK_COUPON_RATES: false   #Multiple coupons effects builds up together.
     USE_PERFECT_PITCH: false         #For lvl 30 or above, each lvlup grants player 1 perfect pitch.

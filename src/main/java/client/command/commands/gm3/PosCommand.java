@@ -40,5 +40,17 @@ public class PosCommand extends Command {
         float fh = player.getMap().getFootholds().findBelow(player.getPosition()).getId();
         player.dropMessage(6, "Position: (" + xpos + ", " + ypos + ")");
         player.dropMessage(6, "Foothold ID: " + fh);
+        int next = player.getMap().getFootholds().findBelow(player.getPosition()).getNext();
+        int prev = player.getMap().getFootholds().findBelow(player.getPosition()).getPrev();
+        player.dropMessage(6, "next: " + next);
+        if (next != 0) {
+            player.dropMessage(6, "p1: (" + player.getMap().getFootholds().getByID(next).getX1() + "," + player.getMap().getFootholds().getByID(next).getY1() + ")");
+            player.dropMessage(6, "p2: (" + player.getMap().getFootholds().getByID(next).getX2() + "," + player.getMap().getFootholds().getByID(next).getY2() + ")");
+        }
+        player.dropMessage(6, "prev: " + prev);
+        if (prev != 0) {
+            player.dropMessage(6, "p1: (" + player.getMap().getFootholds().getByID(prev).getX1() + "," + player.getMap().getFootholds().getByID(prev).getY1() + ")");
+            player.dropMessage(6, "p2: (" + player.getMap().getFootholds().getByID(prev).getX2() + "," + player.getMap().getFootholds().getByID(prev).getY2() + ")");
+        }
     }
 }

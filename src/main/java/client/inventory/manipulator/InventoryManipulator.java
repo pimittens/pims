@@ -808,4 +808,14 @@ public class InventoryManipulator {
     public static boolean isSandboxItem(Item it) {
         return (it.getFlag() & ItemConstants.SANDBOX) == ItemConstants.SANDBOX;
     }
+
+    public static short getPosition(Client c, int itemId) {
+        Inventory inv = c.getPlayer().getInventory(ItemConstants.getInventoryType(itemId));
+        return inv.getSlot(itemId);
+    }
+
+    public static short getQuantity(Client c, InventoryType inventoryType, short pos) {
+        Inventory inv = c.getPlayer().getInventory(inventoryType);
+        return inv.getItem(pos).getQuantity();
+    }
 }

@@ -34,7 +34,7 @@ import java.util.*;
  */
 public class MonsterStats {
     public boolean changeable;
-    public int exp, hp, mp, level, PADamage, PDDamage, MADamage, MDDamage, dropPeriod, cp, buffToGive = -1, removeAfter;
+    public int exp, hp, mp, level, PADamage, PDDamage, MADamage, MDDamage, Acc, Eva, dropPeriod, cp, buffToGive = -1, removeAfter;
     public boolean boss, undead, ffaLoot, isExplosiveReward, firstAttack, removeOnMiss;
     public String name;
     public Map<String, Integer> animationTimes = new HashMap<>();
@@ -310,6 +310,14 @@ public class MonsterStats {
         return MDDamage;
     }
 
+    public int getAcc() {
+        return this.Acc;
+    }
+
+    public int getEva() {
+        return this.Eva;
+    }
+
     public boolean isFriendly() {
         return friendly;
     }
@@ -328,6 +336,14 @@ public class MonsterStats {
 
     public void setMDDamage(int MDDamage) {
         this.MDDamage = MDDamage;
+    }
+
+    public void setAcc(int acc) {
+        this.Acc = acc;
+    }
+
+    public void setEva(int eva) {
+        this.Eva = eva;
     }
 
     public int getFixedStance() {

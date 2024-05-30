@@ -626,7 +626,7 @@ public class AbstractPlayerInteraction {
                         it.setUpgradeSlots(3);
                     }
 
-                    if (YamlConfig.config.server.USE_ENHANCED_CRAFTING == true && c.getPlayer().getCS() == true) {
+                    if (YamlConfig.config.server.USE_ENHANCED_CRAFTING && c.getPlayer().getCS()) {
                         Equip eqp = (Equip) item;
                         if (!(c.getPlayer().isGM() && YamlConfig.config.server.USE_PERFECT_GM_SCROLL)) {
                             eqp.setUpgradeSlots((byte) (eqp.getUpgradeSlots() + 1));

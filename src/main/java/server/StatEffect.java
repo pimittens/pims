@@ -60,7 +60,7 @@ import java.util.*;
  * @author Ronan
  */
 public class StatEffect {
-    private short watk, matk, wdef, mdef, acc, avoid, speed, jump;
+    private short watk, matk, wdef, mdef, acc, avoid, speed, jump, mastery;
     private short hp, mp;
     private double hpR, mpR;
     private short mhpRRate, mmpRRate, mobSkill, mobSkillLevel;
@@ -242,6 +242,7 @@ public class StatEffect {
         ret.mdef = (short) DataTool.getInt("mdd", source, 0);
         ret.acc = (short) DataTool.getIntConvert("acc", source, 0);
         ret.avoid = (short) DataTool.getInt("eva", source, 0);
+        ret.mastery = (short) (DataTool.getInt("mastery", source, 0) * 5);
 
         ret.speed = (short) DataTool.getInt("speed", source, 0);
         ret.jump = (short) DataTool.getInt("jump", source, 0);
@@ -378,7 +379,7 @@ public class StatEffect {
             } else {
                 if (isMapChair(sourceid)) {
                     addBuffStatPairToListIfNotZero(statups, BuffStat.MAP_CHAIR, 1);
-                } else if ((sourceid == Beginner.NIMBLE_FEET || sourceid == Noblesse.NIMBLE_FEET || sourceid == Evan.NIMBLE_FEET || sourceid == Legend.AGILE_BODY) && YamlConfig.config.server.USE_ULTRA_NIMBLE_FEET == true) {
+                } else if ((sourceid == Beginner.NIMBLE_FEET || sourceid == Noblesse.NIMBLE_FEET || sourceid == Evan.NIMBLE_FEET || sourceid == Legend.AGILE_BODY) && YamlConfig.config.server.USE_ULTRA_NIMBLE_FEET) {
                     ret.jump = (short) (ret.speed * 4);
                     ret.speed *= 15;
                 }
@@ -407,7 +408,7 @@ public class StatEffect {
 
         int x = DataTool.getInt("x", source, 0);
 
-        if ((sourceid == Beginner.RECOVERY || sourceid == Noblesse.RECOVERY || sourceid == Evan.RECOVERY || sourceid == Legend.RECOVERY) && YamlConfig.config.server.USE_ULTRA_RECOVERY == true) {
+        if ((sourceid == Beginner.RECOVERY || sourceid == Noblesse.RECOVERY || sourceid == Evan.RECOVERY || sourceid == Legend.RECOVERY) && YamlConfig.config.server.USE_ULTRA_RECOVERY) {
             x *= 10;
         }
         ret.x = x;
@@ -1823,6 +1824,14 @@ public class StatEffect {
 
     public short getWatk() {
         return watk;
+    }
+
+    public short getMastery() {
+        return mastery;
+    }
+
+    public double getProp() {
+        return prop;
     }
 
     public int getDuration() {

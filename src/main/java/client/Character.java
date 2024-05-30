@@ -129,8 +129,8 @@ public class Character extends AbstractCharacterObject {
     private int omokwins, omokties, omoklosses, matchcardwins, matchcardties, matchcardlosses;
     private int owlSearch;
     private long lastfametime, lastUsedCashItem, lastExpression = 0, lastHealed, lastBuyback = 0, lastDeathtime, jailExpiration = -1;
-    private transient int localstr, localdex, localluk, localint_, localmagic, localwatk;
-    private transient int equipmaxhp, equipmaxmp, equipstr, equipdex, equipluk, equipint_, equipmagic, equipwatk, localchairhp, localchairmp;
+    private transient int localstr, localdex, localluk, localint_, localmagic, localwatk, localacc;
+    private transient int equipmaxhp, equipmaxmp, equipstr, equipdex, equipluk, equipint_, equipmagic, equipwatk, equipacc, localchairhp, localchairmp;
     private int localchairrate;
     private boolean hidden, equipchanged = true, berserk, hasMerchant, hasSandboxItem = false, whiteChat = false, canRecvPartySearchInvite = true;
     private boolean equippedMesoMagnet = false, equippedItemPouch = false, equippedPetItemIgnore = false;
@@ -377,10 +377,10 @@ public class Character extends AbstractCharacterObject {
         ret.accountid = c.getAccID();
         ret.buddylist = new BuddyList(20);
         ret.maplemount = null;
-        ret.getInventory(InventoryType.EQUIP).setSlotLimit(24);
-        ret.getInventory(InventoryType.USE).setSlotLimit(24);
-        ret.getInventory(InventoryType.SETUP).setSlotLimit(24);
-        ret.getInventory(InventoryType.ETC).setSlotLimit(24);
+        ret.getInventory(InventoryType.EQUIP).setSlotLimit(96);
+        ret.getInventory(InventoryType.USE).setSlotLimit(96);
+        ret.getInventory(InventoryType.SETUP).setSlotLimit(96);
+        ret.getInventory(InventoryType.ETC).setSlotLimit(96);
 
         // Select a keybinding method
         int[] selectedKey;
@@ -726,7 +726,7 @@ public class Character extends AbstractCharacterObject {
                     weapMulti = 4.2;
                 }
 
-                int attack = (int) Math.min(Math.floor((2 * getLevel() + 31) / 3), 31);
+                int attack = (int) Math.min(Math.floor((2 * getLevel() + 31) / 3.0), 31);
                 maxbasedamage = (int) Math.ceil((localstr * weapMulti + localdex) * attack / 100.0);
             } else {
                 maxbasedamage = 1;
@@ -6290,6 +6290,21 @@ public class Character extends AbstractCharacterObject {
         return spGain;
     }
 
+    private int getTotalSpToMax(Job job) {
+        int jobId = job.getId();
+        int spLeft = 0;
+
+        for (Entry<Skill, SkillEntry> s : this.getSkills().entrySet()) {
+            Skill skill = s.getKey();
+
+            if (GameConstants.isInJobTree(skill.getId(), jobId) && !skill.isBeginnerSkill()) {
+                spLeft += skill.getMaxLevel();
+            }
+        }
+
+        return spLeft;
+    }
+
     private void levelUpGainSp() {
         if (GameConstants.getJobBranch(job) == 0) {
             return;
@@ -6298,6 +6313,10 @@ public class Character extends AbstractCharacterObject {
         int spGain = 3;
         if (YamlConfig.config.server.USE_ENFORCE_JOB_SP_RANGE && !GameConstants.hasSPTable(job)) {
             spGain = getSpGain(spGain, job);
+        }
+
+        if (level == 30 || level == 70 || level == 120 || level == 200) {
+            spGain = getTotalSpToMax(job) - getUsedSp(job) - getRemainingSp(); // give enough sp to max everything, note - doesn't see level 0 skills
         }
 
         if (spGain > 0) {
@@ -6465,7 +6484,7 @@ public class Character extends AbstractCharacterObject {
         }
 
         if (level % 20 == 0) {
-            if (YamlConfig.config.server.USE_ADD_SLOTS_BY_LEVEL == true) {
+            if (YamlConfig.config.server.USE_ADD_SLOTS_BY_LEVEL) {
                 if (!isGM()) {
                     for (byte i = 1; i < 5; i++) {
                         gainSlots(i, 4, true);
@@ -6474,7 +6493,7 @@ public class Character extends AbstractCharacterObject {
                     this.yellowMessage("You reached level " + level + ". Congratulations! As a token of your success, your inventory has been expanded a little bit.");
                 }
             }
-            if (YamlConfig.config.server.USE_ADD_RATES_BY_LEVEL == true) { //For the rate upgrade
+            if (YamlConfig.config.server.USE_ADD_RATES_BY_LEVEL) { //For the rate upgrade
                 revertLastPlayerRates();
                 setPlayerRates();
                 this.yellowMessage("You managed to get level " + level + "! Getting experience and items seems a little easier now, huh?");
@@ -7639,6 +7658,7 @@ public class Character extends AbstractCharacterObject {
             equipwatk = 0;
             //equipspeed = 0;
             //equipjump = 0;
+            equipacc = 0;
 
             for (Item item : getInventory(InventoryType.EQUIPPED)) {
                 Equip equip = (Equip) item;
@@ -7652,6 +7672,7 @@ public class Character extends AbstractCharacterObject {
                 equipwatk += equip.getWatk();
                 //equipspeed += equip.getSpeed();
                 //equipjump += equip.getJump();
+                equipacc = equip.getAcc();
             }
 
             equipchanged = false;
@@ -7665,6 +7686,7 @@ public class Character extends AbstractCharacterObject {
         localluk += equipluk;
         localmagic += equipmagic;
         localwatk += equipwatk;
+        localacc += equipacc;
     }
 
     private void reapplyLocalStats() {
@@ -7681,6 +7703,7 @@ public class Character extends AbstractCharacterObject {
             localmagic = localint_;
             localwatk = 0;
             localchairrate = -1;
+            localacc = 0;
 
             recalcEquipStats();
 
@@ -7750,6 +7773,11 @@ public class Character extends AbstractCharacterObject {
                 localjump += jumpbuff.intValue();
             }
             */
+
+            Integer accbuff = getBuffedValue(BuffStat.ACC);
+            if (accbuff != null) {
+                localacc += accbuff.intValue();
+            }
 
             Integer blessing = getSkillLevel(10000000 * getJobType() + 12);
             if (blessing > 0) {
@@ -8126,7 +8154,7 @@ public class Character extends AbstractCharacterObject {
 
             try {
                 // Character info
-                try (PreparedStatement ps = con.prepareStatement("INSERT INTO characters (str, dex, luk, `int`, gm, skincolor, gender, job, hair, face, map, meso, spawnpoint, accountid, name, world, hp, mp, maxhp, maxmp, level, ap, sp) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
+                try (PreparedStatement ps = con.prepareStatement("INSERT INTO characters (str, dex, luk, `int`, gm, skincolor, gender, job, hair, face, map, meso, spawnpoint, accountid, name, world, hp, mp, maxhp, maxmp, level, ap, sp, equipslots, useslots, setupslots, etcslots) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS)) {
                     ps.setInt(1, str);
                     ps.setInt(2, dex);
                     ps.setInt(3, luk);
@@ -8157,6 +8185,10 @@ public class Character extends AbstractCharacterObject {
                     }
                     String sp = sps.toString();
                     ps.setString(23, sp.substring(0, sp.length() - 1));
+                    ps.setInt(24, getInventory(InventoryType.EQUIP).getSlotLimit());
+                    ps.setInt(25, getInventory(InventoryType.USE).getSlotLimit());
+                    ps.setInt(26, getInventory(InventoryType.SETUP).getSlotLimit());
+                    ps.setInt(27, getInventory(InventoryType.ETC).getSlotLimit());
 
                     int updateRows = ps.executeUpdate();
                     if (updateRows < 1) {
@@ -11241,5 +11273,153 @@ public class Character extends AbstractCharacterObject {
 
     public void setChasing(boolean chasing) {
         this.chasing = chasing;
+    }
+
+    public double getMasteryDouble() {
+        return getMastery() / 100.0;
+    }
+
+    public int getMastery() {
+        int mastery = 10;
+        if (getSkillLevel(Fighter.SWORD_MASTERY) > 0 || getSkillLevel(Fighter.AXE_MASTERY) > 0) {
+            mastery += Math.max(SkillFactory.getSkill(Fighter.SWORD_MASTERY).getEffect(getSkillLevel(Fighter.SWORD_MASTERY)).getMastery(),
+                    SkillFactory.getSkill(Fighter.AXE_MASTERY).getEffect(getSkillLevel(Fighter.AXE_MASTERY)).getMastery());
+        } else if (getSkillLevel(Page.SWORD_MASTERY) > 0 || getSkillLevel(Page.BW_MASTERY) > 0) {
+            mastery += Math.max(SkillFactory.getSkill(Page.SWORD_MASTERY).getEffect(getSkillLevel(Page.SWORD_MASTERY)).getMastery(),
+                    SkillFactory.getSkill(Page.BW_MASTERY).getEffect(getSkillLevel(Page.BW_MASTERY)).getMastery());
+        } else if (getSkillLevel(Spearman.SPEAR_MASTERY) > 0 || getSkillLevel(Spearman.POLEARM_MASTERY) > 0) {
+            mastery += Math.max(SkillFactory.getSkill(Spearman.SPEAR_MASTERY).getEffect(getSkillLevel(Spearman.SPEAR_MASTERY)).getMastery(),
+                    SkillFactory.getSkill(Spearman.POLEARM_MASTERY).getEffect(getSkillLevel(Spearman.POLEARM_MASTERY)).getMastery());
+            if (getSkillLevel(DarkKnight.BEHOLDER) > 0) {
+                mastery += SkillFactory.getSkill(DarkKnight.BEHOLDER).getEffect(getSkillLevel(DarkKnight.BEHOLDER)).getMastery();
+            }
+        } else if (getSkillLevel(Hunter.BOW_MASTERY) > 0) {
+            if (getSkillLevel(Bowmaster.BOW_EXPERT) > 0) {
+                mastery += SkillFactory.getSkill(Bowmaster.BOW_EXPERT).getEffect(getSkillLevel(Bowmaster.BOW_EXPERT)).getMastery();
+            } else {
+                mastery += SkillFactory.getSkill(Hunter.BOW_MASTERY).getEffect(getSkillLevel(Hunter.BOW_MASTERY)).getMastery();
+            }
+        } else if (getSkillLevel(Crossbowman.CROSSBOW_MASTERY) > 0) {
+            if (getSkillLevel(Marksman.MARKSMAN_BOOST) > 0) {
+                mastery += SkillFactory.getSkill(Marksman.MARKSMAN_BOOST).getEffect(getSkillLevel(Marksman.MARKSMAN_BOOST)).getMastery();
+            } else {
+                mastery += SkillFactory.getSkill(Crossbowman.CROSSBOW_MASTERY).getEffect(getSkillLevel(Crossbowman.CROSSBOW_MASTERY)).getMastery();
+            }
+        } else if (getSkillLevel(Assassin.CLAW_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Assassin.CLAW_MASTERY).getEffect(getSkillLevel(Assassin.CLAW_MASTERY)).getMastery();
+        } else if (getSkillLevel(Bandit.DAGGER_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Bandit.DAGGER_MASTERY).getEffect(getSkillLevel(Bandit.DAGGER_MASTERY)).getMastery();
+        } else if (getSkillLevel(Brawler.KNUCKLER_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Brawler.KNUCKLER_MASTERY).getEffect(getSkillLevel(Brawler.KNUCKLER_MASTERY)).getMastery();
+        } else if (getSkillLevel(Gunslinger.GUN_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Gunslinger.GUN_MASTERY).getEffect(getSkillLevel(Gunslinger.GUN_MASTERY)).getMastery();
+        }
+        return mastery;
+    }
+
+    public int calculateMinBaseDamage(int watk) {
+        int minbasedamage;
+        Item weapon_item = getInventory(InventoryType.EQUIPPED).getItem((short) -11);
+        if (weapon_item != null) {
+            minbasedamage = calculateMinBaseDamage(watk, ItemInformationProvider.getInstance().getWeaponType(weapon_item.getItemId()));
+        } else {
+            if (job.isA(Job.PIRATE) || job.isA(Job.THUNDERBREAKER1)) {
+                double weapMulti = 3;
+                if (job.getId() % 100 != 0) {
+                    weapMulti = 4.2;
+                }
+
+                int attack = (int) Math.min(Math.floor((2 * getLevel() + 31) / 3.0), 31);
+                minbasedamage = (int) Math.ceil((localstr * weapMulti * 0.1 * 0.9 + localdex) * attack / 100.0);
+            } else {
+                minbasedamage = 1;
+            }
+        }
+        return minbasedamage;
+    }
+
+    public int calculateMinBaseDamage(int watk, WeaponType weapon) {
+        int mainstat, secondarystat;
+        if (getJob().isA(Job.THIEF) && weapon == WeaponType.DAGGER_OTHER) {
+            weapon = WeaponType.DAGGER_THIEVES;
+        }
+
+        if (weapon == WeaponType.BOW || weapon == WeaponType.CROSSBOW || weapon == WeaponType.GUN) {
+            mainstat = localdex;
+            secondarystat = localstr;
+        } else if (weapon == WeaponType.CLAW || weapon == WeaponType.DAGGER_THIEVES) {
+            mainstat = localluk;
+            secondarystat = localdex + localstr;
+        } else {
+            mainstat = localstr;
+            secondarystat = localdex;
+        }
+        return (int) Math.ceil(((weapon.getMaxDamageMultiplier() * mainstat * 0.9 * getMasteryDouble() + secondarystat) / 100.0) * watk);
+    }
+
+    public int calculateMinBaseMagicAttackDamage(int skillId) {
+        return (int) ((Math.ceil((getTotalMagic() * Math.ceil(getTotalMagic() / 1000.0) + getTotalMagic() *
+                (10 + SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMastery()) * 0.9) / 30.0) +
+                Math.ceil(getTotalInt() / 200.0)) * SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMatk());
+    }
+
+    public int calculateMaxBaseMagicAttackDamage(int skillId) {
+        return (int) ((Math.ceil((getTotalMagic() * Math.ceil(getTotalMagic() / 1000.0) + getTotalMagic()) / 30.0) +
+                Math.ceil(getTotalInt() / 200.0)) * SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMatk());
+    }
+
+    public WeaponType getWeaponType() {
+        Item weapon_item = getInventory(InventoryType.EQUIPPED).getItem((short) -11);
+        if (weapon_item != null) {
+            return ItemInformationProvider.getInstance().getWeaponType(weapon_item.getItemId());
+        }
+        return WeaponType.NOT_A_WEAPON;
+    }
+
+    public float getAccuracy() {
+        if (job.getId() / 100 == 5 && job.getId() % 100 / 10 == 1) {
+            return 0.9f * getTotalDex() + 0.3f * getTotalLuk() + localacc;
+        }
+        if (job.getId() / 100 == 3 || job.getId() / 100 == 4 || job.getId() / 100 == 5) {
+            return 0.6f * getTotalDex() + 0.3f * getTotalLuk() + localacc;
+        }
+        return 0.8f * getTotalDex() + 0.5f * getTotalLuk() + localacc;
+    }
+
+    public long getExpirationTime(int skillId) {
+        if (buffExpires.get(skillId) == null) {
+            return -1;
+        }
+        return buffExpires.get(skillId);
+    }
+
+    public double getCritRate() {
+        double ret = 0;
+        if (getSkillLevel(Archer.CRITICAL_SHOT) > 0) {
+            ret += SkillFactory.getSkill(Archer.CRITICAL_SHOT).getEffect(getSkillLevel(Archer.CRITICAL_SHOT)).getProp();
+        } else if (getSkillLevel(Assassin.CRITICAL_THROW) > 0) {
+            ret += SkillFactory.getSkill(Assassin.CRITICAL_THROW).getEffect(getSkillLevel(Assassin.CRITICAL_THROW)).getProp();
+        }
+        if (getBuffEffect(BuffStat.SHARP_EYES) != null) {
+            ret += getBuffEffect(BuffStat.SHARP_EYES).getX() / 100.0;
+        }
+        return ret;
+    }
+
+    public double getCritBonus() {
+        int ret = 100;
+        if (getSkillLevel(Archer.CRITICAL_SHOT) > 0) {
+            ret = SkillFactory.getSkill(Archer.CRITICAL_SHOT).getEffect(getSkillLevel(Archer.CRITICAL_SHOT)).getDamage();
+        } else if (getSkillLevel(Assassin.CRITICAL_THROW) > 0) {
+            ret = SkillFactory.getSkill(Assassin.CRITICAL_THROW).getEffect(getSkillLevel(Assassin.CRITICAL_THROW)).getDamage();
+        }
+        if (getBuffEffect(BuffStat.SHARP_EYES) != null) {
+            ret += getBuffEffect(BuffStat.SHARP_EYES).getY() - 100;
+        }
+        return ret / 100.0;
+    }
+
+    public int getWeaponSpeed() {
+        return 4; // todo
     }
 }

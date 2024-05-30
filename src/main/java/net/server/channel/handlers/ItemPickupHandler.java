@@ -40,6 +40,7 @@ public final class ItemPickupHandler extends AbstractPacketHandler {
 
     @Override
     public void handlePacket(final InPacket p, final Client c) {
+        //System.out.println("pickup item packet: " + p);
         p.readInt(); //Timestamp
         p.readByte();
         p.readPos(); //cpos

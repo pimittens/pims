@@ -219,7 +219,7 @@ public class StorageInventory {
         }
 
         int invTypeCriteria = 1;
-        int sortCriteria = (YamlConfig.config.server.USE_ITEM_SORT_BY_NAME == true) ? 2 : 0;
+        int sortCriteria = (YamlConfig.config.server.USE_ITEM_SORT_BY_NAME) ? 2 : 0;
         PairedQuicksort pq = new PairedQuicksort(itemarray, sortCriteria, invTypeCriteria);
 
         inventory.clear();

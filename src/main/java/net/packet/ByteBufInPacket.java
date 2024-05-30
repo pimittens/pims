@@ -3,6 +3,8 @@ package net.packet;
 import constants.string.CharsetConstants;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
+import net.opcodes.SendOpcode;
 
 import java.awt.*;
 
@@ -10,6 +12,12 @@ public class ByteBufInPacket implements InPacket {
     private final ByteBuf byteBuf;
 
     public ByteBufInPacket(ByteBuf byteBuf) {
+        this.byteBuf = byteBuf;
+    }
+
+    public ByteBufInPacket(SendOpcode op) {
+        ByteBuf byteBuf = Unpooled.buffer();
+        byteBuf.writeShortLE((short) op.getValue());
         this.byteBuf = byteBuf;
     }
 
@@ -99,5 +107,52 @@ public class ByteBufInPacket implements InPacket {
         StringBuilder sb = new StringBuilder(hexDump);
         sb.insert(2 * index, '_');
         return sb.toString();
+    }
+
+    @Override
+    public void writeByte(byte value) {
+        byteBuf.writeByte(value);
+    }
+
+    @Override
+    public void writeByte(int value) {
+        writeByte((byte) value);
+    }
+
+    @Override
+    public void writeBytes(byte[] value) {
+        byteBuf.writeBytes(value);
+    }
+
+    @Override
+    public void writeShort(int value) {
+        byteBuf.writeShortLE(value);
+    }
+
+    @Override
+    public void writeInt(int value) {
+        byteBuf.writeIntLE(value);
+    }
+
+    @Override
+    public void writeLong(long value) {
+        byteBuf.writeLongLE(value);
+    }
+
+    @Override
+    public void writeBool(boolean value) {
+        byteBuf.writeByte(value ? 1 : 0);
+    }
+
+    @Override
+    public void writeString(String value) {
+        byte[] bytes = value.getBytes(CharsetConstants.CHARSET);
+        writeShort(bytes.length);
+        writeBytes(bytes);
+    }
+
+    @Override
+    public void writeFixedString(String value) {
+        writeBytes(value.getBytes(CharsetConstants.CHARSET));
     }
 }

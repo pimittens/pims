@@ -119,6 +119,8 @@ public class LifeFactory {
         stats.setPDDamage(DataTool.getIntConvert("PDDamage", monsterInfoData));
         stats.setMADamage(DataTool.getIntConvert("MADamage", monsterInfoData));
         stats.setMDDamage(DataTool.getIntConvert("MDDamage", monsterInfoData));
+        stats.setAcc(DataTool.getIntConvert("acc", monsterInfoData));
+        stats.setEva(DataTool.getIntConvert("eva", monsterInfoData));
         stats.setMp(DataTool.getIntConvert("maxMP", monsterInfoData, stats.getMp()));
         stats.setExp(DataTool.getIntConvert("exp", monsterInfoData, stats.getExp()));
         stats.setLevel(DataTool.getIntConvert("level", monsterInfoData));

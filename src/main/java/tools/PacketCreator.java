@@ -37,9 +37,7 @@ import constants.id.ItemId;
 import constants.id.MapId;
 import constants.id.NpcId;
 import constants.inventory.ItemConstants;
-import constants.skills.Buccaneer;
-import constants.skills.Corsair;
-import constants.skills.ThunderBreaker;
+import constants.skills.*;
 import net.encryption.InitializationVector;
 import net.opcodes.SendOpcode;
 import net.packet.ByteBufOutPacket;
@@ -49,6 +47,7 @@ import net.packet.Packet;
 import net.server.PlayerCoolDownValueHolder;
 import net.server.Server;
 import net.server.channel.Channel;
+import net.server.channel.handlers.AbstractDealDamageHandler;
 import net.server.channel.handlers.PlayerInteractionHandler;
 import net.server.channel.handlers.SummonDamageHandler.SummonAttackEntry;
 import net.server.channel.handlers.WhisperHandler;
@@ -7405,6 +7404,291 @@ public class PacketCreator {
         //8 or 16 = "You have reached the round of %n by default." | Encodes nState as %n ?!
         p.writeByte(nState);
 
+        return p;
+    }
+
+    public static InPacket createCharSelectedPacket(int charID) {
+        final InPacket p = InPacket.create(SendOpcode.CHAR_SELECTED);
+        p.writeInt(charID);
+        p.writeString("10-68-38-68-E9-1E");
+        p.writeString("10683868E91F_A9071648");
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createLoginPacket(int charID) {
+        final InPacket p = InPacket.create(SendOpcode.CHANNEL_SELECTED);
+        p.writeInt(charID);
+        p.writeShort(0); // idk what this does or if it should ever be nonzero
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createPartySearchUpdatePacket() {
+        final InPacket p = InPacket.create(SendOpcode.SPAWN_GUIDE);
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createPlayerMapTransitionPacket() {
+        final InPacket p = InPacket.create(SendOpcode.DOJO_WARP_UP);
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createLoginPasswordPacket(String login, String password) {
+        final InPacket p = InPacket.create(SendOpcode.GUEST_ID_LOGIN);
+        p.writeString(login); // login
+        p.writeString(password); // password
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // these get skipped
+        p.writeByte(-87);
+        p.writeByte(7);
+        p.writeByte(22);
+        p.writeByte(72); // hwidNibbles
+        // the actual packets have more data after this but the server doesn't appear to use them for anything
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createServerListRequestPacket() {
+        final InPacket p = InPacket.create(SendOpcode.CHARLIST);
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createCharListRequestPacket() {
+        final InPacket p = InPacket.create(SendOpcode.CONFIRM_EULA_RESULT);
+        p.writeByte(0); // not sure if this is used for anything
+        p.writeByte(0); // world
+        p.writeByte(0); // channel - 1
+        p.writeInt(0); // not sure if this is used for anything
+        p.skip(2);
+        return p;
+    }
+
+    /* character states:
+     2 - walk right
+     3 - walk left
+     4 - stand facing right
+     5 - stand facing left
+     6 - jump/fall facing right
+     7 - jump/fall facing left
+     8 - regular attack facing right
+     9 - regular attack facing left
+     16 - climbing ladder */
+
+    public static InPacket createPlayerMovementPacket(short xpos, short ypos, byte state, short duration) {
+        final InPacket p = InPacket.create(SendOpcode.MEMO_RESULT);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // these get skipped
+        p.writeByte(1); // number of commands
+        p.writeByte(0); // command type
+        p.writeShort(xpos); // xpos
+        p.writeShort(ypos); // ypos
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(state); // new state, see states above
+        p.writeShort(duration); // duration
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createPickupItemPacket(int oid) {
+        final InPacket p = InPacket.create(SendOpcode.GUILD_NAME_CHANGED);
+        p.writeInt(0); // timestamp
+        p.writeByte(0); // skipped
+        p.writeShort(0); // xpos
+        p.writeShort(0); // ypos
+        p.writeInt(oid); // oid
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createRegularAttackPacket(int monsteroid, int damage, boolean facingLeft) {
+        final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
+        p.writeByte(0); // skipped
+        p.writeByte(17); // num attacked and damage
+        p.writeInt(0); // skill
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(0); // display
+        p.writeByte(7); // direction
+        p.writeByte(-128); // stance
+        p.writeByte(0); // skipped
+        p.writeByte(2); // speed
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeInt(monsteroid); // oid of the target monster
+        for (int i = 0; i < 14; i++) {
+            p.writeByte(0); //skipped
+        }
+        p.writeInt(damage); // damage
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createUseBuffPacket(int skillId, int skillLevel) {
+        final InPacket p = InPacket.create(SendOpcode.PARTY_VALUE);
+        p.writeInt(0); // skipped
+        p.writeInt(skillId); // skill id
+        p.writeByte(skillLevel); // skill level
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createMagicAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
+        final InPacket p = InPacket.create(SendOpcode.CLAIM_AVAILABLE_TIME);
+        p.writeByte(0); // skipped
+        p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
+        p.writeInt(attack.skill); // skill
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(attack.display); // display
+        p.writeByte(attack.direction); // direction
+        p.writeByte(attack.stance); // stance
+        p.writeByte(0); // skipped
+        p.writeByte(attack.speed); // speed
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        for (int i : attack.allDamage.keySet()) {
+            p.writeInt(i); // oid of the target monster
+            for (int j = 0; j < 14; j++) {
+                p.writeByte(0); // skipped
+            }
+            for (int k : attack.allDamage.get(i)) {
+                p.writeInt(k); // damage
+            }
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+        }
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createRangedAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
+        final InPacket p = InPacket.create(SendOpcode.CLAIM_RESULT);
+        p.writeByte(0); // skipped
+        p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
+        p.writeInt(attack.skill); // skill
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(attack.display); // display
+        p.writeByte(attack.direction); // direction
+        p.writeByte(attack.stance); // stance
+        p.writeByte(0); // skipped
+        p.writeByte(attack.speed); // speed
+        p.writeByte(0); // skipped
+        p.writeByte(attack.rangedirection); // ranged direction
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        if (attack.skill == Bowmaster.HURRICANE || attack.skill == Marksman.PIERCING_ARROW || attack.skill == Corsair.RAPID_FIRE || attack.skill == WindArcher.HURRICANE) {
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+        }
+        for (int i : attack.allDamage.keySet()) {
+            p.writeInt(i); // oid of the target monster
+            for (int j = 0; j < 14; j++) {
+                p.writeByte(0); // skipped
+            }
+            for (int k : attack.allDamage.get(i)) {
+                p.writeInt(k); // damage
+            }
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+        }
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createCloseRangeAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
+        final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
+        p.writeByte(0); // skipped
+        p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
+        p.writeInt(attack.skill); // skill
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeByte(attack.display); // display
+        p.writeByte(attack.direction); // direction
+        p.writeByte(attack.stance); // stance
+        p.writeByte(0); // skipped
+        p.writeByte(attack.speed); // speed
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        for (int i : attack.allDamage.keySet()) {
+            p.writeInt(i); // oid of the target monster
+            for (int j = 0; j < 14; j++) {
+                p.writeByte(0); // skipped
+            }
+            for (int k : attack.allDamage.get(i)) {
+                p.writeInt(k); // damage
+            }
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+        }
+        p.skip(2);
         return p;
     }
 
