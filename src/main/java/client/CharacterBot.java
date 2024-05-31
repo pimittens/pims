@@ -1,6 +1,7 @@
 package client;
 
 import client.inventory.InventoryType;
+import client.inventory.Item;
 import client.inventory.WeaponType;
 import client.inventory.manipulator.InventoryManipulator;
 import client.processor.stat.AssignSPProcessor;
@@ -8,6 +9,7 @@ import constants.inventory.ItemConstants;
 import constants.skills.*;
 import net.PacketProcessor;
 import net.server.channel.handlers.AbstractDealDamageHandler;
+import server.ItemInformationProvider;
 import server.StatEffect;
 import server.life.Monster;
 import server.life.MonsterDropEntry;
@@ -17,10 +19,8 @@ import tools.Randomizer;
 
 import java.awt.*;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class CharacterBot {
     private enum Mode {
@@ -144,7 +144,9 @@ public class CharacterBot {
             }
         }
         // todo: pqs
+        System.out.println("current time: " + System.currentTimeMillis() + ", previous action: " + previousAction + ", delay: " + delay);
         int time = (int) (System.currentTimeMillis() - previousAction - delay); // amount of time for actions
+        System.out.println("time: " + time);
         previousAction = System.currentTimeMillis();
         delay = 0;
         grind(time);
@@ -220,9 +222,10 @@ public class CharacterBot {
                 timeRemaining = 0;
             }
         }
-        if (c.getPlayer().getPosition().x == targetX && c.getPlayer().getPosition().y == targetY) {
-            c.handlePacket(PacketCreator.createPlayerMovementPacket((short) (c.getPlayer().getPosition().x), (short) (c.getPlayer().getPosition().y), (byte) (facingLeft ? 5 : 4), (short) 10), (short) 41);
+        if (hasTargetMonster) {
+            facingLeft = false;
         }
+        c.handlePacket(PacketCreator.createPlayerMovementPacket((short) (c.getPlayer().getPosition().x), (short) (c.getPlayer().getPosition().y), (byte) (facingLeft ? 5 : 4), (short) 10), (short) 41);
         return timeRemaining - 10;
     }
 
@@ -440,7 +443,7 @@ public class CharacterBot {
     private void doAttack(int time, int skillId) { // todo: combo orbs, arrow bomb, shadow partner, paladin charges, bucc stuff, are star att bonuses being use?
         if (skillId == -1) {
             doRegularAttack();
-            delay = System.currentTimeMillis() + 500 - time; // todo: accurate delay
+            delay = 500 - time; // todo: accurate delay
             return;
         }
         List<Monster> targets = new ArrayList<>();
@@ -472,9 +475,9 @@ public class CharacterBot {
         attack.speed = c.getPlayer().getWeaponSpeed();
         attack.display = 0; // todo: if using any attacks that use diplay update this
         attack.position = c.getPlayer().getPosition();
-        attack.stance = facingLeft ? -128 : 0;
+        attack.stance = (!facingLeft || skillId == Bowmaster.HURRICANE || skillId == Corsair.RAPID_FIRE) ? 0 : -128;
         attack.direction = getDirection(skillId);
-        attack.rangedirection = 0; // todo: figure out what this does, seems to increment with each skill usage
+        attack.rangedirection = ((skillId == Bowmaster.HURRICANE || skillId == Corsair.RAPID_FIRE) && facingLeft) ? -128 : 0; // todo: figure out what this does, seems to increment with each skill usage
         List<Integer> damageNumbers;
         if (effect.getMatk() > 0) {
             attack.magic = true;
@@ -487,6 +490,7 @@ public class CharacterBot {
             }
             c.handlePacket(PacketCreator.createMagicAttackPacket(attack), (short) 46);
         } else if (isRangedJob()) {
+            rechargeProjectiles();
             attack.ranged = true;
             for (Monster m : targets) {
                 damageNumbers = new ArrayList<>();
@@ -506,7 +510,7 @@ public class CharacterBot {
             }
             c.handlePacket(PacketCreator.createCloseRangeAttackPacket(attack), (short) 44);
         }
-        delay = System.currentTimeMillis() + 500 - time; // todo: accurate delay
+        delay = 500 - time; // todo: accurate delay
     }
 
     private int calcMagicDamage(int skillId, Monster target) {
@@ -656,7 +660,7 @@ public class CharacterBot {
         boolean didAction = true;
         while (time > 0 && didAction) {
             didAction = false;
-            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) { // todo: pick closest item
                 if (!c.getPlayer().getMap().getItems().isEmpty()) {
                     for (MapObject it : c.getPlayer().getMap().getItems()) {
                         if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer())) {
@@ -696,12 +700,12 @@ public class CharacterBot {
                     didAction = true;
                 }
             } else if (hasTargetMonster) {
-                if (c.getPlayer().getPosition().distance(targetMonster.getPosition()) < 100) { // todo: accurate range
+                if (c.getPlayer().getPosition().distance(targetMonster.getPosition().x - (isRangedJob() ? 300 : 50), targetMonster.getPosition().y) < 50) { // todo: accurate range
                     attack(time);
                     time = 0;
                     didAction = true;
                 } else {
-                    time = moveBot((short) targetMonster.getPosition().x, (short) targetMonster.getPosition().y, time);
+                    time = moveBot((short) (targetMonster.getPosition().x - (isRangedJob() ? 300 : 50)), (short) targetMonster.getPosition().y, time);
                     didAction = true;
                 }
             }
@@ -839,6 +843,25 @@ public class CharacterBot {
         }
     }
 
+    private void rechargeProjectiles() {
+        ItemInformationProvider ii = ItemInformationProvider.getInstance();
+        for (Item torecharge : c.getPlayer().getInventory(InventoryType.USE).list()) {
+            if (ItemConstants.isThrowingStar(torecharge.getItemId())) {
+                torecharge.setQuantity(ii.getSlotMax(c, torecharge.getItemId()));
+                c.getPlayer().forceUpdateItem(torecharge);
+            } else if (ItemConstants.isArrow(torecharge.getItemId())) {
+                torecharge.setQuantity(ii.getSlotMax(c, torecharge.getItemId()));
+                c.getPlayer().forceUpdateItem(torecharge);
+            } else if (ItemConstants.isBullet(torecharge.getItemId())) {
+                torecharge.setQuantity(ii.getSlotMax(c, torecharge.getItemId()));
+                c.getPlayer().forceUpdateItem(torecharge);
+            } else if (ItemConstants.isConsumable(torecharge.getItemId())) {
+                torecharge.setQuantity(ii.getSlotMax(c, torecharge.getItemId()));
+                c.getPlayer().forceUpdateItem(torecharge);
+            }
+        }
+    }
+
     private void gainItem(int itemId, short quantity) {
         InventoryType inventoryType = ItemConstants.getInventoryType(itemId);
         while (!InventoryManipulator.checkSpace(c, itemId, quantity, "")) {
@@ -867,7 +890,7 @@ public class CharacterBot {
 
     private boolean isRangedJob() {
         int jobId = c.getPlayer().getJob().getId();
-        return jobId / 100 == 3 || (jobId / 100 == 4 && jobId % 100 / 10 == 1) || (jobId / 100 == 5 && jobId % 100 / 10 == 2);
+        return jobId / 100 == 3 || (jobId / 100 == 4 && jobId % 100 / 10 != 2) || (jobId / 100 == 5 && jobId % 100 / 10 == 2);
     }
 
     public Character getFollowing() {

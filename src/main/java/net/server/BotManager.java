@@ -162,11 +162,15 @@ public class BotManager {
     public void dismissFollowers(Character character) {
         lock.lock();
         try {
+            List<CharacterBot> toRemove = new ArrayList<>();
             for (CharacterBot bot : followers) {
                 if (bot.getFollowing().equals(character)) {
                     bot.logout();
-                    followers.remove(bot);
+                    toRemove.add(bot);
                 }
+            }
+            for (CharacterBot bot : toRemove) {
+                followers.remove(bot);
             }
         } finally {
             lock.unlock();

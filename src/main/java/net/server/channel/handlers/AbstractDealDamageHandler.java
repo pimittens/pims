@@ -608,10 +608,10 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
             }
             return ret;
         }
+        p.readByte();
+        ret.speed = p.readByte();
+        //System.out.println("speed: " + ret.speed);
         if (ranged) {
-            p.readByte();
-            ret.speed = p.readByte();
-            //System.out.println("speed: " + ret.speed);
             p.readByte();
             ret.rangedirection = p.readByte();
             //System.out.println("rangedirection: " + ret.rangedirection);
@@ -620,9 +620,6 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
                 p.skip(4);
             }
         } else {
-            p.readByte();
-            ret.speed = p.readByte();
-            //System.out.println("speed: " + ret.speed);
             p.skip(4);
         }
 
