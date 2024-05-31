@@ -9,6 +9,7 @@ import constants.inventory.ItemConstants;
 import constants.skills.*;
 import net.PacketProcessor;
 import net.server.channel.handlers.AbstractDealDamageHandler;
+import org.w3c.dom.ranges.Range;
 import server.ItemInformationProvider;
 import server.StatEffect;
 import server.life.Monster;
@@ -95,7 +96,7 @@ public class CharacterBot {
     }
 
     public void update() {
-        if (loggedOut || level >= 30 || true) { // temporarily disabled bot updates for testing purposes
+        if (loggedOut || level >= 70 || true) { // temporarily disabled bot updates for testing purposes
             return;
         }
         c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their mp each update
@@ -223,7 +224,7 @@ public class CharacterBot {
             }
         }
         if (hasTargetMonster) {
-            facingLeft = false;
+            facingLeft = targetMonster.getPosition().x < c.getPlayer().getPosition().x;
         }
         c.handlePacket(PacketCreator.createPlayerMovementPacket((short) (c.getPlayer().getPosition().x), (short) (c.getPlayer().getPosition().y), (byte) (facingLeft ? 5 : 4), (short) 10), (short) 41);
         return timeRemaining - 10;
@@ -240,6 +241,7 @@ public class CharacterBot {
             case FIGHTER:
             case PAGE:
             case SPEARMAN:
+            case CRUSADER:
                 if (c.getPlayer().getSkillLevel(Warrior.POWER_STRIKE) > 0) {
                     singleTargetAttack = Warrior.POWER_STRIKE;
                 }
@@ -247,13 +249,47 @@ public class CharacterBot {
                     mobAttack = Warrior.SLASH_BLAST;
                 }
                 break;
-            case CRUSADER:
-            case WHITEKNIGHT:
-            case DRAGONKNIGHT:
             case HERO:
+                if (c.getPlayer().getSkillLevel(Hero.BRANDISH) > 0) {
+                    singleTargetAttack = Hero.BRANDISH;
+                    mobAttack = Hero.BRANDISH;
+                } else {
+                    singleTargetAttack = Warrior.POWER_STRIKE;
+                    mobAttack = Warrior.SLASH_BLAST;
+                }
+                break;
+            case WHITEKNIGHT:
+                singleTargetAttack = Warrior.POWER_STRIKE;
+                if (c.getPlayer().getSkillLevel(WhiteKnight.CHARGE_BLOW) > 0) {
+                    mobAttack = WhiteKnight.CHARGE_BLOW;
+                } else {
+                    mobAttack = Warrior.SLASH_BLAST;
+                }
+                break;
             case PALADIN:
+                if (c.getPlayer().getSkillLevel(Paladin.BLAST) > 0) {
+                    singleTargetAttack = Paladin.BLAST;
+                } else {
+                    singleTargetAttack = Warrior.POWER_STRIKE;
+                }
+                mobAttack = WhiteKnight.CHARGE_BLOW;
+                break;
+            case DRAGONKNIGHT:
+                if (c.getPlayer().getSkillLevel(DragonKnight.SPEAR_CRUSHER) > 0) {
+                    singleTargetAttack = DragonKnight.SPEAR_CRUSHER;
+                } else {
+                    singleTargetAttack = Warrior.POWER_STRIKE;
+                }
+                if (c.getPlayer().getSkillLevel(DragonKnight.SPEAR_DRAGON_FURY) > 0) {
+                    mobAttack = DragonKnight.SPEAR_DRAGON_FURY;
+                } else {
+                    mobAttack = Warrior.SLASH_BLAST;
+                }
+                break;
             case DARKKNIGHT:
-                break; // todo
+                singleTargetAttack = DragonKnight.SPEAR_CRUSHER;
+                mobAttack = DragonKnight.SPEAR_DRAGON_FURY;
+                break;
             case MAGICIAN:
                 if (c.getPlayer().getSkillLevel(Magician.MAGIC_CLAW) > 0) {
                     singleTargetAttack = Magician.MAGIC_CLAW;
@@ -264,15 +300,104 @@ public class CharacterBot {
                 }
                 break;
             case FP_WIZARD:
-            case IL_WIZARD:
-            case CLERIC:
+                if (c.getPlayer().getSkillLevel(FPWizard.FIRE_ARROW) > 0) {
+                    singleTargetAttack = FPWizard.FIRE_ARROW;
+                    mobAttack = FPWizard.FIRE_ARROW;
+                } else {
+                    singleTargetAttack = Magician.MAGIC_CLAW;
+                    mobAttack = Magician.MAGIC_CLAW;
+                }
+                break;
             case FP_MAGE:
-            case IL_MAGE:
-            case PRIEST:
+                if (c.getPlayer().getSkillLevel(FPMage.ELEMENT_AMPLIFICATION) > 0) {
+                    singleTargetAttack = FPMage.ELEMENT_AMPLIFICATION;
+                } else {
+                    singleTargetAttack = FPWizard.FIRE_ARROW;
+                }
+                if (c.getPlayer().getSkillLevel(FPMage.EXPLOSION) > 0) {
+                    mobAttack = FPMage.EXPLOSION;
+                } else {
+                    mobAttack = FPWizard.FIRE_ARROW;
+                }
+                break;
             case FP_ARCHMAGE:
+                if (c.getPlayer().getSkillLevel(FPArchMage.PARALYZE) > 0) {
+                    singleTargetAttack = FPArchMage.PARALYZE;
+                } else {
+                    singleTargetAttack = FPMage.ELEMENT_AMPLIFICATION;
+                }
+                if (c.getPlayer().getSkillLevel(FPArchMage.METEOR_SHOWER) > 0) {
+                    mobAttack = FPArchMage.METEOR_SHOWER;
+                } else {
+                    mobAttack = FPMage.EXPLOSION;
+                }
+                break;
+            case IL_WIZARD:
+                if (c.getPlayer().getSkillLevel(ILWizard.COLD_BEAM) > 0) {
+                    singleTargetAttack = ILWizard.COLD_BEAM;
+                } else {
+                    singleTargetAttack = Magician.MAGIC_CLAW;
+                }
+                if (c.getPlayer().getSkillLevel(ILWizard.THUNDERBOLT) > 0) {
+                    mobAttack = ILWizard.THUNDERBOLT;
+                } else {
+                    mobAttack = Magician.MAGIC_CLAW;
+                }
+                break;
+            case IL_MAGE:
+                if (c.getPlayer().getSkillLevel(ILMage.ELEMENT_COMPOSITION) > 0) {
+                    singleTargetAttack = ILMage.ELEMENT_COMPOSITION;
+                } else {
+                    singleTargetAttack = ILWizard.COLD_BEAM;
+                }
+                if (c.getPlayer().getSkillLevel(ILMage.ICE_STRIKE) > 0) {
+                    mobAttack = ILMage.ICE_STRIKE;
+                } else {
+                    mobAttack = ILWizard.THUNDERBOLT;
+                }
+                break;
             case IL_ARCHMAGE:
+                if (c.getPlayer().getSkillLevel(ILArchMage.CHAIN_LIGHTNING) > 0) {
+                    singleTargetAttack = ILArchMage.CHAIN_LIGHTNING;
+                } else {
+                    singleTargetAttack = ILMage.ELEMENT_COMPOSITION;
+                }
+                if (c.getPlayer().getSkillLevel(ILArchMage.BLIZZARD) > 0) {
+                    mobAttack = ILArchMage.BLIZZARD;
+                } else {
+                    mobAttack = ILMage.ICE_STRIKE;
+                }
+                break;
+            case CLERIC:
+                if (c.getPlayer().getSkillLevel(Cleric.HOLY_ARROW) > 0) {
+                    singleTargetAttack = Cleric.HOLY_ARROW;
+                    mobAttack = Cleric.HOLY_ARROW;
+                } else {
+                    singleTargetAttack = Magician.MAGIC_CLAW;
+                    mobAttack = Magician.MAGIC_CLAW;
+                }
+                break;
+            case PRIEST:
+                if (c.getPlayer().getSkillLevel(Priest.SHINING_RAY) > 0) {
+                    singleTargetAttack = Priest.SHINING_RAY;
+                    mobAttack = Priest.SHINING_RAY;
+                } else {
+                    singleTargetAttack = Cleric.HOLY_ARROW;
+                    mobAttack = Cleric.HOLY_ARROW;
+                }
+                break;
             case BISHOP:
-                break; // todo
+                if (c.getPlayer().getSkillLevel(Bishop.ANGEL_RAY) > 0) {
+                    singleTargetAttack = Bishop.ANGEL_RAY;
+                } else {
+                    singleTargetAttack = Priest.SHINING_RAY;
+                }
+                if (c.getPlayer().getSkillLevel(Bishop.GENESIS) > 0) {
+                    singleTargetAttack = Bishop.GENESIS;
+                } else {
+                    singleTargetAttack = Priest.SHINING_RAY;
+                }
+                break;
             case BOWMAN:
                 if (c.getPlayer().getSkillLevel(Archer.DOUBLE_SHOT) > 0) {
                     singleTargetAttack = Archer.DOUBLE_SHOT;
@@ -283,12 +408,61 @@ public class CharacterBot {
                 }
                 break;
             case HUNTER:
-            case CROSSBOWMAN:
+                singleTargetAttack = Archer.DOUBLE_SHOT;
+                if (c.getPlayer().getSkillLevel(Hunter.ARROW_BOMB) > 0) {
+                    mobAttack = Hunter.ARROW_BOMB;
+                } else {
+                    mobAttack = Archer.DOUBLE_SHOT;
+                }
+                break;
             case RANGER:
-            case SNIPER:
+                if (c.getPlayer().getSkillLevel(Ranger.STRAFE) > 0) {
+                    singleTargetAttack = Ranger.STRAFE;
+                } else {
+                    singleTargetAttack = Archer.DOUBLE_SHOT;
+                }
+                if (c.getPlayer().getSkillLevel(Ranger.ARROW_RAIN) > 0) {
+                    mobAttack = Ranger.ARROW_RAIN;
+                } else {
+                    mobAttack = Hunter.ARROW_BOMB;
+                }
+                break;
             case BOWMASTER:
+                if (c.getPlayer().getSkillLevel(Bowmaster.HURRICANE) > 0) {
+                    singleTargetAttack = Bowmaster.HURRICANE;
+                } else {
+                    singleTargetAttack = Ranger.STRAFE;
+                }
+                mobAttack = Ranger.ARROW_RAIN;
+                break;
+            case CROSSBOWMAN:
+                singleTargetAttack = Archer.DOUBLE_SHOT;
+                if (c.getPlayer().getSkillLevel(Crossbowman.IRON_ARROW) > 0) {
+                    mobAttack = Crossbowman.IRON_ARROW;
+                } else {
+                    mobAttack = Archer.DOUBLE_SHOT;
+                }
+                break;
+            case SNIPER:
+                if (c.getPlayer().getSkillLevel(Sniper.STRAFE) > 0) {
+                    singleTargetAttack = Sniper.STRAFE;
+                } else {
+                    singleTargetAttack = Archer.DOUBLE_SHOT;
+                }
+                if (c.getPlayer().getSkillLevel(Sniper.ARROW_ERUPTION) > 0) {
+                    mobAttack = Sniper.ARROW_ERUPTION;
+                } else {
+                    mobAttack = Crossbowman.IRON_ARROW;
+                }
+                break;
             case MARKSMAN:
-                break; // todo
+                singleTargetAttack = Sniper.STRAFE;
+                if (c.getPlayer().getSkillLevel(Marksman.PIERCING_ARROW) > 0) {
+                    mobAttack = Marksman.PIERCING_ARROW;
+                } else {
+                    mobAttack = Sniper.ARROW_ERUPTION;
+                }
+                break;
             case THIEF:
                 if (c.getPlayer().getSkillLevel(Rogue.LUCKY_SEVEN) > 0) {
                     singleTargetAttack = Rogue.LUCKY_SEVEN;
@@ -296,12 +470,50 @@ public class CharacterBot {
                 }
                 break;
             case ASSASSIN:
-            case BANDIT:
+                singleTargetAttack = Rogue.LUCKY_SEVEN;
+                mobAttack = Rogue.LUCKY_SEVEN;
+                break;
             case HERMIT:
-            case CHIEFBANDIT:
+                singleTargetAttack = Rogue.LUCKY_SEVEN;
+                if (c.getPlayer().getSkillLevel(Hermit.AVENGER) > 0) {
+                    mobAttack = Hermit.AVENGER;
+                } else {
+                    mobAttack = Rogue.LUCKY_SEVEN;
+                }
+                break;
             case NIGHTLORD:
+                if (c.getPlayer().getSkillLevel(NightLord.TRIPLE_THROW) > 0) {
+                    singleTargetAttack = NightLord.TRIPLE_THROW;
+                } else {
+                    singleTargetAttack = Rogue.LUCKY_SEVEN;
+                }
+                mobAttack = Hermit.AVENGER;
+                break;
+            case BANDIT:
+                if (c.getPlayer().getSkillLevel(Bandit.SAVAGE_BLOW) > 0) {
+                    singleTargetAttack = Bandit.SAVAGE_BLOW;
+                    mobAttack = Bandit.SAVAGE_BLOW;
+                } else {
+                    singleTargetAttack = Rogue.DOUBLE_STAB;
+                    mobAttack = Rogue.DOUBLE_STAB;
+                }
+                break;
+            case CHIEFBANDIT:
+                singleTargetAttack = Bandit.SAVAGE_BLOW;
+                if (c.getPlayer().getSkillLevel(ChiefBandit.BAND_OF_THIEVES) > 0) {
+                    mobAttack = ChiefBandit.BAND_OF_THIEVES;
+                } else {
+                    mobAttack = Bandit.SAVAGE_BLOW;
+                }
+                break;
             case SHADOWER:
-                break; // todo
+                if (c.getPlayer().getSkillLevel(Shadower.BOOMERANG_STEP) > 0) {
+                    singleTargetAttack = Shadower.BOOMERANG_STEP;
+                } else {
+                    singleTargetAttack = Bandit.SAVAGE_BLOW;
+                }
+                mobAttack = ChiefBandit.BAND_OF_THIEVES;
+                break;
             case PIRATE:
                 if (c.getPlayer().getSkillLevel(Pirate.SOMERSAULT_KICK) > 0) {
                     mobAttack = Pirate.SOMERSAULT_KICK;
@@ -317,12 +529,54 @@ public class CharacterBot {
                 }
                 break;
             case BRAWLER:
-            case GUNSLINGER:
+                if (c.getPlayer().getSkillLevel(Brawler.DOUBLE_UPPERCUT) > 0) {
+                    singleTargetAttack = Brawler.DOUBLE_UPPERCUT;
+                } else {
+                    singleTargetAttack = Pirate.FLASH_FIST;
+                }
+                mobAttack = Pirate.SOMERSAULT_KICK;
+                break;
             case MARAUDER:
-            case OUTLAW:
+                singleTargetAttack = Brawler.DOUBLE_UPPERCUT;
+                mobAttack = Pirate.SOMERSAULT_KICK;
+                break;
             case BUCCANEER:
+                if (c.getPlayer().getSkillLevel(Buccaneer.BARRAGE) > 0) {
+                    singleTargetAttack = Buccaneer.BARRAGE;
+                } else {
+                    singleTargetAttack = Brawler.DOUBLE_UPPERCUT;
+                }
+                if (c.getPlayer().getSkillLevel(Buccaneer.DRAGON_STRIKE) > 0) {
+                    singleTargetAttack = Buccaneer.DRAGON_STRIKE;
+                } else {
+                    mobAttack = Pirate.SOMERSAULT_KICK;
+                }
+                break;
+            case GUNSLINGER:
+                if (c.getPlayer().getSkillLevel(Gunslinger.INVISIBLE_SHOT) > 0) {
+                    singleTargetAttack = Gunslinger.INVISIBLE_SHOT;
+                    mobAttack = Gunslinger.INVISIBLE_SHOT;
+                } else {
+                    singleTargetAttack = Pirate.DOUBLE_SHOT;
+                    mobAttack = Pirate.DOUBLE_SHOT;
+                }
+                break;
+            case OUTLAW:
+                if (c.getPlayer().getSkillLevel(Outlaw.BURST_FIRE) > 0) {
+                    singleTargetAttack = Pirate.DOUBLE_SHOT;
+                } else {
+                    singleTargetAttack = Gunslinger.INVISIBLE_SHOT;
+                }
+                mobAttack = Gunslinger.INVISIBLE_SHOT;
+                break;
             case CORSAIR:
-                break; // todo
+                if (c.getPlayer().getSkillLevel(Corsair.RAPID_FIRE) > 0) {
+                    singleTargetAttack = Corsair.RAPID_FIRE;
+                } else {
+                    singleTargetAttack = Pirate.DOUBLE_SHOT;
+                }
+                mobAttack = Gunslinger.INVISIBLE_SHOT;
+                break;
         }
     }
 
@@ -334,10 +588,21 @@ public class CharacterBot {
                     buffSkills.add(Warrior.IRON_BODY);
                 }
                 break;
-            case HERO: // todo
+            case HERO:
+                if (c.getPlayer().getSkillLevel(Hero.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(Hero.MAPLE_WARRIOR);
+                }
+                if (c.getPlayer().getSkillLevel(Hero.STANCE) > 2) {
+                    buffSkills.add(Hero.STANCE);
+                }
+                /*if (c.getPlayer().getSkillLevel(Hero.ENRAGE) > 3) {
+                    buffSkills.add(Hero.ENRAGE);
+                }*/ // todo: consumes orbs
             case CRUSADER:
+                if (c.getPlayer().getSkillLevel(Crusader.COMBO) > 0) {
+                    buffSkills.add(Crusader.COMBO);
+                }
             case FIGHTER:
-                buffSkills.add(Warrior.IRON_BODY);
                 if (c.getPlayer().getSkillLevel(Fighter.RAGE) > 0) {
                     buffSkills.add(Fighter.RAGE);
                 }
@@ -347,35 +612,45 @@ public class CharacterBot {
                 if (c.getPlayer().getSkillLevel(Fighter.SWORD_BOOSTER) > 2) {
                     buffSkills.add(Fighter.SWORD_BOOSTER);
                 }
-                if (c.getPlayer().getSkillLevel(Fighter.AXE_BOOSTER) > 2) {
-                    buffSkills.add(Fighter.AXE_BOOSTER);
-                }
                 break;
-            case PALADIN: // todo
+            case PALADIN:
+                if (c.getPlayer().getSkillLevel(Paladin.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(Paladin.MAPLE_WARRIOR);
+                }
+                if (c.getPlayer().getSkillLevel(Paladin.STANCE) > 2) {
+                    buffSkills.add(Paladin.STANCE);
+                }
+                if (c.getPlayer().getSkillLevel(Paladin.BW_HOLY_CHARGE) > 1) {
+                    buffSkills.add(Paladin.BW_HOLY_CHARGE);
+                }
             case WHITEKNIGHT:
+                if (c.getPlayer().getSkillLevel(Paladin.BW_HOLY_CHARGE) < 2 && c.getPlayer().getSkillLevel(WhiteKnight.BW_FIRE_CHARGE) > 3) {
+                    buffSkills.add(WhiteKnight.BW_FIRE_CHARGE);
+                }
             case PAGE:
-                buffSkills.add(Warrior.IRON_BODY);
                 if (c.getPlayer().getSkillLevel(Page.POWER_GUARD) > 9) {
                     buffSkills.add(Page.POWER_GUARD);
-                }
-                if (c.getPlayer().getSkillLevel(Page.SWORD_BOOSTER) > 2) {
-                    buffSkills.add(Page.SWORD_BOOSTER);
                 }
                 if (c.getPlayer().getSkillLevel(Page.BW_BOOSTER) > 2) {
                     buffSkills.add(Page.BW_BOOSTER);
                 }
-            case DARKKNIGHT: // todo
+            case DARKKNIGHT:
+                if (c.getPlayer().getSkillLevel(DarkKnight.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(DarkKnight.MAPLE_WARRIOR);
+                }
+                if (c.getPlayer().getSkillLevel(DarkKnight.STANCE) > 0) {
+                    buffSkills.add(DarkKnight.STANCE);
+                }
+                if (c.getPlayer().getSkillLevel(DarkKnight.BEHOLDER) > 0) {
+                    buffSkills.add(DarkKnight.BEHOLDER);
+                }
             case DRAGONKNIGHT:
+                /*if (c.getPlayer().getSkillLevel(DragonKnight.DRAGON_BLOOD) > 3) {
+                    buffSkills.add(DragonKnight.DRAGON_BLOOD);
+                }*/ // todo: this drains hp
             case SPEARMAN:
-                buffSkills.add(Warrior.IRON_BODY);
                 if (c.getPlayer().getSkillLevel(Spearman.SPEAR_BOOSTER) > 2) {
                     buffSkills.add(Spearman.SPEAR_BOOSTER);
-                }
-                if (c.getPlayer().getSkillLevel(Spearman.POLEARM_BOOSTER) > 2) {
-                    buffSkills.add(Spearman.POLEARM_BOOSTER);
-                }
-                if (c.getPlayer().getSkillLevel(Spearman.IRON_WILL) > 1) {
-                    buffSkills.add(Spearman.IRON_WILL);
                 }
                 if (c.getPlayer().getSkillLevel(Spearman.HYPER_BODY) > 2) {
                     buffSkills.add(Spearman.HYPER_BODY);
@@ -390,41 +665,156 @@ public class CharacterBot {
                 }
                 break;
             case FP_ARCHMAGE:
+                if (c.getPlayer().getSkillLevel(FPArchMage.MAPLE_WARRIOR) > 2) {
+                    buffSkills.add(FPArchMage.MAPLE_WARRIOR);
+                }
+                if (c.getPlayer().getSkillLevel(FPArchMage.MANA_REFLECTION) > 2) {
+                    buffSkills.add(FPArchMage.MANA_REFLECTION);
+                }
             case FP_MAGE:
+                if (c.getPlayer().getSkillLevel(FPMage.SPELL_BOOSTER) > 2) {
+                    buffSkills.add(FPMage.SPELL_BOOSTER);
+                }
             case FP_WIZARD:
+                if (c.getPlayer().getSkillLevel(FPWizard.MEDITATION) > 2) {
+                    buffSkills.add(FPWizard.MEDITATION);
+                }
+                buffSkills.add(Magician.MAGIC_GUARD);
+                break;
             case IL_ARCHMAGE:
+                if (c.getPlayer().getSkillLevel(ILArchMage.MAPLE_WARRIOR) > 2) {
+                    buffSkills.add(ILArchMage.MAPLE_WARRIOR);
+                }
+                if (c.getPlayer().getSkillLevel(ILArchMage.MANA_REFLECTION) > 2) {
+                    buffSkills.add(ILArchMage.MANA_REFLECTION);
+                }
             case IL_MAGE:
+                if (c.getPlayer().getSkillLevel(ILMage.SPELL_BOOSTER) > 2) {
+                    buffSkills.add(ILMage.SPELL_BOOSTER);
+                }
             case IL_WIZARD:
+                if (c.getPlayer().getSkillLevel(ILWizard.MEDITATION) > 2) {
+                    buffSkills.add(ILWizard.MEDITATION);
+                }
+                buffSkills.add(Magician.MAGIC_GUARD);
+                break;
             case BISHOP:
+                if (c.getPlayer().getSkillLevel(Bishop.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(Bishop.MAPLE_WARRIOR);
+                }
+                if (c.getPlayer().getSkillLevel(Bishop.MANA_REFLECTION) > 0) {
+                    buffSkills.add(Bishop.MANA_REFLECTION);
+                }
             case PRIEST:
+                if (c.getPlayer().getSkillLevel(Priest.HOLY_SYMBOL) > 0) {
+                    buffSkills.add(Priest.HOLY_SYMBOL);
+                }
             case CLERIC:
-                break; // todo
+                if (c.getPlayer().getSkillLevel(Cleric.BLESS) > 2) {
+                    buffSkills.add(Cleric.BLESS);
+                }
+                if (c.getPlayer().getSkillLevel(Cleric.INVINCIBLE) > 1) {
+                    buffSkills.add(Cleric.INVINCIBLE);
+                }
+                break;
             case BOWMAN:
                 if (c.getPlayer().getSkillLevel(Archer.FOCUS) > 0) {
                     buffSkills.add(Archer.FOCUS);
                 }
                 break;
             case BOWMASTER:
+                if (c.getPlayer().getSkillLevel(Bowmaster.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(Bowmaster.MAPLE_WARRIOR);
+                }
+                if (c.getPlayer().getSkillLevel(Bowmaster.SHARP_EYES) > 2) {
+                    buffSkills.add(Bowmaster.SHARP_EYES);
+                }
+                if (c.getPlayer().getSkillLevel(Bowmaster.CONCENTRATE) > 0) {
+                    buffSkills.add(Bowmaster.CONCENTRATE);
+                }
             case RANGER:
             case HUNTER:
+                if (c.getPlayer().getSkillLevel(Hunter.BOW_BOOSTER) > 2) {
+                    buffSkills.add(Hunter.BOW_BOOSTER);
+                }
+                if (c.getPlayer().getSkillLevel(Hunter.SOUL_ARROW) > 0) {
+                    buffSkills.add(Hunter.SOUL_ARROW);
+                }
+                break;
             case MARKSMAN:
+                if (c.getPlayer().getSkillLevel(Marksman.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(Marksman.MAPLE_WARRIOR);
+                }
+                if (c.getPlayer().getSkillLevel(Marksman.SHARP_EYES) > 2) {
+                    buffSkills.add(Marksman.SHARP_EYES);
+                }
             case SNIPER:
             case CROSSBOWMAN:
-                break; // todo
+                if (c.getPlayer().getSkillLevel(Crossbowman.CROSSBOW_BOOSTER) > 2) {
+                    buffSkills.add(Crossbowman.CROSSBOW_BOOSTER);
+                }
+                if (c.getPlayer().getSkillLevel(Crossbowman.SOUL_ARROW) > 0) {
+                    buffSkills.add(Crossbowman.SOUL_ARROW);
+                }
+                break;
             case NIGHTLORD:
+                if (c.getPlayer().getSkillLevel(NightLord.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(NightLord.MAPLE_WARRIOR);
+                }
             case HERMIT:
+                if (c.getPlayer().getSkillLevel(Hermit.MESO_UP) > 1) {
+                    buffSkills.add(Hermit.MESO_UP);
+                }
+                if (c.getPlayer().getSkillLevel(Hermit.SHADOW_PARTNER) > 0) {
+                    buffSkills.add(Hermit.SHADOW_PARTNER);
+                }
             case ASSASSIN:
+                if (c.getPlayer().getSkillLevel(Assassin.HASTE) > 2) {
+                    buffSkills.add(Assassin.HASTE);
+                }
+                if (c.getPlayer().getSkillLevel(Assassin.CLAW_BOOSTER) > 2) {
+                    buffSkills.add(Assassin.CLAW_BOOSTER);
+                }
+                break;
             case SHADOWER:
+                if (c.getPlayer().getSkillLevel(Shadower.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(Shadower.MAPLE_WARRIOR);
+                }
             case CHIEFBANDIT:
+                if (c.getPlayer().getSkillLevel(ChiefBandit.MESO_GUARD) > 2) {
+                    buffSkills.add(ChiefBandit.MESO_GUARD);
+                }
             case BANDIT:
-                break; // todo
+                if (c.getPlayer().getSkillLevel(Bandit.HASTE) > 2) {
+                    buffSkills.add(Bandit.HASTE);
+                }
+                if (c.getPlayer().getSkillLevel(Bandit.DAGGER_BOOSTER) > 2) {
+                    buffSkills.add(Bandit.DAGGER_BOOSTER);
+                }
+                break;
             case BUCCANEER:
+                if (c.getPlayer().getSkillLevel(Buccaneer.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(Buccaneer.MAPLE_WARRIOR);
+                }
+                if (c.getPlayer().getSkillLevel(Buccaneer.SPEED_INFUSION) > 0) {
+                    buffSkills.add(Buccaneer.SPEED_INFUSION);
+                }
             case MARAUDER:
             case BRAWLER:
+                if (c.getPlayer().getSkillLevel(Brawler.KNUCKLER_BOOSTER) > 2) {
+                    buffSkills.add(Brawler.KNUCKLER_BOOSTER);
+                }
+                break;
             case CORSAIR:
+                if (c.getPlayer().getSkillLevel(Corsair.MAPLE_WARRIOR) > 0) {
+                    buffSkills.add(Corsair.MAPLE_WARRIOR);
+                }
             case OUTLAW:
             case GUNSLINGER:
-                break; // todo
+                if (c.getPlayer().getSkillLevel(Gunslinger.GUN_BOOSTER) > 2) {
+                    buffSkills.add(Gunslinger.GUN_BOOSTER);
+                }
+                break;
         }
     }
 
@@ -700,7 +1090,7 @@ public class CharacterBot {
                     didAction = true;
                 }
             } else if (hasTargetMonster) {
-                if (c.getPlayer().getPosition().distance(targetMonster.getPosition().x - (isRangedJob() ? 300 : 50), targetMonster.getPosition().y) < 50) { // todo: accurate range
+                if (c.getPlayer().getPosition().distance(targetMonster.getPosition().x - (isRangedJob() ? 300 : 50), targetMonster.getPosition().y) < (isRangedJob() ? 100 : 50)) { // todo: accurate range
                     attack(time);
                     time = 0;
                     didAction = true;
@@ -890,6 +1280,9 @@ public class CharacterBot {
 
     private boolean isRangedJob() {
         int jobId = c.getPlayer().getJob().getId();
+        if (jobId == 500 && c.getPlayer().getWeaponType().equals(WeaponType.GUN) && !currentMode.equals(Mode.GRINDING)) {
+            return true;
+        }
         return jobId / 100 == 3 || (jobId / 100 == 4 && jobId % 100 / 10 != 2) || (jobId / 100 == 5 && jobId % 100 / 10 == 2);
     }
 
@@ -908,7 +1301,7 @@ public class CharacterBot {
             case DragonKnight.SPEAR_CRUSHER, DragonKnight.POLE_ARM_CRUSHER -> 54;
             case DragonKnight.SPEAR_DRAGON_FURY, DragonKnight.POLE_ARM_DRAGON_FURY -> Randomizer.nextInt(2) == 0 ? 13 : 14;
             case Magician.ENERGY_BOLT, Magician.MAGIC_CLAW, ILWizard.COLD_BEAM, ILWizard.THUNDERBOLT  -> Randomizer.nextInt(2) == 0 ? 28 : 29;
-            case FPWizard.FIRE_ARROW, Ranger.INFERNO, Ranger.STRAFE, Ranger.ARROW_RAIN -> 22;
+            case FPWizard.FIRE_ARROW, Ranger.INFERNO, Ranger.STRAFE, Ranger.ARROW_RAIN, Cleric.HOLY_ARROW, Bishop.ANGEL_RAY -> 22;
             case FPWizard.POISON_BREATH -> 7;
             case FPMage.ELEMENT_COMPOSITION, ILMage.ELEMENT_COMPOSITION -> 48;
             case FPMage.EXPLOSION -> 51;
@@ -916,9 +1309,10 @@ public class CharacterBot {
             case FPArchMage.METEOR_SHOWER -> 66;
             case FPArchMage.PARALYZE -> 67;
             case ILMage.THUNDER_SPEAR -> 49;
-            case ILMage.ICE_STRIKE -> 50;
+            case ILMage.ICE_STRIKE, Priest.SHINING_RAY -> 50;
             case ILArchMage.CHAIN_LIGHTNING -> 75;
             case ILArchMage.BLIZZARD -> 68;
+            case Bishop.GENESIS -> 69;
             case Archer.ARROW_BLOW, Archer.DOUBLE_SHOT -> c.getPlayer().getWeaponType().equals(WeaponType.BOW) ? (Randomizer.nextInt(2) == 0 ? 22 : 27) : 23;
             case Hunter.ARROW_BOMB -> Randomizer.nextInt(2) == 0 ? 22 : 27;
             case Crossbowman.IRON_ARROW, Sniper.ARROW_ERUPTION, Sniper.BLIZZARD, Sniper.STRAFE, Marksman.SNIPE -> 23;
@@ -971,9 +1365,50 @@ public class CharacterBot {
                 {Warrior.IRON_BODY, 20},
                 {Warrior.ENDURE, 8}
         });
-        skillOrders.putIfAbsent(Job.FIGHTER, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.PAGE, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.SPEARMAN, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.FIGHTER, new int[][]{
+                {Fighter.SWORD_MASTERY, 20},
+                {Fighter.RAGE, 20},
+                {Fighter.SWORD_BOOSTER, 20},
+                {Fighter.FINAL_ATTACK_SWORD, 1},
+                {Fighter.AXE_MASTERY, 5},
+                {Fighter.AXE_BOOSTER, 1},
+                {Fighter.FINAL_ATTACK_AXE, 1},
+                {Fighter.POWER_GUARD, 30},
+                {Fighter.FINAL_ATTACK_SWORD, 30},
+                {Fighter.AXE_MASTERY, 20},
+                {Fighter.AXE_BOOSTER, 20},
+                {Fighter.FINAL_ATTACK_AXE, 30}
+        });
+        skillOrders.putIfAbsent(Job.PAGE, new int[][]{
+                {Page.BW_MASTERY, 20},
+                {Page.BW_BOOSTER, 20},
+                {Page.THREATEN, 20},
+                {Page.POWER_GUARD, 1},
+                {Page.FINAL_ATTACK_BW, 1},
+                {Page.SWORD_MASTERY, 5},
+                {Page.SWORD_BOOSTER, 1},
+                {Page.FINAL_ATTACK_SWORD, 1},
+                {Page.POWER_GUARD, 20},
+                {Page.FINAL_ATTACK_BW, 20},
+                {Page.SWORD_MASTERY, 20},
+                {Page.SWORD_BOOSTER, 20},
+                {Page.FINAL_ATTACK_SWORD, 20}
+        });
+        skillOrders.putIfAbsent(Job.SPEARMAN, new int[][]{
+                {Spearman.SPEAR_MASTERY, 20},
+                {Spearman.SPEAR_BOOSTER, 20},
+                {Spearman.IRON_WILL, 3},
+                {Spearman.HYPER_BODY, 30},
+                {Spearman.FINAL_ATTACK_SPEAR, 1},
+                {Spearman.POLEARM_MASTERY, 5},
+                {Spearman.POLEARM_BOOSTER, 1},
+                {Spearman.FINAL_ATTACK_POLEARM, 1},
+                {Spearman.IRON_WILL, 20},
+                {Spearman.FINAL_ATTACK_SPEAR, 30},
+                {Spearman.POLEARM_MASTERY, 20},
+                {Spearman.POLEARM_BOOSTER, 20},
+                {Spearman.FINAL_ATTACK_POLEARM, 30}
+        });
         skillOrders.putIfAbsent(Job.CRUSADER, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.WHITEKNIGHT, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.DRAGONKNIGHT, new int[][]{}); // todo
@@ -990,9 +1425,41 @@ public class CharacterBot {
                 {Magician.IMPROVED_MP_RECOVERY, 16},
                 {Magician.ENERGY_BOLT, 20}
         });
-        skillOrders.putIfAbsent(Job.FP_WIZARD, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.IL_WIZARD, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.CLERIC, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.FP_WIZARD, new int[][]{
+                {FPWizard.FIRE_ARROW, 30},
+                {FPWizard.MP_EATER, 3},
+                {FPWizard.MEDITATION, 20},
+                {FPWizard.TELEPORT, 5},
+                {FPWizard.SLOW, 1},
+                {FPWizard.POISON_BREATH, 1},
+                {FPWizard.MP_EATER, 20},
+                {FPWizard.TELEPORT, 20},
+                {FPWizard.SLOW, 20},
+                {FPWizard.POISON_BREATH, 30}
+        });
+        skillOrders.putIfAbsent(Job.IL_WIZARD, new int[][]{
+                {ILWizard.THUNDERBOLT, 30},
+                {ILWizard.MP_EATER, 3},
+                {ILWizard.MEDITATION, 20},
+                {ILWizard.TELEPORT, 5},
+                {ILWizard.SLOW, 1},
+                {ILWizard.COLD_BEAM, 30},
+                {ILWizard.MP_EATER, 20},
+                {ILWizard.TELEPORT, 20},
+                {ILWizard.SLOW, 20}
+        });
+        skillOrders.putIfAbsent(Job.CLERIC, new int[][]{
+                {Cleric.HEAL, 5},
+                {Cleric.INVINCIBLE, 5},
+                {Cleric.BLESS, 20},
+                {Cleric.HEAL, 30},
+                {Cleric.MP_EATER, 1},
+                {Cleric.TELEPORT, 1},
+                {Cleric.HOLY_ARROW, 30},
+                {Cleric.INVINCIBLE, 20},
+                {Cleric.MP_EATER, 20},
+                {Cleric.TELEPORT, 20},
+        });
         skillOrders.putIfAbsent(Job.FP_MAGE, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.IL_MAGE, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.PRIEST, new int[][]{}); // todo
@@ -1010,8 +1477,26 @@ public class CharacterBot {
                 {Archer.FOCUS, 20},
                 {Archer.ARROW_BLOW, 20}
         });
-        skillOrders.putIfAbsent(Job.HUNTER, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.CROSSBOWMAN, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.HUNTER, new int[][]{
+                {Hunter.BOW_MASTERY, 20},
+                {Hunter.ARROW_BOMB, 30},
+                {Hunter.BOW_BOOSTER, 20},
+                {Hunter.FINAL_ATTACK, 1},
+                {Hunter.POWER_KNOCKBACK, 1},
+                {Hunter.SOUL_ARROW, 20},
+                {Hunter.FINAL_ATTACK, 30},
+                {Hunter.POWER_KNOCKBACK, 20}
+        });
+        skillOrders.putIfAbsent(Job.CROSSBOWMAN, new int[][]{
+                {Crossbowman.CROSSBOW_MASTERY, 20},
+                {Crossbowman.IRON_ARROW, 30},
+                {Crossbowman.CROSSBOW_BOOSTER, 20},
+                {Crossbowman.FINAL_ATTACK, 1},
+                {Crossbowman.POWER_KNOCKBACK, 1},
+                {Crossbowman.SOUL_ARROW, 20},
+                {Crossbowman.FINAL_ATTACK, 30},
+                {Crossbowman.POWER_KNOCKBACK, 20}
+        });
         skillOrders.putIfAbsent(Job.RANGER, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.SNIPER, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.BOWMASTER, new int[][]{}); // todo
@@ -1027,8 +1512,27 @@ public class CharacterBot {
                 {Rogue.DARK_SIGHT, 20},
                 {Rogue.DISORDER, 20}
         });
-        skillOrders.putIfAbsent(Job.ASSASSIN, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.BANDIT, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.ASSASSIN, new int[][]{
+                {Assassin.CLAW_MASTERY, 20},
+                {Assassin.CRITICAL_THROW, 30},
+                {Assassin.CLAW_BOOSTER, 20},
+                {Assassin.ENDURE, 3},
+                {Assassin.DRAIN, 1},
+                {Assassin.HASTE, 20},
+                {Assassin.ENDURE, 20},
+                {Assassin.DRAIN, 30}
+        });
+        skillOrders.putIfAbsent(Job.BANDIT, new int[][]{
+                {Bandit.DAGGER_MASTERY, 20},
+                {Bandit.SAVAGE_BLOW, 30},
+                {Bandit.DAGGER_BOOSTER, 20},
+                {Bandit.ENDURE, 1},
+                {Bandit.HASTE, 5},
+                {Bandit.STEAL, 1},
+                {Bandit.HASTE, 20},
+                {Bandit.ENDURE, 20},
+                {Bandit.STEAL, 30}
+        });
         skillOrders.putIfAbsent(Job.HERMIT, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.CHIEFBANDIT, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.NIGHTLORD, new int[][]{}); // todo
@@ -1044,8 +1548,32 @@ public class CharacterBot {
                 {Pirate.BULLET_TIME, 20},
                 {Pirate.DASH, 10}
         });
-        skillOrders.putIfAbsent(Job.BRAWLER, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.GUNSLINGER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.BRAWLER, new int[][]{
+                {Brawler.IMPROVE_MAX_HP, 10},
+                {Brawler.KNUCKLER_MASTERY, 20},
+                {Brawler.KNUCKLER_BOOSTER, 20},
+                {Brawler.BACK_SPIN_BLOW, 1},
+                {Brawler.CORKSCREW_BLOW, 1},
+                {Brawler.MP_RECOVERY, 1},
+                {Brawler.OAK_BARREL, 1},
+                {Brawler.DOUBLE_UPPERCUT, 20},
+                {Brawler.BACK_SPIN_BLOW, 20},
+                {Brawler.CORKSCREW_BLOW, 20},
+                {Brawler.MP_RECOVERY, 10},
+                {Brawler.OAK_BARREL, 10}
+        });
+        skillOrders.putIfAbsent(Job.GUNSLINGER, new int[][]{
+                {Gunslinger.GUN_MASTERY, 20},
+                {Gunslinger.INVISIBLE_SHOT, 20},
+                {Gunslinger.GUN_BOOSTER, 20},
+                {Gunslinger.WINGS, 5},
+                {Gunslinger.RECOIL_SHOT, 1},
+                {Gunslinger.GRENADE, 1},
+                {Gunslinger.BLANK_SHOT, 20},
+                {Gunslinger.WINGS, 10},
+                {Gunslinger.RECOIL_SHOT, 20},
+                {Gunslinger.GRENADE, 20}
+        });
         skillOrders.putIfAbsent(Job.MARAUDER, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.OUTLAW, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.BUCCANEER, new int[][]{}); // todo

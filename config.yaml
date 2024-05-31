@@ -266,7 +266,7 @@ server:
     USE_FISHING_SYSTEM: false            #Flag to enable/disable custom fishing system
     USE_NPCS_SCRIPTABLE: true           #Flag to enable/disable serverside predefined script NPCs.
     
-    ALL_ITEMS_DROPPABLE: true           # make all items droppable
+    ALL_ITEMS_DROPPABLE: true           # make all items droppable (note: does not work on reverse/timeless equips that have been locked)
     UNIQUE_ITEM_BYPASS: true            # if true multiple copies of unique items can be held
 
     #Events/PQs Configuration
