@@ -48,6 +48,7 @@ public final class ItemMoveHandler extends AbstractPacketHandler {
         if (src < 0 && action > 0) {
             InventoryManipulator.unequip(c, src, action);
         } else if (action < 0) {
+            System.out.println(action);
             InventoryManipulator.equip(c, src, action);
         } else if (action == 0) {
             InventoryManipulator.drop(c, type, src, quantity);

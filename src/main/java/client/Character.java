@@ -11358,14 +11358,14 @@ public class Character extends AbstractCharacterObject {
     }
 
     public int calculateMinBaseMagicAttackDamage(int skillId) {
-        return (int) ((Math.ceil((getTotalMagic() * Math.ceil(getTotalMagic() / 1000.0) + getTotalMagic() *
-                (10 + SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMastery()) * 0.9) / 30.0) +
-                Math.ceil(getTotalInt() / 200.0)) * SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMatk());
+        return (int) (((getTotalMagic() * getTotalMagic() / 1000.0 + getTotalMagic() *
+                ((10 + SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMastery()) / 100.0 ) * 0.9) / 30.0 +
+                getTotalInt() / 200.0) * SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMatk());
     }
 
     public int calculateMaxBaseMagicAttackDamage(int skillId) {
-        return (int) ((Math.ceil((getTotalMagic() * Math.ceil(getTotalMagic() / 1000.0) + getTotalMagic()) / 30.0) +
-                Math.ceil(getTotalInt() / 200.0)) * SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMatk());
+        return (int) ((((getTotalMagic() * getTotalMagic() / 1000.0 + getTotalMagic()) / 30.0) +
+                getTotalInt() / 200.0) * SkillFactory.getSkill(skillId).getEffect(getSkillLevel(skillId)).getMatk());
     }
 
     public WeaponType getWeaponType() {
@@ -11384,6 +11384,10 @@ public class Character extends AbstractCharacterObject {
             return 0.6f * getTotalDex() + 0.3f * getTotalLuk() + localacc;
         }
         return 0.8f * getTotalDex() + 0.5f * getTotalLuk() + localacc;
+    }
+
+    public float getMagicAccuracy() {
+        return getTotalInt() / 10 + getTotalLuk() / 10;
     }
 
     public long getExpirationTime(int skillId) {

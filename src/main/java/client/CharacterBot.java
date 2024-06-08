@@ -1,5 +1,6 @@
 package client;
 
+import client.inventory.Equip;
 import client.inventory.InventoryType;
 import client.inventory.Item;
 import client.inventory.WeaponType;
@@ -23,15 +24,95 @@ import java.sql.SQLException;
 import java.util.*;
 import java.util.List;
 
+import static java.util.concurrent.TimeUnit.MINUTES;
+
 public class CharacterBot {
     private enum Mode {
         WAITING, // no mode decided
         SOCIALIZING, // hang out in henesys
         GRINDING, // pick a map and kill monsters
+        MANAGE_INVENTORY, // check if any equips are better than what they're using and sell lowest value items to make space
         PQ, // do a pq
         BOSSING // fight a boss
 
     }
+
+    private static final int[] lv1to5Maps = {
+            104000100, 104000200, 104000300, // lith maps
+            101040000 // perion street corner
+    },
+    lv6to10Maps = {
+            104040000, // hhg1
+            100010000, // hill east of henesys
+            101010000, // field north of ellinia
+            102010000, // west street corner of perion
+            102050000, // sunset sky
+            100030000 // the forest east of henesys
+    },
+    lv11to15Maps = {
+            104040001, // hhg2
+            100050000, // field south of ellinia
+            103010000, // kerning city construction site
+            102040000 // construction site north of kerning city
+    },
+    lv16to20Maps = {
+            103000101, // bubblings
+            104040002, // hhg3
+            101030402 //east rocky mountain 3
+    },
+    lv21to25Maps = {
+            104000400, // mano
+            105050000, // ant tunnel 1
+            101030403, // east rocky mountain 4
+            101030101, // excavation site 1
+            101030102, // excavation site 2
+            101030103 // excavation site 3
+    },
+    lv26to30Maps = {
+            10504000, // swampy land in a deep forest
+            101030406 // east rocky mountain 6
+    },
+    lv31to35Maps = {
+            105070100, // cave of evil eye 1
+            105040100, // hunting ground in the deep forest 1
+            107000000, // the swamp of despair 1
+            107000001, // swamp of the jr necki
+            101030404, // east rocky mountain 5
+            106000101, // the burnt land 1
+            220010500 // terrace hall
+    },
+    lv36to40Maps = {
+            105040301, // sleepy dungeon 1
+            105040302, // sleepy dungeon 2
+            105040303 // sleepy dungeon 3
+    },
+    lv41to45Maps = {
+            106000120 //the burnt land 3
+    },
+    lv46to50Maps = {
+            101030105, //tomb 1
+            103000104 // line 1 area 3
+    },
+    lv51to55Maps = {
+            106010102 // the entrance of golem's temple
+    },
+    lv56to60Maps = {
+            106010103, // golem's temple 1
+            106010104, // golem's temple 2
+            106010105, // golem's temple 3
+            106010106, // golem's temple 4
+            105040306 // the forest of golem
+    },
+    lv61to65Maps = {
+            107000300 // dangerous croko 1
+    },
+    lv66to70Maps = {
+            610030011 // tornado corridor
+    },
+    lv71to75Maps = {
+            101030108, // tomb 4
+            101030109 // tomb 5
+    };
 
     private static Map<Job, int[][]> skillOrders = new HashMap<>();
     private static Map<Integer, Integer> skillDelayTimes = new HashMap<>(); // todo: put delay times
@@ -96,7 +177,11 @@ public class CharacterBot {
     }
 
     public void update() {
-        if (loggedOut || level >= 70 || true) { // temporarily disabled bot updates for testing purposes
+        if (loggedOut || level >= 29) {
+            return;
+        }
+        if (System.currentTimeMillis() - currentModeStartTime > MINUTES.toMillis(30)) {
+            chooseMode();
             return;
         }
         c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their mp each update
@@ -113,10 +198,16 @@ public class CharacterBot {
                 return;
             }
         }
-        int time = (int) (System.currentTimeMillis() - previousAction - delay); // amount of time for actions
+        int time = Math.min((int) (System.currentTimeMillis() - previousAction - delay), 1000); // amount of time for actions
         previousAction = System.currentTimeMillis();
         delay = 0;
         switch (currentMode) {
+            case MANAGE_INVENTORY -> {
+                checkEquips();
+                // todo: put items in fm shop
+                createInventorySpace();
+                chooseMode();
+            }
             case WAITING -> chooseMode();
             case GRINDING -> grind(time);
         }
@@ -145,9 +236,9 @@ public class CharacterBot {
             }
         }
         // todo: pqs
-        System.out.println("current time: " + System.currentTimeMillis() + ", previous action: " + previousAction + ", delay: " + delay);
-        int time = (int) (System.currentTimeMillis() - previousAction - delay); // amount of time for actions
-        System.out.println("time: " + time);
+        //System.out.println("current time: " + System.currentTimeMillis() + ", previous action: " + previousAction + ", delay: " + delay);
+        int time = Math.min((int) (System.currentTimeMillis() - previousAction - delay), 1000); // amount of time for actions
+        //System.out.println("time: " + time);
         previousAction = System.currentTimeMillis();
         delay = 0;
         grind(time);
@@ -161,7 +252,7 @@ public class CharacterBot {
         short nextX, nextY;
         byte nextState;
         int xDiff = c.getPlayer().getPosition().x - targetX, yDiff = c.getPlayer().getPosition().y - targetY;
-        System.out.println("xDiff: " + xDiff + ", yDiff: " + yDiff);
+        //System.out.println("xDiff: " + xDiff + ", yDiff: " + yDiff);
         if (yDiff < 0) {
             nextX = (short) (c.getPlayer().getPosition().x);
             if (-8 * yDiff < timeRemaining) {
@@ -905,8 +996,8 @@ public class CharacterBot {
 
     private int calcMagicDamage(int skillId, Monster target) {
         int leveldelta = Math.max(0, target.getLevel() - c.getPlayer().getLevel());
-        if (Randomizer.nextDouble() >= calculateMagicHitchance(leveldelta,
-                c.getPlayer().getTotalInt(), c.getPlayer().getTotalLuk(), target.getStats().getEva())) {
+        if (Randomizer.nextDouble() >= calculateHitchance(leveldelta,
+                c.getPlayer().getMagicAccuracy(), target.getStats().getEva())) {
             return 0;
         }
         int minDamage = c.getPlayer().calculateMinBaseMagicAttackDamage(skillId),
@@ -938,8 +1029,8 @@ public class CharacterBot {
         }
         int minDamage, maxDamage;
         if (skillId == Rogue.LUCKY_SEVEN || skillId == NightLord.TRIPLE_THROW) {
-            maxDamage = (int) ((c.getPlayer().getTotalLuk() * 5) * Math.ceil(c.getPlayer().getTotalWatk() / 100.0));
-            minDamage = (int) ((c.getPlayer().getTotalLuk() * 2.5) * Math.ceil(c.getPlayer().getTotalWatk() / 100.0));
+            maxDamage = (int) ((c.getPlayer().getTotalLuk() * 5) * c.getPlayer().getTotalWatk() / 100.0);
+            minDamage = (int) ((c.getPlayer().getTotalLuk() * 2.5) * c.getPlayer().getTotalWatk() / 100.0);
         } else {
             minDamage = c.getPlayer().calculateMinBaseDamage(c.getPlayer().getTotalWatk());
             maxDamage = c.getPlayer().calculateMaxBaseDamage(c.getPlayer().getTotalWatk());
@@ -1005,16 +1096,21 @@ public class CharacterBot {
         return hitchance;
     }
 
-    private static float calculateMagicHitchance(int leveldelta, int player_int, int playerluk, int avoid) {
+    /*private static float calculateMagicHitchance(int leveldelta, int player_int, int playerluk, int avoid) {
         float x =  (player_int / 10 + playerluk / 10) / (avoid + 1f) * (1 + 0.0415f * leveldelta);
         float hitchance = -2.5795f * x * x + 5.2343f * x - 1.6749f;
         if (hitchance < 0.01f) {
             hitchance = 0.01f;
         }
         return hitchance;
-    }
+    }*/ // this formula appears to be incorrect, due to the negative first term of the quadratic it often gives a negative accuracy
 
     private void chooseMode() {
+        if (!currentMode.equals(Mode.MANAGE_INVENTORY)) { // manage inventory between modes
+            currentMode = Mode.MANAGE_INVENTORY;
+            // todo: go to henesys or fm
+            return;
+        }
         currentModeStartTime = System.currentTimeMillis();
         if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
             currentMode = Mode.GRINDING;
@@ -1027,10 +1123,86 @@ public class CharacterBot {
     }
 
     private void pickMap() {
-        if (c.getPlayer().getJob().equals(Job.BEGINNER)) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(104000100 + Randomizer.nextInt(3) * 100));
+        if (c.getPlayer().getLevel() < 6) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv1to5Maps[Randomizer.nextInt(lv1to5Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 11) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv6to10Maps[Randomizer.nextInt(lv6to10Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 16) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv11to15Maps[Randomizer.nextInt(lv11to15Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 21) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv16to20Maps[Randomizer.nextInt(lv16to20Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 26) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv21to25Maps[Randomizer.nextInt(lv21to25Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 31) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv26to30Maps[Randomizer.nextInt(lv26to30Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 36) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv31to35Maps[Randomizer.nextInt(lv31to35Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 41) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv36to40Maps[Randomizer.nextInt(lv36to40Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 46) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv41to45Maps[Randomizer.nextInt(lv41to45Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 51) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv46to50Maps[Randomizer.nextInt(lv46to50Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 56) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv51to55Maps[Randomizer.nextInt(lv51to55Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 61) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv56to60Maps[Randomizer.nextInt(lv56to60Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 66) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv61to65Maps[Randomizer.nextInt(lv61to65Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 71) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv66to70Maps[Randomizer.nextInt(lv66to70Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 76) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)]));
+        } else if (c.getPlayer().getLevel() < 81) {
+
+        } else if (c.getPlayer().getLevel() < 86) {
+
+        } else if (c.getPlayer().getLevel() < 91) {
+
+        } else if (c.getPlayer().getLevel() < 96) {
+
+        } else if (c.getPlayer().getLevel() < 101) {
+
+        } else if (c.getPlayer().getLevel() < 106) {
+
+        } else if (c.getPlayer().getLevel() < 111) {
+
+        } else if (c.getPlayer().getLevel() < 116) {
+
+        } else if (c.getPlayer().getLevel() < 121) {
+
+        } else if (c.getPlayer().getLevel() < 126) {
+
+        } else if (c.getPlayer().getLevel() < 131) {
+
+        } else if (c.getPlayer().getLevel() < 136) {
+
+        } else if (c.getPlayer().getLevel() < 141) {
+
+        } else if (c.getPlayer().getLevel() < 146) {
+
+        } else if (c.getPlayer().getLevel() < 151) {
+
+        } else if (c.getPlayer().getLevel() < 156) {
+
+        } else if (c.getPlayer().getLevel() < 161) {
+
+        } else if (c.getPlayer().getLevel() < 166) {
+
+        } else if (c.getPlayer().getLevel() < 171) {
+
+        } else if (c.getPlayer().getLevel() < 176) {
+
+        } else if (c.getPlayer().getLevel() < 181) {
+
+        } else if (c.getPlayer().getLevel() < 186) {
+
+        } else if (c.getPlayer().getLevel() < 191) {
+
+        } else if (c.getPlayer().getLevel() < 196) {
+
         } else {
-            changeMap(c.getChannelServer().getMapFactory().getMap(104000100 + Randomizer.nextInt(3) * 100)); // todo: pick map based on level
+
         }
     }
 
@@ -1048,48 +1220,83 @@ public class CharacterBot {
 
     private boolean grind(int time) {
         boolean didAction = true;
+        long startTime = System.currentTimeMillis(), otherStartTime, time1 = 0, time2 = 0, time3 = 0, time4 = 0;
+        int loops = 0;
         while (time > 0 && didAction) {
+            loops++;
             didAction = false;
-            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) { // todo: pick closest item
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+                otherStartTime = System.currentTimeMillis();
                 if (!c.getPlayer().getMap().getItems().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
                     for (MapObject it : c.getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer())) {
+                            if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            nextDistance = c.getPlayer().getPosition().distance(it.getPosition());
+                            if (nextDistance < minDistance) {
+                                minDistance = nextDistance;
+                                targetItem = it;
+                                hasTargetItem = true;
+                            }
+                        }
+                    }
+                    /*for (MapObject it : c.getPlayer().getMap().getItems()) {
                         if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer())) {
                             if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
                                 continue;
                             }
                             targetItem = it;
                             hasTargetItem = true;
-                            break;
                         }
-                    }
+                    }*/
                 }
+                time1 += System.currentTimeMillis() - otherStartTime;
             }
             if (!hasTargetMonster || !targetMonster.isAlive()) {
-                if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) { // pick closest monster to the character
-                    double minDistance = c.getPlayer().getPosition().distance(c.getPlayer().getMap().getAllMonsters().getFirst().getPosition()), nextDistance;
-                    targetMonster = c.getPlayer().getMap().getAllMonsters().getFirst();
+                otherStartTime = System.currentTimeMillis();
+                if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
                     for (Monster m : c.getPlayer().getMap().getAllMonsters()) {
+                        if (!m.isAlive()) {
+                            continue;
+                        }
                         nextDistance = c.getPlayer().getPosition().distance(m.getPosition());
                         if (nextDistance < minDistance) {
                             minDistance = nextDistance;
                             targetMonster = m;
+                            hasTargetMonster = true;
                         }
                     }
-                    hasTargetMonster = true;
+                    /*List<Monster> shuffled = c.getPlayer().getMap().getAllMonsters();
+                    Collections.shuffle(shuffled);*/
+                    /*for (Monster m : c.getPlayer().getMap().getAllMonsters()) {
+                        if (m.isAlive()) {
+                            targetMonster = m;
+                            hasTargetMonster = true;
+                            break;
+                        }
+                    }*/
                 } else {
                     hasTargetMonster = false;
                 }
+                time2 += System.currentTimeMillis() - otherStartTime;
             }
             if (hasTargetItem) {
+                otherStartTime = System.currentTimeMillis();
                 if (!c.getPlayer().getPosition().equals(targetItem.getPosition())) {
                     time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
                     didAction = true;
                 }
                 if (c.getPlayer().getPosition().equals(targetItem.getPosition())) {
                     pickupItem();
+                    time -= 50;
                     didAction = true;
                 }
+                time3 += System.currentTimeMillis() - otherStartTime;
             } else if (hasTargetMonster) {
+                otherStartTime = System.currentTimeMillis();
                 if (c.getPlayer().getPosition().distance(targetMonster.getPosition().x - (isRangedJob() ? 300 : 50), targetMonster.getPosition().y) < (isRangedJob() ? 100 : 50)) { // todo: accurate range
                     attack(time);
                     time = 0;
@@ -1098,6 +1305,14 @@ public class CharacterBot {
                     time = moveBot((short) (targetMonster.getPosition().x - (isRangedJob() ? 300 : 50)), (short) targetMonster.getPosition().y, time);
                     didAction = true;
                 }
+                time4 += System.currentTimeMillis() - otherStartTime;
+            }
+        }
+        long grindTime = System.currentTimeMillis() - startTime;
+        if (grindTime > 10) {
+            System.out.println("Grind time: " + grindTime + ", loops: " + loops + ", time1: " + time1 + ", time2: " + time2 + ", time3: " + time3 + ", time4: " + time4);
+            if (time4 > 10) {
+                System.out.println("job: " + c.getPlayer().getJob());
             }
         }
         return didAction;
@@ -1273,9 +1488,300 @@ public class CharacterBot {
         InventoryManipulator.equip(c, InventoryManipulator.getPosition(c, itemId), (short) -11);
     }
 
+    /**
+     * checks each equip to see if it is better than the currently equipped item and equips it if so
+     */
+    private void checkEquips() {
+        c.getPlayer().getInventory(InventoryType.EQUIP).lockInventory();
+        c.getPlayer().getInventory(InventoryType.EQUIPPED).lockInventory();
+        try {
+            boolean notDone = true;
+            short equipPos, ringSlot = 0;
+            Equip nextEquip = null;
+            Iterator<Item> it;
+            ItemInformationProvider ii = ItemInformationProvider.getInstance();
+            while (notDone) {
+                notDone = false;
+                equipPos = -1;
+                it = c.getPlayer().getInventory(InventoryType.EQUIP).iterator();
+                while (it.hasNext()) {
+                    nextEquip = (Equip) it.next();
+                    if (!jobAppropriateEquip(nextEquip.getItemId()) || !ii.canWearEquipment(c.getPlayer(), nextEquip, ItemConstants.getEquipSlot(nextEquip.getItemId()))) {
+                        continue;
+                    }
+                    if (ItemConstants.isRing(nextEquip.getItemId())) {
+                        ringSlot = isBetterRing(nextEquip);
+                        if (ringSlot != 0) {
+                            equipPos = nextEquip.getPosition();
+                            notDone = true;
+                            break;
+                        }
+                    } else if (isBetterEquip(nextEquip)) {
+                        equipPos = nextEquip.getPosition();
+                        notDone = true;
+                        break;
+                    }
+                }
+                if (equipPos != -1) {
+                    if (ItemConstants.isRing(nextEquip.getItemId())) {
+                        InventoryManipulator.equip(c, equipPos, ringSlot);
+                    } else {
+                        InventoryManipulator.equip(c, equipPos, ItemConstants.getEquipSlot(nextEquip.getItemId()));
+                    }
+                }
+            }
+        } finally {
+            c.getPlayer().getInventory(InventoryType.EQUIP).unlockInventory();
+            c.getPlayer().getInventory(InventoryType.EQUIPPED).unlockInventory();
+        }
+    }
+
+    private boolean jobAppropriateEquip(int itemId) {
+        if (ItemConstants.isWeapon(itemId) && !isJobAppropriateWeapon(itemId)) {
+            return false;
+        }
+        ItemInformationProvider ii = ItemInformationProvider.getInstance();
+        int reqJob = ii.getEquipStats(itemId).get("reqJob");
+        if (reqJob == 0) {
+            return true;
+        }
+        if (c.getPlayer().getJob().getId() / 100 == 1) {
+            return reqJob % 2 == 1;
+        } else if (c.getPlayer().getJob().getId() / 100 == 2) {
+            return reqJob % 4 / 2 == 1;
+        } else if (c.getPlayer().getJob().getId() / 100 == 3) {
+            return reqJob % 8 / 4 == 1;
+        } else if (c.getPlayer().getJob().getId() / 100 == 4) {
+            return reqJob % 16 / 8 == 1;
+        } else if (c.getPlayer().getJob().getId() / 100 == 5) {
+            return reqJob % 32 / 16 == 1;
+        }
+        return false;
+    }
+
+    private boolean isJobAppropriateWeapon(int itemId) {
+        if (c.getPlayer().getJob().getId() / 100 == 1) {
+            if (c.getPlayer().getJob().getId() % 10 == 1) {
+                return ItemConstants.is1hSword(itemId) || ItemConstants.is2hSword(itemId);
+            }
+            if (c.getPlayer().getJob().getId() % 10 == 2) {
+                return ItemConstants.is1hBluntWeapon(itemId) || ItemConstants.is2hBluntWeapon(itemId);
+            }
+            if (c.getPlayer().getJob().getId() % 10 == 3) {
+                return ItemConstants.isSpear(itemId);
+            }
+            return ItemConstants.is1hSword(itemId) || ItemConstants.is2hSword(itemId) || ItemConstants.is1hAxe(itemId) ||
+                    ItemConstants.is2hAxe(itemId) || ItemConstants.is1hBluntWeapon(itemId) || ItemConstants.is2hBluntWeapon(itemId) ||
+                    ItemConstants.isSpear(itemId) || ItemConstants.isPolearm(itemId);
+        }
+        if (c.getPlayer().getJob().getId() / 100 == 2) {
+            return ItemConstants.isWand(itemId) || ItemConstants.isStaff(itemId);
+        }
+        if (c.getPlayer().getJob().getId() / 100 == 3) {
+            if (c.getPlayer().getJob().getId() % 10 == 2) {
+                return ItemConstants.isCrossbow(itemId);
+            }
+            return ItemConstants.isBow(itemId);
+        }
+        if (c.getPlayer().getJob().getId() / 100 == 4) {
+            if (c.getPlayer().getJob().getId() % 10 == 2) {
+                return ItemConstants.isDagger(itemId);
+            }
+            return ItemConstants.isClaw(itemId);
+        }
+        if (c.getPlayer().getJob().getId() / 100 == 5) {
+            if (c.getPlayer().getWeaponType().equals(WeaponType.GUN)) {
+                return ItemConstants.isGun(itemId);
+            }
+            return ItemConstants.isKnuckle(itemId);
+        }
+        return true;
+    }
+
+    private boolean isBetterEquip(Equip equip) {
+        short equipSlot = ItemConstants.getEquipSlot(equip.getItemId());
+        if (equipSlot == 0) {
+            System.out.println("equip slot could not be determined for item with id " + equip.getItemId());
+            return false;
+        }
+        return isBetterEquip(equip, equipSlot);
+    }
+
+    private boolean isBetterEquip(Equip equip, short equipSlot) {
+        Equip currentEquip = (Equip) c.getPlayer().getInventory(InventoryType.EQUIPPED).getItem(equipSlot);
+        if (currentEquip == null) {
+            return true;
+        }
+        int attack, mainStat, secondaryStat, accuracy = currentEquip.getAcc();
+        if (c.getPlayer().getJob().getId() / 100 == 2) {
+            attack = currentEquip.getMatk();
+            mainStat = currentEquip.getInt();
+            secondaryStat = currentEquip.getLuk();
+        } else {
+            attack = currentEquip.getWatk();
+            if (c.getPlayer().getJob().getId() / 100 == 1 || (c.getPlayer().getJob().getId() / 100 == 5 && !c.getPlayer().getWeaponType().equals(WeaponType.GUN))) {
+                mainStat = currentEquip.getStr();
+                secondaryStat = currentEquip.getDex();
+            } else if (c.getPlayer().getJob().getId() / 100 == 3 || c.getPlayer().getJob().getId() / 100 == 5) {
+                mainStat = currentEquip.getDex();
+                secondaryStat = currentEquip.getStr();
+            } else { // thief
+                mainStat = currentEquip.getLuk();
+                secondaryStat = currentEquip.getDex();
+            }
+        }
+        if (ItemConstants.is2hWeapon(equip.getItemId())) { // compare against weapon + shield
+            currentEquip = (Equip) c.getPlayer().getInventory(InventoryType.EQUIPPED).getItem((short) -10);
+            if (currentEquip != null) {
+                if (c.getPlayer().getJob().getId() / 100 == 2) {
+                    attack += currentEquip.getMatk();
+                    mainStat += currentEquip.getInt();
+                    secondaryStat += currentEquip.getLuk();
+                } else {
+                    attack += currentEquip.getWatk();
+                    if (c.getPlayer().getJob().getId() / 100 == 1 || (c.getPlayer().getJob().getId() / 100 == 5 && !c.getPlayer().getWeaponType().equals(WeaponType.GUN))) {
+                        mainStat += currentEquip.getStr();
+                        secondaryStat += currentEquip.getDex();
+                    } else if (c.getPlayer().getJob().getId() / 100 == 3 || c.getPlayer().getJob().getId() / 100 == 5) {
+                        mainStat += currentEquip.getDex();
+                        secondaryStat += currentEquip.getStr();
+                    } else { // thief
+                        mainStat = currentEquip.getLuk();
+                        secondaryStat += currentEquip.getDex();
+                    }
+                }
+            }
+        }
+        if (ItemConstants.isOverall(equip.getItemId())) { // compare against top + bottom
+            currentEquip = (Equip) c.getPlayer().getInventory(InventoryType.EQUIPPED).getItem((short) -6);
+            if (currentEquip != null) {
+                if (c.getPlayer().getJob().getId() / 100 == 2) {
+                    attack += currentEquip.getMatk();
+                    mainStat += currentEquip.getInt();
+                    secondaryStat += currentEquip.getLuk();
+                } else {
+                    attack += currentEquip.getWatk();
+                    if (c.getPlayer().getJob().getId() / 100 == 1 || (c.getPlayer().getJob().getId() / 100 == 5 && !c.getPlayer().getWeaponType().equals(WeaponType.GUN))) {
+                        mainStat += currentEquip.getStr();
+                        secondaryStat += currentEquip.getDex();
+                    } else if (c.getPlayer().getJob().getId() / 100 == 3 || c.getPlayer().getJob().getId() / 100 == 5) {
+                        mainStat += currentEquip.getDex();
+                        secondaryStat += currentEquip.getStr();
+                    } else { // thief
+                        mainStat = currentEquip.getLuk();
+                        secondaryStat += currentEquip.getDex();
+                    }
+                }
+            }
+        }
+        if (c.getPlayer().getJob().getId() / 100 == 2) { // magic users
+            if (equip.getInt() + equip.getMatk() > mainStat + attack) {
+                return true;
+            }
+            if (equip.getInt() + equip.getMatk() == mainStat + attack &&
+                    equip.getLuk() > secondaryStat) {
+                return true;
+            }
+        } else {
+            if (equip.getWatk() > attack) {
+                return true;
+            }
+            if (equip.getWatk() == attack) {
+                if (c.getPlayer().getJob().getId() / 100 == 1 || (c.getPlayer().getJob().getId() / 100 == 5 && !c.getPlayer().getWeaponType().equals(WeaponType.GUN))) {
+                    if (equip.getStr() > mainStat) {
+                        return true;
+                    }
+                    if (equip.getStr() == mainStat) {
+                        if (equip.getDex() > secondaryStat) {
+                            return true;
+                        }
+                        if (equip.getDex() == secondaryStat) {
+                            if (equip.getAcc() > accuracy) {
+                                return true;
+                            }
+                        }
+                    }
+                } else if (c.getPlayer().getJob().getId() / 100 == 3 || c.getPlayer().getJob().getId() / 100 == 5) {
+                    if (equip.getDex() > mainStat) {
+                        return true;
+                    }
+                    if (equip.getDex() == mainStat) {
+                        if (equip.getStr() > secondaryStat) {
+                            return true;
+                        }
+                    }
+                } else { // thief
+                    if (equip.getLuk() > mainStat) {
+                        return true;
+                    }
+                    if (equip.getLuk() == mainStat) {
+                        if (equip.getDex() > secondaryStat) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * check against all 4 rings
+     * @param ring the new ring
+     * @return the position of the equipped ring which was found to be worse, either -12, -13, -15, or -16, or 0 if none were worse
+     */
+    private short isBetterRing(Equip ring) {
+        for (short equipSlot : new short[]{-12, -13, -15, -16}) {
+            if (isBetterEquip(ring, equipSlot)) {
+                return equipSlot;
+            }
+        }
+        return 0;
+    }
+
+    private void createInventorySpace() {
+        c.getPlayer().getInventory(InventoryType.EQUIP).lockInventory();
+        c.getPlayer().getInventory(InventoryType.USE).lockInventory();
+        c.getPlayer().getInventory(InventoryType.ETC).lockInventory();
+        try {
+            short space, nextPos;
+            ItemInformationProvider ii = ItemInformationProvider.getInstance();
+            for (InventoryType type : new InventoryType[]{InventoryType.EQUIP, InventoryType.USE, InventoryType.ETC}) {
+                space = c.getPlayer().getInventory(type).getNumFreeSlot();
+                while (space < 48) {
+                    nextPos = getLowestValueItemPos(type);
+                    c.getPlayer().gainMeso(ii.getPrice(c.getPlayer().getInventory(type).getItem(nextPos).getItemId(), c.getPlayer().getInventory(type).getItem(nextPos).getQuantity()));
+                    c.getPlayer().getInventory(type).removeItem(nextPos);
+                    space = c.getPlayer().getInventory(type).getNumFreeSlot();
+                }
+            }
+        } finally {
+            c.getPlayer().getInventory(InventoryType.EQUIP).unlockInventory();
+            c.getPlayer().getInventory(InventoryType.USE).unlockInventory();
+            c.getPlayer().getInventory(InventoryType.ETC).unlockInventory();
+        }
+    }
+
     private short getLowestValueItemPos(InventoryType inventoryType) {
-        // todo
-        return 1;
+        c.getPlayer().getInventory(inventoryType).lockInventory();
+        try {
+            int lowestValue = Integer.MAX_VALUE, nextValue;
+            short pos = -1;
+            Iterator<Item> it = c.getPlayer().getInventory(inventoryType).iterator();
+            Item next;
+            ItemInformationProvider ii = ItemInformationProvider.getInstance();
+            while (it.hasNext()) {
+                next = it.next();
+                nextValue = ii.getPrice(next.getItemId(), next.getQuantity());
+                if (nextValue < lowestValue) {
+                    lowestValue = nextValue;
+                    pos = next.getPosition();
+                }
+            }
+            return pos;
+        } finally {
+            c.getPlayer().getInventory(inventoryType).unlockInventory();
+        }
     }
 
     private boolean isRangedJob() {
@@ -1283,7 +1789,7 @@ public class CharacterBot {
         if (jobId == 500 && c.getPlayer().getWeaponType().equals(WeaponType.GUN) && !currentMode.equals(Mode.GRINDING)) {
             return true;
         }
-        return jobId / 100 == 3 || (jobId / 100 == 4 && jobId % 100 / 10 != 2) || (jobId / 100 == 5 && jobId % 100 / 10 == 2);
+        return jobId / 100 == 2 || jobId / 100 == 3 || (jobId / 100 == 4 && jobId % 100 / 10 != 2) || (jobId / 100 == 5 && jobId % 100 / 10 == 2);
     }
 
     public Character getFollowing() {

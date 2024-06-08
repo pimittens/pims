@@ -3,6 +3,7 @@ package net.server.task;
 import net.server.Server;
 import tools.DatabaseConnection;
 import tools.Pair;
+import tools.Randomizer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,12 +29,12 @@ public class ManageBotLoginsTask implements Runnable {
             System.out.println("error - bot login task could not access database");
             return;
         }
-        if (loggedIn.size() < 0) { // just log in 50 bots at a time for now
+        if (loggedIn.size() < 100) {
             List<Pair<String, Integer>> toLogin = new ArrayList<>();
             try (Connection con = DatabaseConnection.getConnection()) {
                 try (PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts WHERE name LIKE \"bot%\" AND loggedin = 0;");
                      ResultSet rs = ps.executeQuery()) {
-                    while (rs.next() && toLogin.size() < 50 - loggedIn.size()) {
+                    while (rs.next()) {
                         toLogin.add(new Pair<>(rs.getString("name"), rs.getInt("id")));
                     }
                 }
@@ -57,6 +58,11 @@ public class ManageBotLoginsTask implements Runnable {
                     toLogin.remove(pair);
                 }
             }
+
+            while (toLogin.size() - loggedIn.size() > 100) { // log in 100 random bots for now
+                toLogin.remove(Randomizer.nextInt(toLogin.size()));
+            }
+
             Server.getInstance().getBotManager().loginBots(toLogin);
         }
     }

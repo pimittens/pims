@@ -24,6 +24,7 @@ package constants.inventory;
 import client.inventory.InventoryType;
 import config.YamlConfig;
 import constants.id.ItemId;
+import server.ItemInformationProvider;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -201,8 +202,186 @@ public final class ItemConstants {
         return itemId / 10000 == 425;
     }
 
+    public static boolean isCap(int itemId) {
+        return itemId / 10000 == 100;
+    }
+
+    public static boolean isFaceAcc(int itemId) {
+        return itemId / 10000 == 101;
+    }
+
+    public static boolean isEyeAcc(int itemId) {
+        return itemId / 10000 == 102;
+    }
+
+    public static boolean isEarring(int itemId) {
+        return itemId / 10000 == 103;
+    }
+
+    public static boolean isTop(int itemId) {
+        return itemId / 10000 == 104;
+    }
+
     public static boolean isOverall(int itemId) {
         return itemId / 10000 == 105;
+    }
+
+    public static boolean isBottom(int itemId) {
+        return itemId / 10000 == 106;
+    }
+
+    public static boolean isShoes(int itemId) {
+        return itemId / 10000 == 107;
+    }
+
+    public static boolean isShield(int itemId) {
+        return itemId / 10000 == 109;
+    }
+
+    public static boolean isGlove(int itemId) {
+        return itemId / 10000 == 108;
+    }
+
+    public static boolean isCape(int itemId) {
+        return itemId / 10000 == 110;
+    }
+
+    public static boolean isRing(int itemId) {
+        return itemId / 10000 == 111;
+    }
+
+    public static boolean isPendant(int itemId) {
+        return itemId / 10000 == 112;
+    }
+
+    public static boolean isBelt(int itemId) {
+        return itemId / 10000 == 113;
+    }
+
+    public static boolean is1hSword(int itemId) {
+        return itemId / 10000 == 130;
+    }
+
+    public static boolean is1hAxe(int itemId) {
+        return itemId / 10000 == 131;
+    }
+
+    public static boolean is1hBluntWeapon(int itemId) {
+        return itemId / 10000 == 132;
+    }
+
+    public static boolean isDagger(int itemId) {
+        return itemId / 10000 == 133;
+    }
+
+    public static boolean isWand(int itemId) {
+        return itemId / 10000 == 137;
+    }
+
+    public static boolean isStaff(int itemId) {
+        return itemId / 10000 == 138;
+    }
+
+    public static boolean is2hSword(int itemId) {
+        return itemId / 10000 == 140;
+    }
+
+    public static boolean is2hAxe(int itemId) {
+        return itemId / 10000 == 141;
+    }
+
+    public static boolean is2hBluntWeapon(int itemId) {
+        return itemId / 10000 == 142;
+    }
+
+    public static boolean isSpear(int itemId) {
+        return itemId / 10000 == 143;
+    }
+
+    public static boolean isPolearm(int itemId) {
+        return itemId / 10000 == 144;
+    }
+
+    public static boolean isBow(int itemId) {
+        return itemId / 10000 == 145;
+    }
+
+    public static boolean isCrossbow(int itemId) {
+        return itemId / 10000 == 146;
+    }
+
+    public static boolean isClaw(int itemId) {
+        return itemId / 10000 == 147;
+    }
+
+    public static boolean isKnuckle(int itemId) {
+        return itemId / 10000 == 148;
+    }
+
+    public static boolean isGun(int itemId) {
+        return itemId / 10000 == 149;
+    }
+
+    public static boolean is1hWeapon(int itemId) {
+        return is1hSword(itemId) || is1hAxe(itemId) || is1hBluntWeapon(itemId) || isWand(itemId) || isStaff(itemId) || isDagger(itemId);
+    }
+
+    public static boolean is2hWeapon(int itemId) {
+        return isWeapon(itemId) && !is1hWeapon(itemId);
+    }
+
+    public static short getEquipSlot(int itemId) {
+        if (isCap(itemId)) {
+            return -1;
+        }
+        if (isFaceAcc(itemId)) {
+            return -2;
+        }
+        if (isEyeAcc(itemId)) {
+            return -3;
+        }
+        if (isEarring(itemId)) {
+            return -4;
+        }
+        if (isOverall(itemId) || isTop(itemId)) {
+            return -5;
+        }
+        if (isBottom(itemId)) {
+            return -6;
+        }
+        if (isShoes(itemId)) {
+            return -7;
+        }
+        if (isGlove(itemId)) {
+            return -8;
+        }
+        if (isCape(itemId)) {
+            return -9;
+        }
+        if (isShield(itemId)) {
+            return -10;
+        }
+        if (isWeapon(itemId)) {
+            return -11;
+        }
+        if (isRing(itemId)) {
+            return -12; // note: this is the first ring slot, they can also go in -13, -15, and -16
+        }
+        if (isPendant(itemId)) {
+            return -17;
+        }
+        if (isMedal(itemId)) {
+            return -49;
+        }
+        if (isBelt(itemId)) {
+            return -50;
+        }
+        return 0;
+    }
+
+    public static int getItemValue(int itemId, int quantity) {
+        ItemInformationProvider ii = ItemInformationProvider.getInstance();
+        return ii.getPrice(itemId, quantity); // todo: store values for special items somewhere, have equips increase/decrease in value when scrolled or depending on slots left
     }
 
     public static boolean isCashStore(int itemId) {

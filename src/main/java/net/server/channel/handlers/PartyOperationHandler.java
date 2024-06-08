@@ -42,7 +42,7 @@ public final class PartyOperationHandler extends AbstractPacketHandler {
 
     @Override
     public final void handlePacket(InPacket p, Client c) {
-        System.out.println("partyoperation packet: " + p);
+        //System.out.println("partyoperation packet: " + p);
         int operation = p.readByte();
         Character player = c.getPlayer();
         World world = c.getWorldServer();

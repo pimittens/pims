@@ -7534,8 +7534,9 @@ public class PacketCreator {
         p.writeByte(0);
         p.writeByte(0); // skipped
         p.writeByte(0); // display
-        p.writeByte(7); // direction
-        p.writeByte(-128); // stance
+        int[] directions = new int[]{5, 6, 7, 16, 17};
+        p.writeByte(directions[Randomizer.nextInt(directions.length)]); // direction
+        p.writeByte(facingLeft ? -128 : 0); // stance
         p.writeByte(0); // skipped
         p.writeByte(2); // speed
         p.writeByte(0);

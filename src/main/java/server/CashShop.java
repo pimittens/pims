@@ -118,9 +118,9 @@ public class CashShop {
                         item.setExpiration(Server.getInstance().getCurrentTime() + DAYS.toMillis(1));
                         break;
                     }
-                } else {
+                } /*else {
                     item.setExpiration(Server.getInstance().getCurrentTime() + DAYS.toMillis(period));
-                }
+                }*/
             }
 
             item.setSN(sn);
