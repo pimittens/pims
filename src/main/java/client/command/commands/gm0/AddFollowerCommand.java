@@ -25,7 +25,6 @@ package client.command.commands.gm0;
 
 import client.Client;
 import client.command.Command;
-import client.processor.action.BuybackProcessor;
 import net.server.Server;
 
 public class AddFollowerCommand extends Command {
