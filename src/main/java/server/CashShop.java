@@ -21,7 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 package server;
 
-import client.inventory.*;
+import client.inventory.Equip;
+import client.inventory.InventoryType;
+import client.inventory.Item;
+import client.inventory.ItemFactory;
+import client.inventory.Pet;
 import config.YamlConfig;
 import constants.id.ItemId;
 import constants.inventory.ItemConstants;
@@ -32,13 +36,18 @@ import provider.DataProviderFactory;
 import provider.DataTool;
 import provider.wz.WZFiles;
 import tools.DatabaseConnection;
+import tools.PacketCreator;
 import tools.Pair;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -399,6 +408,17 @@ public class CashShop {
         }
     }
 
+    public int getItemsSize() {
+        int size = 0;
+        lock.lock();
+        try {
+            size = inventory.size();
+        } finally {
+            lock.unlock();
+        }
+        return size;
+    }
+
     public List<Integer> getWishList() {
         return wishList;
     }
@@ -536,14 +556,14 @@ public class CashShop {
         Item css = getCashShopItemByItemid(ItemId.CASH_SHOP_SURPRISE);
 
         if (css != null) {
+            if (getItemsSize() >= 100) {
+                return null;
+            }
+
             CashItem cItem = CashItemFactory.getRandomCashItem();
 
             if (cItem != null) {
                 if (css.getQuantity() > 1) {
-                    /* if(NOT ENOUGH SPACE) { looks like we're not dealing with cash inventory limit whatsoever, k then
-                        return null;
-                    } */
-
                     css.setQuantity((short) (css.getQuantity() - 1));
                 } else {
                     removeFromInventory(css);
