@@ -7,7 +7,7 @@ worlds:
     server_message: Welcome to pims!
     event_message: pims!
     why_am_i_recommended: Welcome to Scania!
-    channels: 3
+    channels: 4
     exp_rate: 2
     meso_rate: 2
     drop_rate: 2

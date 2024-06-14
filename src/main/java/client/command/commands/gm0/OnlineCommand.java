@@ -42,6 +42,7 @@ public class OnlineCommand extends Command {
             for (Character chr : ch.getPlayerStorage().getAllCharacters()) {
                 if (!chr.isGM()) {
                     player.message(" >> " + Character.makeMapleReadable(chr.getName()) + " is at " + chr.getMap().getMapName() + ".");
+                    System.out.println(" >> " + Character.makeMapleReadable(chr.getName()) + " is at " + chr.getMap().getMapName() + ".");
                 }
             }
         }

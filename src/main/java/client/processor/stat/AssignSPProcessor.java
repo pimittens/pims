@@ -78,6 +78,9 @@ public class AssignSPProcessor {
                 isBeginnerSkill = true;
             }
             Skill skill = SkillFactory.getSkill(skillid);
+            /*if (skill == null) {
+                System.out.println("invalid skill id: " + skillid);
+            }*/
             int curLevel = player.getSkillLevel(skill);
             if ((remainingSp > 0 && curLevel + 1 <= (skill.isFourthJob() ? player.getMasterLevel(skill) : skill.getMaxLevel()))) {
                 if (!isBeginnerSkill) {

@@ -172,12 +172,16 @@ public class CharacterBot {
         c.disconnect(false, false);
     }
 
+    public boolean isLoggedIn() {
+        return !loggedOut;
+    }
+
     public boolean isFollower() {
         return following != null;
     }
 
     public void update() {
-        if (loggedOut || level >= 29) {
+        if (loggedOut || level >= 69) {
             return;
         }
         if (System.currentTimeMillis() - currentModeStartTime > MINUTES.toMillis(30)) {
@@ -1154,55 +1158,55 @@ public class CharacterBot {
         } else if (c.getPlayer().getLevel() < 76) {
             changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)]));
         } else if (c.getPlayer().getLevel() < 81) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 86) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 91) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 96) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 101) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 106) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 111) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 116) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 121) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 126) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 131) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 136) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 141) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 146) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 151) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 156) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 161) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 166) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 171) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 176) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 181) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 186) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 191) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else if (c.getPlayer().getLevel() < 196) {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         } else {
-
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
         }
     }
 
@@ -1330,11 +1334,18 @@ public class CharacterBot {
                 jobAdvance(jobs[Randomizer.nextInt(jobs.length)]);
             }
         } else if (c.getPlayer().getLevel() == 30) { // note: these assume the bot will not gain more than 1 level between updates
-            // todo: second job
+            switch (c.getPlayer().getJob()) {
+                case WARRIOR -> jobAdvance(Job.getById(100 + 10 + 10 * Randomizer.nextInt(3)));
+                case MAGICIAN -> jobAdvance(Job.getById(200 + 10 + 10 * Randomizer.nextInt(3)));
+                case BOWMAN -> jobAdvance(Job.getById(300 + 10 + 10 * Randomizer.nextInt(2)));
+                case THIEF -> jobAdvance(Job.getById(400 + 10 + 10 * Randomizer.nextInt(2)));
+                case PIRATE -> jobAdvance(c.getPlayer().getWeaponType().equals(WeaponType.GUN) ? Job.GUNSLINGER : Job.BRAWLER);
+            }
         } else if (c.getPlayer().getLevel() == 70) {
-            // todo: third job
+            jobAdvance(Job.getById(c.getPlayer().getJob().getId() + 1));
         } else if (c.getPlayer().getLevel() == 120) {
-            // todo: fourth job, probably have it give them max skill levels also
+            jobAdvance(Job.getById(c.getPlayer().getJob().getId() + 1));
+            // todo: 4th job skills
         }
         int remainingAP = c.getPlayer().getRemainingAp(), nextAP;
         // todo: even with max secondary stat, they may be unable to equip the highest level items if the item being replaced give the stat, need to address this eventually
@@ -1406,7 +1417,8 @@ public class CharacterBot {
     }
 
     private void jobAdvance(Job newJob) {
-        boolean firstJob = c.getPlayer().getJob().equals(Job.BEGINNER);
+        boolean firstJob = c.getPlayer().getJob().equals(Job.BEGINNER),
+                secondJob = c.getPlayer().getJob().getId() % 100 == 0;
         c.getPlayer().changeJob(newJob);
         if (firstJob) {
             c.getPlayer().resetStats();
@@ -1429,6 +1441,19 @@ public class CharacterBot {
                         gainAndEquip(1482000);
                     }
                 }
+            }
+        } else if (secondJob) {
+            switch (newJob) {
+                case FIGHTER -> gainAndEquip(1402002);
+                case PAGE -> gainAndEquip(1422001);
+                case SPEARMAN -> gainAndEquip(1432002);
+                case FP_WIZARD, IL_WIZARD, CLERIC -> gainAndEquip(1372003);
+                case HUNTER -> gainAndEquip(1452005);
+                case CROSSBOWMAN -> gainAndEquip(1462000);
+                case ASSASSIN -> gainAndEquip(1472007);
+                case BANDIT -> gainAndEquip(1332012);
+                case BRAWLER -> gainAndEquip(1482004);
+                case GUNSLINGER -> gainAndEquip(1492004);
             }
         }
         assignSP();
@@ -1526,6 +1551,7 @@ public class CharacterBot {
                     if (ItemConstants.isRing(nextEquip.getItemId())) {
                         InventoryManipulator.equip(c, equipPos, ringSlot);
                     } else {
+                        // System.out.println("equipped item: " + nextEquip.getItemId() + " with att: " + nextEquip.getWatk());
                         InventoryManipulator.equip(c, equipPos, ItemConstants.getEquipSlot(nextEquip.getItemId()));
                     }
                 }
@@ -1610,7 +1636,15 @@ public class CharacterBot {
     private boolean isBetterEquip(Equip equip, short equipSlot) {
         Equip currentEquip = (Equip) c.getPlayer().getInventory(InventoryType.EQUIPPED).getItem(equipSlot);
         if (currentEquip == null) {
-            return true;
+            if (ItemConstants.isShield(equip.getItemId())) {
+                Equip weapon = (Equip) c.getPlayer().getInventory(InventoryType.EQUIPPED).getItem((short) -11);
+                return weapon == null || !ItemConstants.is2hWeapon(weapon.getItemId());
+            } else if (ItemConstants.isBottom(equip.getItemId())) {
+                Equip top = (Equip) c.getPlayer().getInventory(InventoryType.EQUIPPED).getItem((short) -5);
+                return top == null || !ItemConstants.isOverall(top.getItemId());
+            } else {
+                return true;
+            }
         }
         int attack, mainStat, secondaryStat, accuracy = currentEquip.getAcc();
         if (c.getPlayer().getJob().getId() / 100 == 2) {

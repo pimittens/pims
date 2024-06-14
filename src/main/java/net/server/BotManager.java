@@ -5,6 +5,7 @@ import client.CharacterBot;
 import net.server.world.Party;
 import tools.DatabaseConnection;
 import tools.Pair;
+import tools.Randomizer;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -79,6 +80,48 @@ public class BotManager {
         }
     }
 
+
+    /**
+     * logout up to the specified number of bots within the level range
+     * @param level the upper limit of the level range (range is 5 levels)
+     * @param amount the number of bots to logout
+     */
+    public void logoutBots(int level, int amount) {
+        lock.lock();
+        try {
+            List<CharacterBot> toRemove = new ArrayList<>();
+            for (CharacterBot bot : bots) {
+                if (bot.isLoggedIn() && bot.getPlayer().getLevel() <= level && bot.getPlayer().getLevel() > level - 5) {
+                    toRemove.add(bot);
+                }
+            }
+            while (toRemove.size() > amount) {
+                toRemove.remove(Randomizer.nextInt(toRemove.size()));
+            }
+            for (CharacterBot bot : toRemove) {
+                bot.logout();
+                bots.remove(bot);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public List<Integer> getLevels() {
+        List<Integer> ret = new ArrayList<>();
+        lock.lock();
+        try {
+            for (CharacterBot bot : bots) {
+                if (bot.isLoggedIn()) {
+                    ret.add(bot.getPlayer().getLevel());
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
+        return ret;
+    }
+
     public void createFollower(Character character) {
         // todo: choose random bot in level range
         character.message("This mode is not yet implemented");
@@ -146,14 +189,19 @@ public class BotManager {
     public void dismissFollower(Character character, String name) {
         lock.lock();
         try {
+            CharacterBot toDismiss = null;
             for (CharacterBot bot : followers) {
                 if (bot.getFollowing().equals(character) && bot.getPlayer().getName().equals(name)) {
-                    bot.logout();
-                    followers.remove(bot);
-                    return;
+                    toDismiss = bot;
+                    break;
                 }
             }
-            character.message("That name does not match any of your followers.");
+            if (toDismiss != null) {
+                toDismiss.logout();
+                followers.remove(toDismiss);
+            } else {
+                character.message("That name does not match any of your followers.");
+            }
         } finally {
             lock.unlock();
         }
