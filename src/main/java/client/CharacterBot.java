@@ -1093,7 +1093,7 @@ public class CharacterBot {
     }
 
     private static float calculateHitchance(int leveldelta, float playerAccuracy, int avoid) {
-        float hitchance = playerAccuracy / (((1.84f + 0.07f * leveldelta) * avoid) + 1.0f);
+        float hitchance = (playerAccuracy + 10) / (((1.84f + 0.07f * leveldelta) * avoid) + 1.0f); // note: add 10 to accuracy to emulate accuracy pill usage
         if (hitchance < 0.01f) {
             hitchance = 0.01f;
         }
@@ -1255,6 +1255,8 @@ public class CharacterBot {
                             hasTargetItem = true;
                         }
                     }*/
+                } else {
+                    hasTargetItem = false;
                 }
                 time1 += System.currentTimeMillis() - otherStartTime;
             }
