@@ -1610,6 +1610,7 @@ public class Client extends ChannelInboundHandlerAdapter {
     }
 
     public void handlePacket(InPacket p, short packetID) {
+        updateLastPacket();
         packetProcessor.getHandler(packetID).handlePacket(p, this);
     }
 

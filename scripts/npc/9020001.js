@@ -272,7 +272,7 @@ function action(mode, type, selection) {
             }
         } else if (status == 1) {
             if (!eim.giveEventReward(cm.getPlayer())) {
-                cm.sendNext("Please make room on your inventory first!");
+                cm.sendNext("Please make room in your inventory first!");
             } else {
                 cm.warp(103000805, "st00");
             }

@@ -38,3 +38,5 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 * Bots creating/joining guilds.
 * Random bot chat messages and smegas.
 * Free market: bots should create their own shops and buy items from other shops.
+* Bots should spend their nx on gachapon tickets and use them at a random gachapon.
+* Include a way for bots to get random cash item equips and wear them.

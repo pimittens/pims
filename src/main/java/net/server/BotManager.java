@@ -123,6 +123,12 @@ public class BotManager {
     }
 
     public void createFollower(Character character) {
+        /*lock.lock();
+        try {
+
+        } finally {
+            lock.unlock();
+        }*/
         // todo: choose random bot in level range
         character.message("This mode is not yet implemented");
     }
@@ -250,6 +256,20 @@ public class BotManager {
                 if (bot.getFollowing().equals(character)) {
                     Party.joinParty(bot.getPlayer(), character.getPartyId(), false);
                 }
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void logoutAllBots() {
+        lock.lock();
+        try {
+            for (CharacterBot bot : bots) {
+                bot.setLoggedOut();
+            }
+            for (CharacterBot bot : followers) {
+                bot.setLoggedOut();
             }
         } finally {
             lock.unlock();

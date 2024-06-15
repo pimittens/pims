@@ -998,7 +998,7 @@ public class Server {
         tMan.register(new DueyFredrickTask(channelDependencies.fredrickProcessor()), HOURS.toMillis(1), timeLeft);
         tMan.register(new InvitationTask(), SECONDS.toMillis(30), SECONDS.toMillis(30));
         tMan.register(new RespawnTask(), YamlConfig.config.server.RESPAWN_INTERVAL, YamlConfig.config.server.RESPAWN_INTERVAL);
-        tMan.register(new UpdateBotsTask(), 500, MINUTES.toMillis(3));
+        tMan.register(new UpdateBotsTask(), 500, MINUTES.toMillis(4));
         tMan.register(new ManageBotLoginsTask(), MINUTES.toMillis(15), MINUTES.toMillis(1));
         tMan.register(new UpdateFollowerBotsTask(), 500, SECONDS.toMillis(30));
 
@@ -1925,6 +1925,7 @@ public class Server {
     }
 
     private synchronized void shutdownInternal(boolean restart) {
+        bots.logoutAllBots();
         log.info("{} the server!", restart ? "Restarting" : "Shutting down");
         if (getWorlds() == null) {
             return;//already shutdown

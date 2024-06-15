@@ -37,6 +37,8 @@ public class CharacterBot {
 
     }
 
+    private static final int[] pqMaps = {103000800}; // first map for each pq
+
     private static final int[] lv1to5Maps = {
             104000100, 104000200, 104000300, // lith maps
             101040000 // perion street corner
@@ -117,6 +119,13 @@ public class CharacterBot {
     private static Map<Job, int[][]> skillOrders = new HashMap<>();
     private static Map<Integer, Integer> skillDelayTimes = new HashMap<>(); // todo: put delay times
 
+    public static Point[] kpqStage2Positions = {new Point(-753, -11), new Point(-719, -254),
+            new Point(-584, -254), new Point(-481, -11)},
+    kpqStage3Positions = {new Point(669, -135), new Point(855, -75), new Point(1036, -135),
+            new Point(950, -195), new Point(762, -195)},
+    getKpqStage4Positions = {new Point(926, -234), new Point(894, -182), new Point(966, -182),
+            new Point(862, -130), new Point(927, -130), new Point(994, -130)};
+
     private Character following = null;
     //private Foothold foothold;
     private Client c;
@@ -135,6 +144,7 @@ public class CharacterBot {
     private long currentModeStartTime;
     private boolean loggedOut = false;
     private long delay = 0; // delay after using an attack before another can be used
+    private boolean doneWithPQTask = false; // used to track progress in some PQ stages
 
     public void setFollowing(Character following) {
         this.following = following;
@@ -167,6 +177,10 @@ public class CharacterBot {
         chooseMode();
     }
 
+    public void setLoggedOut() {
+        loggedOut = true;
+    }
+
     public void logout() {
         loggedOut = true;
         c.disconnect(false, false);
@@ -188,7 +202,8 @@ public class CharacterBot {
             chooseMode();
             return;
         }
-        c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their mp each update
+        c.getPlayer().setHp(c.getPlayer().getMaxHp());
+        c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
         if (c.getPlayer().getLevel() > level || c.getPlayer().getRemainingSp() > 0) {
             levelup();
             decideAttackSkills();
@@ -221,31 +236,37 @@ public class CharacterBot {
         if (loggedOut) {
             return;
         }
-        c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their mp each update
+        c.getPlayer().setHp(c.getPlayer().getMaxHp());
+        c.getPlayer().setMp(c.getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
         if (c.getPlayer().getLevel() > level || c.getPlayer().getRemainingSp() > 0) {
             levelup();
             decideAttackSkills();
             putBuffSkills();
             return;
         }
-        if (c.getPlayer().getMapId() != following.getMapId()) {
+        if (!currentMode.equals(Mode.PQ) && c.getPlayer().getMapId() != following.getMapId()) {
             changeMap(following.getMap(), following.getMap().findClosestPortal(following.getPosition()));
             return;
         }
-        // todo: use mp pots
         for (int i : buffSkills) {
             if (c.getPlayer().getExpirationTime(i) - System.currentTimeMillis() < 10000 && c.getPlayer().getMp() > SkillFactory.getSkill(i).getEffect(c.getPlayer().getSkillLevel(i)).getMpCon()) {
                 useBuff(i);
                 return;
             }
         }
-        // todo: pqs
+        if (!currentMode.equals(Mode.PQ) && isPQMap(c.getPlayer().getMapId())) {
+            currentMode = Mode.PQ;
+        }
         //System.out.println("current time: " + System.currentTimeMillis() + ", previous action: " + previousAction + ", delay: " + delay);
         int time = Math.min((int) (System.currentTimeMillis() - previousAction - delay), 1000); // amount of time for actions
         //System.out.println("time: " + time);
         previousAction = System.currentTimeMillis();
         delay = 0;
-        grind(time);
+        switch (currentMode) {
+            case WAITING -> currentMode = Mode.GRINDING;
+            case GRINDING -> grind(time);
+            case PQ -> doPQ(time);
+        }
     }
 
     private int moveBot(short targetX, short targetY, int time) {
@@ -1080,7 +1101,20 @@ public class CharacterBot {
         } else {
             damage = 0;
         }
-        c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), damage, facingLeft), (short) 44);
+        int[] directions;
+        Equip weapon = (Equip) c.getPlayer().getInventory(InventoryType.EQUIPPED).getItem((short) -11);
+        if (ItemConstants.isStaff(weapon.getItemId()) || ItemConstants.isWand(weapon.getItemId())) {
+            directions = new int[]{6};
+        } else if (ItemConstants.isKnuckle(weapon.getItemId())) {
+            directions = new int[]{16, 17};
+        } else if (ItemConstants.isSpear(weapon.getItemId()) || ItemConstants.isPolearm(weapon.getItemId())) {
+            directions = new int[]{10, 13, 14, 19, 20};
+        } else if (ItemConstants.is2hWeapon(weapon.getItemId())) {
+            directions = new int[]{9, 10, 11, 16, 17};
+        } else {
+            directions = new int[]{5, 6, 7, 16, 17};
+        }
+        c.handlePacket(PacketCreator.createRegularAttackPacket(targetMonster.getObjectId(), damage, directions[Randomizer.nextInt(directions.length)], facingLeft), (short) 44);
     }
 
     private int calcRegularAttackDamage(int leveldelta) {
@@ -1220,6 +1254,19 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createPlayerMovementPacket((short) c.getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
         hasTargetItem = false;
         hasTargetMonster = false;
+        if (isPQMap(target.getId())) {
+            currentMode = Mode.PQ;
+            doneWithPQTask = false;
+        }
+    }
+
+    private static boolean isPQMap(int mapId) {
+        for (int i : pqMaps) {
+            if (mapId == i) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean grind(int time) {
@@ -1236,6 +1283,108 @@ public class CharacterBot {
                     for (MapObject it : c.getPlayer().getMap().getItems()) {
                         if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer())) {
                             if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            nextDistance = c.getPlayer().getPosition().distance(it.getPosition());
+                            if (nextDistance < minDistance) {
+                                minDistance = nextDistance;
+                                targetItem = it;
+                                hasTargetItem = true;
+                            }
+                        }
+                    }
+                    /*for (MapObject it : c.getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer())) {
+                            if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            targetItem = it;
+                            hasTargetItem = true;
+                        }
+                    }*/
+                } else {
+                    hasTargetItem = false;
+                }
+                time1 += System.currentTimeMillis() - otherStartTime;
+            }
+            if (!hasTargetMonster || !targetMonster.isAlive()) {
+                otherStartTime = System.currentTimeMillis();
+                if (!c.getPlayer().getMap().getAllMonsters().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (Monster m : c.getPlayer().getMap().getAllMonsters()) {
+                        if (!m.isAlive()) {
+                            continue;
+                        }
+                        nextDistance = c.getPlayer().getPosition().distance(m.getPosition());
+                        if (nextDistance < minDistance) {
+                            minDistance = nextDistance;
+                            targetMonster = m;
+                            hasTargetMonster = true;
+                        }
+                    }
+                    /*List<Monster> shuffled = c.getPlayer().getMap().getAllMonsters();
+                    Collections.shuffle(shuffled);*/
+                    /*for (Monster m : c.getPlayer().getMap().getAllMonsters()) {
+                        if (m.isAlive()) {
+                            targetMonster = m;
+                            hasTargetMonster = true;
+                            break;
+                        }
+                    }*/
+                } else {
+                    hasTargetMonster = false;
+                }
+                time2 += System.currentTimeMillis() - otherStartTime;
+            }
+            if (hasTargetItem) {
+                otherStartTime = System.currentTimeMillis();
+                if (!c.getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
+                    didAction = true;
+                }
+                if (c.getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    pickupItem();
+                    time -= 50;
+                    didAction = true;
+                }
+                time3 += System.currentTimeMillis() - otherStartTime;
+            } else if (hasTargetMonster) {
+                otherStartTime = System.currentTimeMillis();
+                if (c.getPlayer().getPosition().distance(targetMonster.getPosition().x - (isRangedJob() ? 300 : 50), targetMonster.getPosition().y) < (isRangedJob() ? 100 : 50)) { // todo: accurate range
+                    attack(time);
+                    time = 0;
+                    didAction = true;
+                } else {
+                    time = moveBot((short) (targetMonster.getPosition().x - (isRangedJob() ? 300 : 50)), (short) targetMonster.getPosition().y, time);
+                    didAction = true;
+                }
+                time4 += System.currentTimeMillis() - otherStartTime;
+            }
+        }
+        long grindTime = System.currentTimeMillis() - startTime;
+        if (grindTime > 10) {
+            System.out.println("Grind time: " + grindTime + ", loops: " + loops + ", time1: " + time1 + ", time2: " + time2 + ", time3: " + time3 + ", time4: " + time4);
+            if (time4 > 10) {
+                System.out.println("job: " + c.getPlayer().getJob());
+            }
+        }
+        return didAction;
+    }
+
+    private boolean grind(int time, int targetItemId) {
+        boolean didAction = true;
+        long startTime = System.currentTimeMillis(), otherStartTime, time1 = 0, time2 = 0, time3 = 0, time4 = 0;
+        int loops = 0;
+        while (time > 0 && didAction) {
+            loops++;
+            didAction = false;
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+                otherStartTime = System.currentTimeMillis();
+                if (!c.getPlayer().getMap().getItems().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (MapObject it : c.getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(c.getPlayer())) {
+                            if (((MapItem) it).getItemId() != targetItemId || (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner()))) {
                                 continue;
                             }
                             nextDistance = c.getPlayer().getPosition().distance(it.getPosition());
@@ -1495,13 +1644,17 @@ public class CharacterBot {
     }
 
     private void gainItem(int itemId, short quantity) {
-        InventoryType inventoryType = ItemConstants.getInventoryType(itemId);
-        while (!InventoryManipulator.checkSpace(c, itemId, quantity, "")) {
-            // make sure not to give a quantity that can't fit in their inventory or this will get stuck
-            short lowestValueItemPos = getLowestValueItemPos(inventoryType);
-            InventoryManipulator.drop(c, inventoryType, lowestValueItemPos, InventoryManipulator.getQuantity(c, inventoryType, lowestValueItemPos));
+        if (quantity > 0) {
+            InventoryType inventoryType = ItemConstants.getInventoryType(itemId);
+            while (!InventoryManipulator.checkSpace(c, itemId, quantity, "")) {
+                // make sure not to give a quantity that can't fit in their inventory or this will get stuck
+                short lowestValueItemPos = getLowestValueItemPos(inventoryType);
+                InventoryManipulator.drop(c, inventoryType, lowestValueItemPos, InventoryManipulator.getQuantity(c, inventoryType, lowestValueItemPos));
+            }
+            InventoryManipulator.addById(c, itemId, quantity);
+        } else{
+            InventoryManipulator.removeById(c, ItemConstants.getInventoryType(itemId), itemId, -quantity, true, false);
         }
-        InventoryManipulator.addById(c, itemId, quantity);
     }
 
     private void gainAndEquip(int itemId) {
@@ -1834,8 +1987,16 @@ public class CharacterBot {
 
     private int getDirection(int skillId) {
         return switch (skillId) {
-            case Warrior.POWER_STRIKE, Warrior.SLASH_BLAST, ChiefBandit.BAND_OF_THIEVES -> {
-                int[] directions = new int[]{5, 6, 7, 16, 17};
+            case Warrior.POWER_STRIKE, Warrior.SLASH_BLAST -> {
+                int[] directions;
+                Equip weapon = (Equip) c.getPlayer().getInventory(InventoryType.EQUIPPED).getItem((short) -11);
+                if (ItemConstants.isSpear(weapon.getItemId()) || ItemConstants.isPolearm(weapon.getItemId())) {
+                    directions = new int[]{10, 13, 14, 19, 20};
+                } else if (ItemConstants.is2hWeapon(weapon.getItemId())) {
+                    directions = new int[]{9, 10, 11, 16, 17};
+                } else {
+                    directions = new int[]{5, 6, 7, 16, 17};
+                }
                 yield directions[Randomizer.nextInt(directions.length)];
             }
             case Hero.BRANDISH -> 63;
@@ -1865,6 +2026,10 @@ public class CharacterBot {
             case Hermit.AVENGER -> 56;
             case Rogue.DOUBLE_STAB -> Randomizer.nextInt(2) == 0 ? 16 : 17;
             case Bandit.SAVAGE_BLOW -> 55;
+            case ChiefBandit.BAND_OF_THIEVES -> {
+                int[] directions = new int[]{5, 6, 7, 16, 17};
+                yield directions[Randomizer.nextInt(directions.length)];
+            }
             case Shadower.BOOMERANG_STEP -> 44;
             case Pirate.SOMERSAULT_KICK -> 78;
             case Pirate.DOUBLE_SHOT -> 87;
@@ -1888,6 +2053,80 @@ public class CharacterBot {
             case Corsair.BATTLESHIP_TORPEDO -> 110;
             default -> 0;
         };
+    }
+
+    // pq stuff
+
+    private void doPQ(int time) {
+        switch (c.getPlayer().getMap().getId()) {
+            case 103000800 -> kpqStage1(time);
+            case 103000801 -> kpqStage2(time);
+            case 103000802 -> kpqStage3(time);
+            case 103000803 -> kpqStage4(time);
+            case 103000804 -> kpqStage5(time);
+            default -> currentMode = Mode.WAITING; // if not in a PQ map then switch modes
+        }
+    }
+
+    private void kpqStage1(int time) {
+        if (c.getPlayer().getEventInstance().getProperty("1stageclear") != null) {
+            doneWithPQTask = false;
+            changeMap(c.getChannelServer().getMapFactory().getMap(103000801));
+            return;
+        }
+        if (c.getPlayer().getEventInstance().isEventLeader(c.getPlayer())) {
+            if (c.getPlayer().getItemQuantity(4001008, false) >= c.getPlayer().getEventInstance().getPlayerCount() - 1) {
+                gainItem(4001008, (short) -(c.getPlayer().getEventInstance().getPlayerCount() - 1));
+                c.getPlayer().getEventInstance().setProperty("1stageclear", "true");
+                c.getPlayer().getEventInstance().showClearEffect(true);
+                c.getPlayer().getEventInstance().linkToNextStage(1, "kpq", 103000800);
+            } else {
+                grind(time, 4001008);
+            }
+        } else {
+            if (c.getPlayer().getItemQuantity(4001007, false) >= 22) { // average number of passes needed is 22, so just use that
+                doneWithPQTask = true;
+                gainItem(4001007, (short) -22);
+                c.getPlayer().getMap().spawnItemDrop(c.getPlayer(), c.getPlayer(), new Item(4001008, (short) 0, (short) 1), c.getPlayer().getPosition(), true, true);
+            } else {
+                grind(time, doneWithPQTask ? -1 : 4001007); // stop looting tickets once finished
+            }
+        }
+    }
+
+    private void kpqStage2(int time) {
+        if (c.getPlayer().getEventInstance().getProperty("2stageclear") != null) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(103000802));
+            return;
+        }
+        if (c.getPlayer().getEventInstance().isEventLeader(c.getPlayer())) {
+
+        } else {
+            //int playerEventId = c.getPlayer().getEventInstance().getPlayerEventId(c.getPlayer().getId());
+        }
+    }
+
+    private void kpqStage3(int time) {
+        if (c.getPlayer().getEventInstance().getProperty("3stageclear") != null) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(103000803));
+            return;
+        }
+    }
+
+    private void kpqStage4(int time) {
+        if (c.getPlayer().getEventInstance().getProperty("4stageclear") != null) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(103000804));
+            return;
+        }
+    }
+
+    private void kpqStage5(int time) {
+        if (c.getPlayer().getEventInstance().getProperty("5stageclear") != null) {
+            c.getPlayer().getEventInstance().giveEventReward(c.getPlayer()); // if they don't have space too bad
+            changeMap(c.getChannelServer().getMapFactory().getMap(103000000));
+            currentMode = Mode.WAITING;
+            return;
+        }
     }
 
     public static void putSkillOrdersAndDelayTimes() {

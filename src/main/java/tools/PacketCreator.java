@@ -7547,7 +7547,7 @@ public class PacketCreator {
         return p;
     }
 
-    public static InPacket createRegularAttackPacket(int monsteroid, int damage, boolean facingLeft) {
+    public static InPacket createRegularAttackPacket(int monsteroid, int damage, int direction, boolean facingLeft) {
         final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
         p.writeByte(0); // skipped
         p.writeByte(17); // num attacked and damage
@@ -7561,8 +7561,7 @@ public class PacketCreator {
         p.writeByte(0);
         p.writeByte(0); // skipped
         p.writeByte(0); // display
-        int[] directions = new int[]{5, 6, 7, 16, 17};
-        p.writeByte(directions[Randomizer.nextInt(directions.length)]); // direction
+        p.writeByte(direction); // direction
         p.writeByte(facingLeft ? -128 : 0); // stance
         p.writeByte(0); // skipped
         p.writeByte(2); // speed
