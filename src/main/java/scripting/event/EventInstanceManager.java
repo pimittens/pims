@@ -65,6 +65,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
  * @author Ronan
  */
 public class EventInstanceManager {
+    private int nextPQValue = 0;
     private static final Logger log = LoggerFactory.getLogger(EventInstanceManager.class);
     private final Map<Integer, Character> chars = new HashMap<>();
     private int leaderId = -1;
@@ -421,6 +422,32 @@ public class EventInstanceManager {
         } finally {
             readLock.unlock();
         }
+    }
+
+    public int getPlayerEventId(int characterId) {
+        readLock.lock();
+        try {
+            int ret = 1;
+            for (int id : chars.keySet()) {
+                if (characterId == id) {
+                    return ret;
+                }
+                if (!isEventLeader(chars.get(id))) {
+                    ret ++;
+                }
+            }
+            return -1;
+        } finally {
+            readLock.unlock();
+        }
+    }
+
+    public int getNextPQValue() {
+        return nextPQValue;
+    }
+
+    public void advancePQValue() {
+        nextPQValue++;
     }
 
     public List<Character> getPlayers() {

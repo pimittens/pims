@@ -194,6 +194,7 @@ function action(mode, type, selection) {
                         cm.sendNext("Please hurry on to the next stage, the portal opened!");
                     } else {
                         eim.showWrongEffect();
+						eim.advancePQValue();
                         cm.sendNext("It looks like you haven't found the 3 " + nthobj + " just yet. Please think of a different combination of " + nthobj + ". Only 3 are allowed to " + nthverb + " on " + nthobj + ", and if you " + nthpos + " it may not count as an answer, so please keep that in mind. Keep going!");
                     }
                 }
@@ -221,6 +222,7 @@ function action(mode, type, selection) {
                         cm.sendNext("Please hurry on to the next stage, the portal opened!");
                     } else {
                         eim.showWrongEffect();
+						eim.advancePQValue();
                         cm.sendNext("It looks like you haven't found the 3 " + nthobj + " just yet. Please think of a different combination of " + nthobj + ". Only 3 are allowed to " + nthverb + " on " + nthobj + ", and if you " + nthpos + " it may not count as an answer, so please keep that in mind. Keep going!");
                     }
                 }
@@ -248,6 +250,7 @@ function action(mode, type, selection) {
                         cm.sendNext("Please hurry on to the next stage, the portal opened!");
                     } else {
                         eim.showWrongEffect();
+						eim.advancePQValue();
                         cm.sendNext("It looks like you haven't found the 3 " + nthobj + " just yet. Please think of a different combination of " + nthobj + ". Only 3 are allowed to " + nthverb + " on " + nthobj + ", and if you " + nthpos + " it may not count as an answer, so please keep that in mind. Keep going!");
                     }
                 }

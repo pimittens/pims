@@ -3,6 +3,7 @@ package net.server;
 import client.Character;
 import client.CharacterBot;
 import net.server.world.Party;
+import net.server.world.PartyCharacter;
 import tools.DatabaseConnection;
 import tools.Pair;
 import tools.Randomizer;
@@ -12,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -257,6 +259,39 @@ public class BotManager {
                     Party.joinParty(bot.getPlayer(), character.getPartyId(), false);
                 }
             }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public Party createPQParty(int partySize, int minLevel, int maxLevel, int mapId) {
+        lock.lock();
+        try {
+            Party ret;
+            List<CharacterBot> botsInLevelRange = new ArrayList<>();
+            for (CharacterBot bot : bots) {
+                if (bot.getPlayer().getLevel() >= minLevel && bot.getPlayer().getLevel() <= maxLevel) {
+                    botsInLevelRange.add(bot);
+                }
+            }
+            if (botsInLevelRange.size() < partySize) {
+                return null;
+            }
+            Collections.shuffle(botsInLevelRange); // so different bots get a chance
+            if (!Party.createParty(botsInLevelRange.getFirst().getPlayer(), false)) {
+                return null;
+            }
+            ret = botsInLevelRange.getFirst().getPlayer().getParty();
+            for (int i = 1; i < partySize; i++) {
+                Party.joinParty(botsInLevelRange.get(i).getPlayer(), ret.getId(), false);
+            }
+            if (ret.getMembers().size() == partySize) {
+                for (int i = 0; i < partySize; i++) {
+                    botsInLevelRange.get(i).changeMap(botsInLevelRange.get(i).getPlayer().getClient().getChannelServer().getMapFactory().getMap(mapId));
+                    botsInLevelRange.get(i).setMode(CharacterBot.Mode.PQ);
+                }
+            }
+            return ret;
         } finally {
             lock.unlock();
         }
