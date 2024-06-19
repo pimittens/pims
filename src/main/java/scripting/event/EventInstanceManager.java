@@ -432,7 +432,7 @@ public class EventInstanceManager {
                 if (characterId == id) {
                     return ret;
                 }
-                if (!isEventLeader(chars.get(id))) {
+                if (!isEventLeader(chars.get(id)) && !chars.get(id).isGM()) { // skip gm characters so you can warp in and watch them, could also be isHidden
                     ret ++;
                 }
             }

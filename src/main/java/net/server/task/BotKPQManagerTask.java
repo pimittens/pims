@@ -35,16 +35,20 @@ public class BotKPQManagerTask implements Runnable {
 
     @Override
     public void run() {
+        System.out.println("kpq manager started");
         EventManager em = Server.getInstance().getChannel(0, 1).getEventSM().getEventManager("KerningPQ");
         if (em == null) {
+            System.out.println("event manager was null");
             return;
         }
         Party party = Server.getInstance().getBotManager().createPQParty(4, 21, 30, 103000000);
         if (party == null || party.getMembers().size() != 4) {
+            System.out.println("party was null or wrong size");
             return;
         }
         em.getEligibleParty(party);
         if (!em.startInstance(party, party.getLeader().getPlayer().getMap(), 1)) {
+            System.out.println("kpq failed to start");
             List<Character> partymembers = party.getLeader().getPlayer().getPartyMembersOnline();
             Party.leaveParty(party, party.getLeader().getPlayer().getClient());
             party.getLeader().getPlayer().updatePartySearchAvailability(true);

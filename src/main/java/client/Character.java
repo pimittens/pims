@@ -11261,15 +11261,12 @@ public class Character extends AbstractCharacterObject {
 
     public int getMastery() {
         int mastery = 10;
-        if (getSkillLevel(Fighter.SWORD_MASTERY) > 0 || getSkillLevel(Fighter.AXE_MASTERY) > 0) {
-            mastery += Math.max(SkillFactory.getSkill(Fighter.SWORD_MASTERY).getEffect(getSkillLevel(Fighter.SWORD_MASTERY)).getMastery(),
-                    SkillFactory.getSkill(Fighter.AXE_MASTERY).getEffect(getSkillLevel(Fighter.AXE_MASTERY)).getMastery());
-        } else if (getSkillLevel(Page.SWORD_MASTERY) > 0 || getSkillLevel(Page.BW_MASTERY) > 0) {
-            mastery += Math.max(SkillFactory.getSkill(Page.SWORD_MASTERY).getEffect(getSkillLevel(Page.SWORD_MASTERY)).getMastery(),
-                    SkillFactory.getSkill(Page.BW_MASTERY).getEffect(getSkillLevel(Page.BW_MASTERY)).getMastery());
-        } else if (getSkillLevel(Spearman.SPEAR_MASTERY) > 0 || getSkillLevel(Spearman.POLEARM_MASTERY) > 0) {
-            mastery += Math.max(SkillFactory.getSkill(Spearman.SPEAR_MASTERY).getEffect(getSkillLevel(Spearman.SPEAR_MASTERY)).getMastery(),
-                    SkillFactory.getSkill(Spearman.POLEARM_MASTERY).getEffect(getSkillLevel(Spearman.POLEARM_MASTERY)).getMastery());
+        if (getSkillLevel(Fighter.SWORD_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Fighter.SWORD_MASTERY).getEffect(getSkillLevel(Fighter.SWORD_MASTERY)).getMastery();
+        } else if (getSkillLevel(Page.BW_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Page.BW_MASTERY).getEffect(getSkillLevel(Page.BW_MASTERY)).getMastery();
+        } else if (getSkillLevel(Spearman.SPEAR_MASTERY) > 0) {
+            mastery += SkillFactory.getSkill(Spearman.SPEAR_MASTERY).getEffect(getSkillLevel(Spearman.SPEAR_MASTERY)).getMastery();
             if (getSkillLevel(DarkKnight.BEHOLDER) > 0) {
                 mastery += SkillFactory.getSkill(DarkKnight.BEHOLDER).getEffect(getSkillLevel(DarkKnight.BEHOLDER)).getMastery();
             }

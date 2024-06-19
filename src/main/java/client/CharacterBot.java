@@ -650,6 +650,7 @@ public class CharacterBot {
                 if (getPlayer().getWeaponType().equals(WeaponType.GUN)) {
                     if (getPlayer().getSkillLevel(Pirate.DOUBLE_SHOT) > 0) {
                         singleTargetAttack = Pirate.DOUBLE_SHOT;
+                        mobAttack = Pirate.DOUBLE_SHOT;
                     }
                 } else {
                     if (getPlayer().getSkillLevel(Pirate.FLASH_FIST) > 0) {
@@ -1593,12 +1594,12 @@ public class CharacterBot {
                 }
                 case THIEF -> {
                     gainAndEquip(1472061);
-                    gainItem(2070015, (short) 500); // stars
+                    gainItem(2070000, (short) 500); // stars
                 }
                 case PIRATE -> {
                     if (Randomizer.nextInt(2) == 0) {
                         gainAndEquip(1492000);
-                        gainItem(2330000, (short) 1000);
+                        gainItem(2330000, (short) 1000); // bullets
                     } else {
                         gainAndEquip(1482000);
                     }
@@ -1636,6 +1637,7 @@ public class CharacterBot {
     }
 
     private void rechargeProjectiles() {
+        gainProjectileIfMissing();
         ItemInformationProvider ii = ItemInformationProvider.getInstance();
         for (Item torecharge : getPlayer().getInventory(InventoryType.USE).list()) {
             if (ItemConstants.isThrowingStar(torecharge.getItemId())) {
@@ -1652,6 +1654,65 @@ public class CharacterBot {
                 getPlayer().forceUpdateItem(torecharge);
             }
         }
+    }
+
+    private void gainProjectileIfMissing() {
+        if (getPlayer().getJob().getId() / 100 == 3 && getPlayer().getJob().getId() % 100 / 10 == 2) {
+            if (!hasXBowArrow()) {
+                gainItem(2061000, (short) 1000);
+            }
+        } else if (getPlayer().getJob().getId() / 100 == 3) {
+            if (!hasArrow()) {
+                gainItem(2060000, (short) 1000);
+            }
+        } else if (getPlayer().getJob().getId() / 100 == 4) {
+            if (!hasStar()) {
+                gainItem(2070000, (short) 500);
+            }
+        } else if (getPlayer().getJob().getId() / 100 == 5) {
+            if (!hasBullet()) {
+                gainItem(2330000, (short) 1000);
+            }
+        }
+    }
+
+    private boolean hasXBowArrow() {
+        return getPlayer().getItemQuantity(2061000, false) > 0 ||
+                getPlayer().getItemQuantity(2061001, false) > 0 ||
+                getPlayer().getItemQuantity(2061002, false) > 0 ||
+                getPlayer().getItemQuantity(2061003, false) > 0 ||
+                getPlayer().getItemQuantity(2061004, false) > 0;
+    }
+
+    private boolean hasArrow() {
+        return getPlayer().getItemQuantity(2060000, false) > 0 ||
+                getPlayer().getItemQuantity(2060001, false) > 0 ||
+                getPlayer().getItemQuantity(2060002, false) > 0 ||
+                getPlayer().getItemQuantity(2060003, false) > 0 ||
+                getPlayer().getItemQuantity(2060004, false) > 0;
+    }
+
+    private boolean hasStar() {
+        return getPlayer().getItemQuantity(2070000, false) > 0 ||
+                getPlayer().getItemQuantity(2070001, false) > 0 ||
+                getPlayer().getItemQuantity(2070002, false) > 0 ||
+                getPlayer().getItemQuantity(2070003, false) > 0 ||
+                getPlayer().getItemQuantity(2070004, false) > 0 ||
+                getPlayer().getItemQuantity(2070006, false) > 0 ||
+                getPlayer().getItemQuantity(2070007, false) > 0 ||
+                getPlayer().getItemQuantity(2070011, false) > 0 ||
+                getPlayer().getItemQuantity(2070015, false) > 0 ||
+                getPlayer().getItemQuantity(2070016, false) > 0;
+    }
+
+    private boolean hasBullet() {
+        return getPlayer().getItemQuantity(2330000, false) > 0 ||
+                getPlayer().getItemQuantity(2330001, false) > 0 ||
+                getPlayer().getItemQuantity(2330002, false) > 0 ||
+                getPlayer().getItemQuantity(2330003, false) > 0 ||
+                getPlayer().getItemQuantity(2330004, false) > 0 ||
+                getPlayer().getItemQuantity(2330005, false) > 0 ||
+                getPlayer().getItemQuantity(2330006, false) > 0;
     }
 
     private void gainItem(int itemId, short quantity) {
@@ -1986,7 +2047,7 @@ public class CharacterBot {
 
     private boolean isRangedJob() {
         int jobId = getPlayer().getJob().getId();
-        if (jobId == 500 && getPlayer().getWeaponType().equals(WeaponType.GUN) && !currentMode.equals(Mode.GRINDING)) {
+        if (jobId == 500 && getPlayer().getWeaponType().equals(WeaponType.GUN)) {
             return true;
         }
         return jobId / 100 == 2 || jobId / 100 == 3 || (jobId / 100 == 4 && jobId % 100 / 10 != 2) || (jobId / 100 == 5 && jobId % 100 / 10 == 2);
@@ -2043,7 +2104,7 @@ public class CharacterBot {
             }
             case Shadower.BOOMERANG_STEP -> 44;
             case Pirate.SOMERSAULT_KICK -> 78;
-            case Pirate.DOUBLE_SHOT -> 87;
+            case Pirate.DOUBLE_SHOT -> getPlayer().getSkillLevel(Outlaw.BURST_FIRE) > 0 ? 87 : 86;
             case Pirate.FLASH_FIST -> 79;
             case Brawler.BACK_SPIN_BLOW -> 81;
             case Brawler.DOUBLE_UPPERCUT -> 84;
@@ -2093,8 +2154,8 @@ public class CharacterBot {
             return;
         }
         if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
-            if (getPlayer().getItemQuantity(4001008, false) >= getPlayer().getEventInstance().getPlayerCount() - 1) {
-                gainItem(4001008, (short) -(getPlayer().getEventInstance().getPlayerCount() - 1));
+            if (getPlayer().getItemQuantity(4001008, false) >= getPlayer().getParty().getPartyMembers().size() - 1) {
+                gainItem(4001008, (short) -(getPlayer().getParty().getPartyMembers().size() - 1));
                 getPlayer().getEventInstance().setProperty("1stageclear", "true");
                 getPlayer().getEventInstance().showClearEffect(true);
                 getPlayer().getEventInstance().linkToNextStage(1, "kpq", 103000800);
@@ -2134,7 +2195,7 @@ public class CharacterBot {
                     } else {
                         getPlayer().getEventInstance().showWrongEffect();
                         getPlayer().getEventInstance().advancePQValue();
-                        delay = 3000;
+                        delay = 4000;
                     }
                 } else {
                     moveBot((short) nextPosition.x, (short) nextPosition.y, time);
@@ -2234,11 +2295,11 @@ public class CharacterBot {
                     if (rectangleStages(getPlayer().getEventInstance(), "stg4Property", kpqStage4Permutations, kpqStage4Rectangles)) {
                         getPlayer().getEventInstance().setProperty("4stageclear", "true");
                         getPlayer().getEventInstance().showClearEffect(true);
-                        getPlayer().getEventInstance().linkToNextStage(3, "kpq", 103000803);
+                        getPlayer().getEventInstance().linkToNextStage(4, "kpq", 103000803);
                     } else {
                         getPlayer().getEventInstance().showWrongEffect();
                         getPlayer().getEventInstance().advancePQValue();
-                        delay = 3000;
+                        delay = 2000;
                     }
                 } else {
                     moveBot((short) nextPosition.x, (short) nextPosition.y, time);
@@ -2248,7 +2309,7 @@ public class CharacterBot {
                     if (rectangleStages(getPlayer().getEventInstance(), "stg4Property", kpqStage4Permutations, kpqStage4Rectangles)) {
                         getPlayer().getEventInstance().setProperty("4stageclear", "true");
                         getPlayer().getEventInstance().showClearEffect(true);
-                        getPlayer().getEventInstance().linkToNextStage(3, "kpq", 103000803);
+                        getPlayer().getEventInstance().linkToNextStage(4, "kpq", 103000803);
                     } else {
                         getPlayer().getEventInstance().showWrongEffect();
                         getPlayer().getEventInstance().advancePQValue();
