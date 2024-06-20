@@ -7,8 +7,8 @@ public class UpdateBotsTask implements Runnable {
 
     @Override
     public void run() {
-        long startTime = System.currentTimeMillis();
+        //long startTime = System.currentTimeMillis();
         Server.getInstance().getBotManager().updateBots();
-        System.out.println("update bots completed in " + (System.currentTimeMillis() - startTime) + " ms");
+        //System.out.println("update bots completed in " + (System.currentTimeMillis() - startTime) + " ms");
     }
 }

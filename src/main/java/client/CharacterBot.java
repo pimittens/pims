@@ -10,6 +10,7 @@ import constants.inventory.ItemConstants;
 import constants.skills.*;
 import net.PacketProcessor;
 import net.server.channel.handlers.AbstractDealDamageHandler;
+import net.server.world.Party;
 import org.w3c.dom.ranges.Range;
 import server.ItemInformationProvider;
 import server.StatEffect;
@@ -34,6 +35,7 @@ public class CharacterBot {
         GRINDING, // pick a map and kill monsters
         MANAGE_INVENTORY, // check if any equips are better than what they're using and sell lowest value items to make space
         PQ, // do a pq
+        LEAVE_PARTY, // leave party after pq
         BOSSING // fight a boss
 
     }
@@ -228,6 +230,7 @@ public class CharacterBot {
                 createInventorySpace();
                 chooseMode();
             }
+            case LEAVE_PARTY -> leaveParty();
             case WAITING -> chooseMode();
             case GRINDING -> grind(time);
             case PQ -> doPQ(time);
@@ -276,7 +279,7 @@ public class CharacterBot {
                 createInventorySpace();
                 chooseMode();
             }
-            case WAITING -> currentMode = Mode.GRINDING;
+            case WAITING, LEAVE_PARTY -> currentMode = Mode.GRINDING; // followers don't need to do these
             case GRINDING -> grind(time);
             case PQ -> doPQ(time);
         }
@@ -1163,20 +1166,32 @@ public class CharacterBot {
     }*/ // this formula appears to be incorrect, due to the negative first term of the quadratic it often gives a negative accuracy
 
     private void chooseMode() {
+        currentModeStartTime = System.currentTimeMillis();
         if (!currentMode.equals(Mode.MANAGE_INVENTORY)) { // manage inventory between modes
             currentMode = Mode.MANAGE_INVENTORY;
             // todo: go to henesys or fm
             return;
         }
-        currentModeStartTime = System.currentTimeMillis();
         if (getPlayer().getJob().equals(Job.BEGINNER)) {
             currentMode = Mode.GRINDING;
             pickMap();
             return;
         }
-        // todo: pick mode randomly, maybe have a pq manager task that creates a party if enough bots are waiting for a pq
+        // todo: pick mode randomly
         currentMode = Mode.GRINDING;
         pickMap();
+    }
+
+    public void leaveParty() {
+        Party party = getPlayer().getParty();
+        if (party != null) {
+            List<Character> partymembers = getPlayer().getPartyMembersOnline();
+
+            Party.leaveParty(party, c);
+            getPlayer().updatePartySearchAvailability(true);
+            getPlayer().partyOperationUpdate(party, partymembers);
+        }
+        currentMode = Mode.WAITING;
     }
 
     private void pickMap() {
@@ -1814,13 +1829,13 @@ public class CharacterBot {
 
     private boolean isJobAppropriateWeapon(int itemId) {
         if (getPlayer().getJob().getId() / 100 == 1) {
-            if (getPlayer().getJob().getId() % 10 == 1) {
+            if (getPlayer().getJob().getId() % 100 / 10 == 1) {
                 return ItemConstants.is1hSword(itemId) || ItemConstants.is2hSword(itemId);
             }
-            if (getPlayer().getJob().getId() % 10 == 2) {
+            if (getPlayer().getJob().getId() % 100 / 10 == 2) {
                 return ItemConstants.is1hBluntWeapon(itemId) || ItemConstants.is2hBluntWeapon(itemId);
             }
-            if (getPlayer().getJob().getId() % 10 == 3) {
+            if (getPlayer().getJob().getId() % 100 / 10 == 3) {
                 return ItemConstants.isSpear(itemId);
             }
             return ItemConstants.is1hSword(itemId) || ItemConstants.is2hSword(itemId) || ItemConstants.is1hAxe(itemId) ||
@@ -1831,13 +1846,13 @@ public class CharacterBot {
             return ItemConstants.isWand(itemId) || ItemConstants.isStaff(itemId);
         }
         if (getPlayer().getJob().getId() / 100 == 3) {
-            if (getPlayer().getJob().getId() % 10 == 2) {
+            if (getPlayer().getJob().getId() % 100 / 10 == 2) {
                 return ItemConstants.isCrossbow(itemId);
             }
             return ItemConstants.isBow(itemId);
         }
         if (getPlayer().getJob().getId() / 100 == 4) {
-            if (getPlayer().getJob().getId() % 10 == 2) {
+            if (getPlayer().getJob().getId() % 100 / 10 == 2) {
                 return ItemConstants.isDagger(itemId);
             }
             return ItemConstants.isClaw(itemId);
@@ -2335,7 +2350,7 @@ public class CharacterBot {
             if (getPlayer().getPosition().x == 378 && getPlayer().getPosition().y == -2760) {
                 getPlayer().getEventInstance().giveEventReward(getPlayer()); // if they don't have space too bad
                 changeMap(c.getChannelServer().getMapFactory().getMap(103000000)); // go back to kerning instead of bonus stage
-                currentMode = Mode.WAITING;
+                currentMode = Mode.LEAVE_PARTY;
             } else {
                 moveBot((short) 378, (short) -2760, time);
             }
