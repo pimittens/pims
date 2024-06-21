@@ -16,7 +16,8 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 
 * The ManageBotLoginsTask runs 1 minute after launch and every 15 minutes thereafter. This task first logs out bots if more than 5 are logged in within the same 5 level bracket (for example levels 16 to 20). Next, bots are logged in up to 5 in each 5 level bracket. The brackets 1-5 and 6-10 are ignored until the end, at which point bots level 10 and under are logged in until there are 200 total bots online.
 * The UpdateBotsTask runs every 500 milliseconds and attempts to update each bot depending on what they are doing.
-* Bots have several modes. They can manage their inventory (create space if needed and equips items that are better than what they are currently using), or kill monsters (maps are chosen randomly from premade lists). More modes are planned.
+* There is a task that creates a party and starts a KPQ instance every 30 minutes. Other PQs are not yet implemented.
+* Bots have several modes. They can manage their inventory (create space if needed and equips items that are better than what they are currently using), kill monsters (maps are chosen randomly from premade lists), or do PQs (currently only KPQ is implemented). More modes are planned.
 
 ### Followers
 

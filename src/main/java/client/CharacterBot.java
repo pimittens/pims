@@ -192,11 +192,15 @@ public class CharacterBot {
         currentMode = newMode;
     }
 
+    public Mode getMode() {
+        return currentMode;
+    }
+
     public void update() {
         if (loggedOut || level >= 69) {
             return;
         }
-        if (System.currentTimeMillis() - currentModeStartTime > MINUTES.toMillis(30)) {
+        if (!currentMode.equals(Mode.PQ) && System.currentTimeMillis() - currentModeStartTime > MINUTES.toMillis(30)) {
             chooseMode();
             return;
         }
@@ -1163,7 +1167,7 @@ public class CharacterBot {
             hitchance = 0.01f;
         }
         return hitchance;
-    }*/ // this formula appears to be incorrect, due to the negative first term of the quadratic it often gives a negative accuracy
+    }*/ // this formula appears to be incorrect, due to the negative first term of the quadratic it often gives a negative hitchance
 
     private void chooseMode() {
         currentModeStartTime = System.currentTimeMillis();

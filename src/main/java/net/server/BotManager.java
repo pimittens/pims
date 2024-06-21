@@ -93,7 +93,7 @@ public class BotManager {
         try {
             List<CharacterBot> toRemove = new ArrayList<>();
             for (CharacterBot bot : bots) {
-                if (bot.isLoggedIn() && bot.getPlayer().getLevel() <= level && bot.getPlayer().getLevel() > level - 5) {
+                if (bot.isLoggedIn() && bot.getPlayer().getLevel() <= level && bot.getPlayer().getLevel() > level - 5 && !bot.getMode().equals(CharacterBot.Mode.PQ)) {
                     toRemove.add(bot);
                 }
             }
@@ -270,15 +270,17 @@ public class BotManager {
             Party ret;
             List<CharacterBot> botsInLevelRange = new ArrayList<>();
             for (CharacterBot bot : bots) {
-                if (bot.getPlayer().getLevel() >= minLevel && bot.getPlayer().getLevel() <= maxLevel) {
+                if (!bot.getMode().equals(CharacterBot.Mode.PQ) && bot.getPlayer().getLevel() >= minLevel && bot.getPlayer().getLevel() <= maxLevel && bot.getPlayer().getParty() == null) {
                     botsInLevelRange.add(bot);
                 }
             }
             if (botsInLevelRange.size() < partySize) {
+                System.out.println("not enough online bots to create party");
                 return null;
             }
             Collections.shuffle(botsInLevelRange); // so different bots get a chance
             if (!Party.createParty(botsInLevelRange.getFirst().getPlayer(), false)) {
+                System.out.println("party failed to be created");
                 return null;
             }
             ret = botsInLevelRange.getFirst().getPlayer().getParty();
