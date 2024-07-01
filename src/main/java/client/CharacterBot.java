@@ -125,8 +125,10 @@ public class CharacterBot {
     private Client c;
     private Monster targetMonster;
     private MapObject targetItem;
+    private Reactor targetReactor;
     private boolean hasTargetMonster = false;
     private boolean hasTargetItem = false;
+    private boolean hasTargetReactor = false;
     private boolean facingLeft = false;
     private String login;
     private int charID;
@@ -139,6 +141,7 @@ public class CharacterBot {
     private boolean loggedOut = false;
     private int delay = 0; // delay after using an attack before another can be used
     private boolean doneWithPQTask = false; // used to track progress in some PQ stages
+    private byte pqValue = -1;
 
     public void setFollowing(Character following) {
         this.following = following;
@@ -959,6 +962,10 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createUseBuffPacket(skillId, getPlayer().getSkillLevel(skillId)), (short) 91);
     }
 
+    private void hitReactor(int time) {
+        // todo: generate and handle attack packet and hit reactor packet
+    }
+
     private void attack(int time) {
         if (targetMonster.isBoss()) {
             doAttack(time, singleTargetAttack);
@@ -1391,12 +1398,12 @@ public class CharacterBot {
             }
         }
         long grindTime = System.currentTimeMillis() - startTime;
-        if (grindTime > 10) {
+        /*if (grindTime > 10) {
             System.out.println("Grind time: " + grindTime + ", loops: " + loops + ", time1: " + time1 + ", time2: " + time2 + ", time3: " + time3 + ", time4: " + time4);
             if (time4 > 10) {
                 System.out.println("job: " + getPlayer().getJob());
             }
-        }
+        }*/
         return time;
     }
 
@@ -1493,10 +1500,423 @@ public class CharacterBot {
             }
         }
         long grindTime = System.currentTimeMillis() - startTime;
-        if (grindTime > 10) {
+        /*if (grindTime > 10) {
             System.out.println("Grind time: " + grindTime + ", loops: " + loops + ", time1: " + time1 + ", time2: " + time2 + ", time3: " + time3 + ", time4: " + time4);
             if (time4 > 10) {
                 System.out.println("job: " + getPlayer().getJob());
+            }
+        }*/
+        return didAction;
+    }
+
+    private boolean grind(int time, int[] targetItemIds, boolean seek) {
+        boolean didAction = true;
+        while (time > 0 && didAction) {
+            didAction = false;
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+                if (!getPlayer().getMap().getItems().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            boolean target = false;
+                            for (int id : targetItemIds) {
+                                if (((MapItem) it).getItemId() == id) {
+                                    target = true;
+                                    break;
+                                }
+                            }
+                            if (seek != target || (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner()))) {
+                                continue;
+                            }
+
+                            nextDistance = getPlayer().getPosition().distance(it.getPosition());
+                            if (nextDistance < minDistance) {
+                                minDistance = nextDistance;
+                                targetItem = it;
+                                hasTargetItem = true;
+                            }
+                        }
+                    }
+                    /*for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            targetItem = it;
+                            hasTargetItem = true;
+                        }
+                    }*/
+                } else {
+                    hasTargetItem = false;
+                }
+            }
+            if (!hasTargetMonster || !targetMonster.isAlive()) {
+                if (!getPlayer().getMap().getAllMonsters().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (Monster m : getPlayer().getMap().getAllMonsters()) {
+                        if (!m.isAlive()) {
+                            continue;
+                        }
+                        nextDistance = getPlayer().getPosition().distance(m.getPosition());
+                        if (nextDistance < minDistance) {
+                            minDistance = nextDistance;
+                            targetMonster = m;
+                            hasTargetMonster = true;
+                        }
+                    }
+                    /*List<Monster> shuffled = getPlayer().getMap().getAllMonsters();
+                    Collections.shuffle(shuffled);*/
+                    /*for (Monster m : getPlayer().getMap().getAllMonsters()) {
+                        if (m.isAlive()) {
+                            targetMonster = m;
+                            hasTargetMonster = true;
+                            break;
+                        }
+                    }*/
+                } else {
+                    hasTargetMonster = false;
+                }
+            }
+            if (hasTargetItem) {
+                if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
+                    didAction = true;
+                }
+                if (getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    pickupItem();
+                    time -= 50;
+                    didAction = true;
+                }
+            } else if (hasTargetMonster) {
+                if (getPlayer().getPosition().distance(targetMonster.getPosition().x - (isRangedJob() ? 300 : 50), targetMonster.getPosition().y) < (isRangedJob() ? 100 : 50)) { // todo: accurate range
+                    attack(time);
+                    time = 0;
+                    didAction = true;
+                } else {
+                    time = moveBot((short) (targetMonster.getPosition().x - (isRangedJob() ? 300 : 50)), (short) targetMonster.getPosition().y, time);
+                    didAction = true;
+                }
+            }
+        }
+        return didAction;
+    }
+
+    private void hitReactors(int time) {
+        boolean didAction = true;
+        while (time > 0 && didAction) {
+            didAction = false;
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+                if (!getPlayer().getMap().getItems().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            nextDistance = getPlayer().getPosition().distance(it.getPosition());
+                            if (nextDistance < minDistance) {
+                                minDistance = nextDistance;
+                                targetItem = it;
+                                hasTargetItem = true;
+                            }
+                        }
+                    }
+                    /*for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            targetItem = it;
+                            hasTargetItem = true;
+                        }
+                    }*/
+                } else {
+                    hasTargetItem = false;
+                }
+            }
+            if (!hasTargetReactor) {
+                if (!getPlayer().getMap().getAllReactors().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (Reactor r : getPlayer().getMap().getAllReactors()) {
+                        nextDistance = getPlayer().getPosition().distance(r.getPosition());
+                        if (nextDistance < minDistance) {
+                            minDistance = nextDistance;
+                            targetReactor = r;
+                            hasTargetReactor = true;
+                        }
+                    }
+                } else {
+                    hasTargetReactor = false;
+                }
+            }
+            if (hasTargetItem) {
+                if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
+                    didAction = true;
+                }
+                if (getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    pickupItem();
+                    time -= 50;
+                    didAction = true;
+                }
+            } else if (hasTargetReactor) {
+                if (getPlayer().getPosition().distance(targetReactor.getPosition().x - 50, targetReactor.getPosition().y) < 50) {
+                    hitReactor(time);
+                    time = 0;
+                    didAction = true;
+                } else {
+                    time = moveBot((short) (targetReactor.getPosition().x - 50), (short) targetReactor.getPosition().y, time);
+                    didAction = true;
+                }
+            }
+        }
+    }
+
+    private void hitReactors(int time, int targetItemId, boolean seek) {
+        boolean didAction = true;
+        while (time > 0 && didAction) {
+            didAction = false;
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+                if (!getPlayer().getMap().getItems().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            if ((seek == (((MapItem) it).getItemId() != targetItemId)) || ((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            nextDistance = getPlayer().getPosition().distance(it.getPosition());
+                            if (nextDistance < minDistance) {
+                                minDistance = nextDistance;
+                                targetItem = it;
+                                hasTargetItem = true;
+                            }
+                        }
+                    }
+                    /*for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            targetItem = it;
+                            hasTargetItem = true;
+                        }
+                    }*/
+                } else {
+                    hasTargetItem = false;
+                }
+            }
+            if (!hasTargetReactor) {
+                if (!getPlayer().getMap().getAllReactors().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (Reactor r : getPlayer().getMap().getAllReactors()) {
+                        nextDistance = getPlayer().getPosition().distance(r.getPosition());
+                        if (nextDistance < minDistance) {
+                            minDistance = nextDistance;
+                            targetReactor = r;
+                            hasTargetReactor = true;
+                        }
+                    }
+                } else {
+                    hasTargetReactor = false;
+                }
+            }
+            if (hasTargetItem) {
+                if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
+                    didAction = true;
+                }
+                if (getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    pickupItem();
+                    time -= 50;
+                    didAction = true;
+                }
+            } else if (hasTargetReactor) {
+                if (getPlayer().getPosition().distance(targetReactor.getPosition().x - 50, targetReactor.getPosition().y) < 50) {
+                    hitReactor(time);
+                    time = 0;
+                    didAction = true;
+                } else {
+                    time = moveBot((short) (targetReactor.getPosition().x - 50), (short) targetReactor.getPosition().y, time);
+                    didAction = true;
+                }
+            }
+        }
+    }
+    private boolean grindAndHitReactors(int time) {
+        boolean didAction = true;
+        while (time > 0 && didAction) {
+            didAction = false;
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+                if (!getPlayer().getMap().getItems().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            if ((((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner()))) {
+                                continue;
+                            }
+                            nextDistance = getPlayer().getPosition().distance(it.getPosition());
+                            if (nextDistance < minDistance) {
+                                minDistance = nextDistance;
+                                targetItem = it;
+                                hasTargetItem = true;
+                            }
+                        }
+                    }
+                } else {
+                    hasTargetItem = false;
+                }
+            }
+            if (!hasTargetMonster || !targetMonster.isAlive()) {
+                if (!getPlayer().getMap().getAllMonsters().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (Monster m : getPlayer().getMap().getAllMonsters()) {
+                        if (!m.isAlive()) {
+                            continue;
+                        }
+                        nextDistance = getPlayer().getPosition().distance(m.getPosition());
+                        if (nextDistance < minDistance) {
+                            minDistance = nextDistance;
+                            targetMonster = m;
+                            hasTargetMonster = true;
+                        }
+                    }
+                } else {
+                    hasTargetMonster = false;
+                }
+            }
+            if (!hasTargetReactor) {
+                if (!getPlayer().getMap().getAllReactors().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (Reactor r : getPlayer().getMap().getAllReactors()) {
+                        nextDistance = getPlayer().getPosition().distance(r.getPosition());
+                        if (nextDistance < minDistance) {
+                            minDistance = nextDistance;
+                            targetReactor = r;
+                            hasTargetReactor = true;
+                        }
+                    }
+                } else {
+                    hasTargetReactor = false;
+                }
+            }
+            if (hasTargetItem) {
+                if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
+                    didAction = true;
+                }
+                if (getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    pickupItem();
+                    time -= 50;
+                    didAction = true;
+                }
+            } else if (hasTargetMonster) {
+                if (getPlayer().getPosition().distance(targetMonster.getPosition().x - (isRangedJob() ? 300 : 50), targetMonster.getPosition().y) < (isRangedJob() ? 100 : 50)) { // todo: accurate range
+                    attack(time);
+                    time = 0;
+                    didAction = true;
+                } else {
+                    time = moveBot((short) (targetMonster.getPosition().x - (isRangedJob() ? 300 : 50)), (short) targetMonster.getPosition().y, time);
+                    didAction = true;
+                }
+            } else if (hasTargetReactor) {
+                if (getPlayer().getPosition().distance(targetReactor.getPosition().x - 50, targetReactor.getPosition().y) < 50) {
+                    hitReactor(time);
+                    time = 0;
+                    didAction = true;
+                } else {
+                    time = moveBot((short) (targetReactor.getPosition().x - 50), (short) targetReactor.getPosition().y, time);
+                    didAction = true;
+                }
+            }
+        }
+        return didAction;
+    }
+
+    private boolean grindAndHitReactors(int time, int targetItemId, boolean seek) {
+        boolean didAction = true;
+        while (time > 0 && didAction) {
+            didAction = false;
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+                if (!getPlayer().getMap().getItems().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            if ((seek == (((MapItem) it).getItemId() != targetItemId)) || (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner()))) {
+                                continue;
+                            }
+                            nextDistance = getPlayer().getPosition().distance(it.getPosition());
+                            if (nextDistance < minDistance) {
+                                minDistance = nextDistance;
+                                targetItem = it;
+                                hasTargetItem = true;
+                            }
+                        }
+                    }
+                } else {
+                    hasTargetItem = false;
+                }
+            }
+            if (!hasTargetMonster || !targetMonster.isAlive()) {
+                if (!getPlayer().getMap().getAllMonsters().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (Monster m : getPlayer().getMap().getAllMonsters()) {
+                        if (!m.isAlive()) {
+                            continue;
+                        }
+                        nextDistance = getPlayer().getPosition().distance(m.getPosition());
+                        if (nextDistance < minDistance) {
+                            minDistance = nextDistance;
+                            targetMonster = m;
+                            hasTargetMonster = true;
+                        }
+                    }
+                } else {
+                    hasTargetMonster = false;
+                }
+            }
+            if (!hasTargetReactor) {
+                if (!getPlayer().getMap().getAllReactors().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (Reactor r : getPlayer().getMap().getAllReactors()) {
+                        nextDistance = getPlayer().getPosition().distance(r.getPosition());
+                        if (nextDistance < minDistance) {
+                            minDistance = nextDistance;
+                            targetReactor = r;
+                            hasTargetReactor = true;
+                        }
+                    }
+                } else {
+                    hasTargetReactor = false;
+                }
+            }
+            if (hasTargetItem) {
+                if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
+                    didAction = true;
+                }
+                if (getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    pickupItem();
+                    time -= 50;
+                    didAction = true;
+                }
+            } else if (hasTargetMonster) {
+                if (getPlayer().getPosition().distance(targetMonster.getPosition().x - (isRangedJob() ? 300 : 50), targetMonster.getPosition().y) < (isRangedJob() ? 100 : 50)) { // todo: accurate range
+                    attack(time);
+                    time = 0;
+                    didAction = true;
+                } else {
+                    time = moveBot((short) (targetMonster.getPosition().x - (isRangedJob() ? 300 : 50)), (short) targetMonster.getPosition().y, time);
+                    didAction = true;
+                }
+            } else if (hasTargetReactor) {
+                if (getPlayer().getPosition().distance(targetReactor.getPosition().x - 50, targetReactor.getPosition().y) < 50) {
+                    hitReactor(time);
+                    time = 0;
+                    didAction = true;
+                } else {
+                    time = moveBot((short) (targetReactor.getPosition().x - 50), (short) targetReactor.getPosition().y, time);
+                    didAction = true;
+                }
             }
         }
         return didAction;
@@ -1528,70 +1948,94 @@ public class CharacterBot {
             // todo: 4th job skills
         }
         int remainingAP = getPlayer().getRemainingAp(), nextAP;
+        System.out.println("player " + getPlayer().getName() + " assigning " + remainingAP + " ap, job: " + getPlayer().getJob());
+        System.out.println("starting str: " + getPlayer().getStr());
+        System.out.println("starting dex: " + getPlayer().getDex());
+        System.out.println("starting int: " + getPlayer().getInt());
+        System.out.println("starting luk: " + getPlayer().getLuk());
         // todo: even with max secondary stat, they may be unable to equip the highest level items if the item being replaced give the stat, need to address this eventually
         if (getPlayer().getJob().equals(Job.BEGINNER)) {
             if (getPlayer().getTotalDex() < 60) {
                 nextAP = Math.min(remainingAP, 60 - getPlayer().getTotalDex());
+                System.out.println("nextAP: " + nextAP + " (dex)");
                 remainingAP -= nextAP;
                 getPlayer().assignDex(nextAP);
             }
+            System.out.println("remainingAP: " + remainingAP + " (str)");
             getPlayer().assignStr(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 1) { // warrior
             if (getPlayer().getTotalDex() < 60 && getPlayer().getTotalDex() < getPlayer().getLevel() + 10) {
                 nextAP = Math.min(Math.min(remainingAP, 60 - getPlayer().getTotalDex()), getPlayer().getLevel() + 10 - getPlayer().getTotalDex());
+                System.out.println("nextAP: " + nextAP + " (dex)");
                 remainingAP -= nextAP;
                 getPlayer().assignDex(nextAP);
             }
+            System.out.println("remainingAP: " + remainingAP + " (str)");
             getPlayer().assignStr(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 2) { // magician
             if (getPlayer().getTotalLuk() < 123 && getPlayer().getTotalLuk() < getPlayer().getLevel() + 3) {
                 nextAP = Math.min(Math.min(remainingAP, 123 - getPlayer().getTotalLuk()), getPlayer().getLevel() + 3 - getPlayer().getTotalLuk());
+                System.out.println("nextAP: " + nextAP + " (luk)");
                 remainingAP -= nextAP;
                 getPlayer().assignLuk(nextAP);
             }
+            System.out.println("remainingAP: " + remainingAP + " (int)");
             getPlayer().assignInt(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 3) { // bowman
             if (getPlayer().getWeaponType().equals(WeaponType.BOW)) {
                 if (getPlayer().getTotalStr() < 125 && getPlayer().getTotalStr() < getPlayer().getLevel() + 5) {
                     nextAP = Math.min(Math.min(remainingAP, 125 - getPlayer().getTotalStr()), getPlayer().getLevel() + 5 - getPlayer().getTotalStr());
+                    System.out.println("nextAP: " + nextAP + " (str)");
                     remainingAP -= nextAP;
                     getPlayer().assignStr(nextAP);
                 }
             } else { // crossbow
                 if (getPlayer().getTotalStr() < 120 && getPlayer().getTotalStr() < getPlayer().getLevel()) {
                     nextAP = Math.min(Math.min(remainingAP, 120 - getPlayer().getTotalStr()), getPlayer().getLevel() - getPlayer().getTotalStr());
+                    System.out.println("nextAP: " + nextAP + " (str)");
                     remainingAP -= nextAP;
                     getPlayer().assignStr(nextAP);
                 }
             }
+            System.out.println("remainingAP: " + remainingAP + " (dex)");
             getPlayer().assignDex(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 4) { // thief
             if (getPlayer().getTotalDex() < 160 && getPlayer().getTotalDex() < getPlayer().getLevel() + 40) {
                 nextAP = Math.min(Math.min(remainingAP, 160 - getPlayer().getTotalDex()), getPlayer().getLevel() + 40 - getPlayer().getTotalDex());
+                System.out.println("nextAP: " + nextAP + " (dex)");
                 remainingAP -= nextAP;
                 getPlayer().assignDex(nextAP);
             }
             /*if (weaponType.equals(WeaponType.DAGGER_THIEVES)) {
                 // todo: str daggers?
             }*/
+            System.out.println("remainingAP: " + remainingAP + " (luk)");
             getPlayer().assignLuk(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 5) { // pirate
             if (getPlayer().getWeaponType().equals(WeaponType.GUN)) {
                 if (getPlayer().getTotalStr() < 120 && getPlayer().getTotalStr() < getPlayer().getLevel()) {
                     nextAP = Math.min(Math.min(remainingAP, 120 - getPlayer().getTotalStr()), getPlayer().getLevel() - getPlayer().getTotalStr());
+                    System.out.println("nextAP: " + nextAP + " (str)");
                     remainingAP -= nextAP;
                     getPlayer().assignStr(nextAP);
                 }
+                System.out.println("remainingAP: " + remainingAP + " (dex)");
                 getPlayer().assignDex(remainingAP);
             } else { // knuckle
                 if (getPlayer().getTotalDex() < 120 && getPlayer().getTotalDex() < getPlayer().getLevel()) {
                     nextAP = Math.min(Math.min(remainingAP, 120 - getPlayer().getTotalDex()), getPlayer().getLevel() - getPlayer().getTotalDex());
+                    System.out.println("nextAP: " + nextAP + " (dex)");
                     remainingAP -= nextAP;
                     getPlayer().assignDex(nextAP);
                 }
+                System.out.println("remainingAP: " + remainingAP + " (str)");
                 getPlayer().assignStr(remainingAP);
             }
         }
+        System.out.println("ending str: " + getPlayer().getStr());
+        System.out.println("ending dex: " + getPlayer().getDex());
+        System.out.println("ending int: " + getPlayer().getInt());
+        System.out.println("ending luk: " + getPlayer().getLuk());
         this.level = getPlayer().getLevel();
         if (currentMode != Mode.PQ) {
             currentMode = Mode.WAITING; // pick new map? todo: only do this if you get into a new level range for maps probably
@@ -2152,12 +2596,24 @@ public class CharacterBot {
         //System.out.println(getPlayer().getName() + " is " + (getPlayer().getEventInstance().isEventLeader(getPlayer()) ? "" : "not") + " the party leader");
         //System.out.println("event id: " + getPlayer().getEventInstance().getPlayerEventId(getPlayer().getId()));
         switch (getPlayer().getMap().getId()) {
-            case 103000000 -> {} // do nothing
+            case 103000000, 221024500 -> {} // do nothing
             case 103000800 -> kpqStage1(time);
             case 103000801 -> kpqStage2(time);
             case 103000802 -> kpqStage3(time);
             case 103000803 -> kpqStage4(time);
             case 103000804 -> kpqStage5(time);
+            case 922010100 -> lpqStage1(time);
+            case 922010200 -> lpqStage2(time);
+            case 922010201 -> lpqStage2ExtraRoom1(time);
+            case 922010300 -> lpqStage3(time);
+            case 922010400 -> lpqStage4(time);
+            case 922010401, 922010402, 922010403, 922010404, 922010405 -> lpqStage4ExtraRooms(time);
+            case 922010500 -> lpqStage5(time);
+            case 922010501, 922010502, 922010503, 922010504, 922010505, 922010506 -> lpqStage5ExtraRooms(time);
+            case 922010600 -> lpqStage6(time);
+            case 922010700 -> lpqStage7(time);
+            case 922010800 -> lpqStage8(time);
+            case 922010900 -> lpqStage9(time);
             default -> currentMode = Mode.WAITING; // if not in a PQ map then switch modes
         }
     }
@@ -2372,6 +2828,331 @@ public class CharacterBot {
             }
         } else {
             grind(time, 4001008, false);
+        }
+    }
+
+    private void lpqStage1(int time) {
+        if (getPlayer().getEventInstance().getProperty("1stageclear") != null) {
+            if (getPlayer().getPosition().x == -47 && getPlayer().getPosition().y == -180) {
+                changeMap(c.getChannelServer().getMapFactory().getMap(922010200));
+            } else {
+                moveBot((short) -47, (short) -180, time);
+            }
+            return;
+        }
+        if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
+            if (getPlayer().getItemQuantity(4001022, false) >= 25) {
+                gainItem(4001022, (short) -25);
+                getPlayer().getEventInstance().setProperty("statusStg1", 1);
+                getPlayer().getEventInstance().setProperty("1stageclear", "true");
+                getPlayer().getEventInstance().showClearEffect(true);
+                getPlayer().getEventInstance().linkToNextStage(1, "lpq", 922010100);
+            } else {
+                grind(time);
+            }
+        } else {
+            grind(time, 4001022, false);
+        }
+    }
+
+    private void lpqStage2(int time) {
+        if (getPlayer().getEventInstance().getProperty("2stageclear") != null) {
+            if (getPlayer().getPosition().x == 52 && getPlayer().getPosition().y == -2643) {
+                doneWithPQTask = false;
+                changeMap(c.getChannelServer().getMapFactory().getMap(922010300));
+            } else {
+                moveBot((short) 52, (short) -2643, time);
+            }
+            return;
+        }
+        if (doneWithPQTask) {
+            if (getPlayer().getPosition().x == 52 && getPlayer().getPosition().y == -2643) {
+                if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
+                    grind(time); // pick up passes that other members drop
+                    if (getPlayer().getItemQuantity(4001022, false) >= 15) {
+                        gainItem(4001022, (short) -15);
+                        getPlayer().getEventInstance().setProperty("statusStg2", 1);
+                        getPlayer().getEventInstance().setProperty("2stageclear", "true");
+                        getPlayer().getEventInstance().showClearEffect(true);
+                        getPlayer().getEventInstance().linkToNextStage(2, "lpq", 922010200);
+                    }
+                } else {
+                    // if leader is there drop the passes
+                    int quantity = getPlayer().getItemQuantity(4001022, false);
+                    if (quantity > 0 &&
+                            Math.abs(getPlayer().getParty().getLeader().getPlayer().getPosition().x - 52) < 50 &&
+                            Math.abs(getPlayer().getParty().getLeader().getPlayer().getPosition().y + 2643) < 50) {
+                        gainItem(4001022, (short) -quantity);
+                        getPlayer().getMap().spawnItemDrop(getPlayer(), getPlayer(), new Item(4001022, (short) 0, (short) quantity), getPlayer().getPosition(), true, true);
+                    }
+                }
+            } else {
+                moveBot((short) 52, (short) -2643, time);
+            }
+        } else {
+            hitReactors(time);
+            if (getPlayer().getMap().getAllReactors().isEmpty() && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+                doneWithPQTask = true;
+            }
+        }
+    }
+
+    private void lpqStage2ExtraRoom1(int time) {
+        if (doneWithPQTask) {
+            doneWithPQTask = false;
+            changeMap(c.getChannelServer().getMapFactory().getMap(922010200));
+        } else {
+            hitReactors(time);
+            if (getPlayer().getMap().getAllReactors().isEmpty() && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+                doneWithPQTask = true;
+            }
+        }
+    }
+
+    private void lpqStage3(int time) {
+        if (getPlayer().getEventInstance().getProperty("3stageclear") != null) {
+            if (getPlayer().getPosition().x == 8 && getPlayer().getPosition().y == -1509) {
+                changeMap(c.getChannelServer().getMapFactory().getMap(922010400));
+            } else {
+                moveBot((short) 8, (short) -1509, time);
+            }
+            return;
+        }
+        if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
+            if (getPlayer().getItemQuantity(4001022, false) >= 32) {
+                gainItem(4001022, (short) -32);
+                getPlayer().getEventInstance().setProperty("statusStg3", 1);
+                getPlayer().getEventInstance().setProperty("3stageclear", "true");
+                getPlayer().getEventInstance().showClearEffect(true);
+                getPlayer().getEventInstance().linkToNextStage(3, "lpq", 922010300);
+            } else {
+                grindAndHitReactors(time);
+            }
+        } else {
+            grindAndHitReactors(time, 4001022, false);
+        }
+    }
+
+    private void lpqStage4(int time) {
+        if (getPlayer().getEventInstance().getProperty("4stageclear") != null) {
+            doneWithPQTask = false;
+            if (getPlayer().getPosition().x == -16 && getPlayer().getPosition().y == -2171) {
+                changeMap(c.getChannelServer().getMapFactory().getMap(922010500));
+            } else {
+                moveBot((short) -16, (short) -2171, time);
+            }
+            return;
+        }
+        if (doneWithPQTask) {
+            if (getPlayer().getPosition().x == -16 && getPlayer().getPosition().y == -2171) {
+                if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
+                    grind(time);
+                    if (getPlayer().getItemQuantity(4001022, false) >= 6) {
+                        gainItem(4001022, (short) -6);
+                        getPlayer().getEventInstance().setProperty("statusStg4", 1);
+                        getPlayer().getEventInstance().setProperty("4stageclear", "true");
+                        getPlayer().getEventInstance().showClearEffect(true);
+                        getPlayer().getEventInstance().linkToNextStage(4, "lpq", 922010400);
+                    }
+                } else {
+                    // if leader is there drop the passes
+                    int quantity = getPlayer().getItemQuantity(4001022, false);
+                    if (quantity > 0 &&
+                            Math.abs(getPlayer().getParty().getLeader().getPlayer().getPosition().x + 16) < 50 &&
+                            Math.abs(getPlayer().getParty().getLeader().getPlayer().getPosition().y + 2171) < 50) {
+                        gainItem(4001022, (short) -quantity);
+                        getPlayer().getMap().spawnItemDrop(getPlayer(), getPlayer(), new Item(4001022, (short) 0, (short) quantity), getPlayer().getPosition(), true, true);
+                    }
+                }
+            } else {
+                moveBot((short) -16, (short) -2171, time);
+            }
+        } else {
+            changeMap(c.getChannelServer().getMapFactory().getMap(922010401));
+        }
+    }
+
+    private void lpqStage4ExtraRooms(int time) {
+        if (doneWithPQTask) {
+            if (getPlayer().getMap().getId() == 922010405) {
+                changeMap(c.getChannelServer().getMapFactory().getMap(922010400));
+            } else {
+                doneWithPQTask = false;
+                changeMap(c.getChannelServer().getMapFactory().getMap(getPlayer().getMap().getId() + 1));
+            }
+        } else {
+            grind(time);
+            if (!containsItemId(getPlayer().getMap().getItems(), 4001022) && getPlayer().getMap().getAllMonsters().isEmpty()) {
+                doneWithPQTask = true;
+            }
+        }
+    }
+
+    private void lpqStage5(int time) {
+        if (getPlayer().getEventInstance().getProperty("5stageclear") != null) {
+            doneWithPQTask = false;
+            if (getPlayer().getPosition().x == -34 && getPlayer().getPosition().y == -215) {
+                changeMap(c.getChannelServer().getMapFactory().getMap(922010600));
+            } else {
+                moveBot((short) -34, (short) -215, time);
+            }
+            return;
+        }
+        if (doneWithPQTask) {
+            if (getPlayer().getPosition().x == -34 && getPlayer().getPosition().y == -215) {
+                if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
+                    grind(time);
+                    if (getPlayer().getItemQuantity(4001022, false) >= 24) {
+                        gainItem(4001022, (short) -24);
+                        getPlayer().getEventInstance().setProperty("statusStg5", 1);
+                        getPlayer().getEventInstance().setProperty("5stageclear", "true");
+                        getPlayer().getEventInstance().showClearEffect(true);
+                        getPlayer().getEventInstance().linkToNextStage(5, "lpq", 922010500);
+                    }
+                } else {
+                    // if leader is there drop the passes
+                    int quantity = getPlayer().getItemQuantity(4001022, false);
+                    if (quantity > 0 &&
+                            Math.abs(getPlayer().getParty().getLeader().getPlayer().getPosition().x + 34) < 50 &&
+                            Math.abs(getPlayer().getParty().getLeader().getPlayer().getPosition().y + 215) < 50) {
+                        gainItem(4001022, (short) -quantity);
+                        getPlayer().getMap().spawnItemDrop(getPlayer(), getPlayer(), new Item(4001022, (short) 0, (short) quantity), getPlayer().getPosition(), true, true);
+                    }
+                }
+            } else {
+                moveBot((short) -34, (short) -215, time);
+            }
+        } else {
+            changeMap(c.getChannelServer().getMapFactory().getMap(922010501));
+        }
+    }
+
+    private void lpqStage5ExtraRooms(int time) {
+        if (doneWithPQTask) {
+            if (getPlayer().getMap().getId() == 922010506) {
+                changeMap(c.getChannelServer().getMapFactory().getMap(922010500));
+            } else {
+                doneWithPQTask = false;
+                changeMap(c.getChannelServer().getMapFactory().getMap(getPlayer().getMap().getId() + 1));
+            }
+        } else {
+            grind(time);
+            if (getPlayer().getMap().getAllReactors().isEmpty() && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+                doneWithPQTask = true;
+            }
+        }
+    }
+
+    private void lpqStage6(int time) {
+        if (pqValue < 0 || pqValue >= lpqStage6Positions.length) {
+            pqValue = 0;
+        }
+        if (getPlayer().getPosition().x == lpqStage6Positions[pqValue].x &&
+                getPlayer().getPosition().y == lpqStage6Positions[pqValue].y) {
+            pqValue++;
+            if (pqValue == lpqStage6Positions.length) {
+                pqValue = -1;
+                changeMap(c.getChannelServer().getMapFactory().getMap(922010700));
+                return;
+            }
+        }
+        moveBot((short) lpqStage6Positions[pqValue].x, (short) lpqStage6Positions[pqValue].y, time);
+    }
+
+    private void lpqStage7(int time) {
+        if (getPlayer().getEventInstance().getProperty("7stageclear") != null) {
+            if (getPlayer().getPosition().x == -28 && getPlayer().getPosition().y == -709) {
+                changeMap(c.getChannelServer().getMapFactory().getMap(922010800));
+            } else {
+                moveBot((short) -28, (short) -709, time);
+            }
+            return;
+        }
+        if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
+            if (getPlayer().getItemQuantity(4001022, false) >= 3) {
+                gainItem(4001022, (short) -3);
+                getPlayer().getEventInstance().setProperty("statusStg7", 1);
+                getPlayer().getEventInstance().setProperty("7stageclear", "true");
+                getPlayer().getEventInstance().showClearEffect(true);
+                getPlayer().getEventInstance().linkToNextStage(7, "lpq", 922010700);
+            } else {
+                grind(time, 4001156, false);
+            }
+        } else {
+            grind(time, new int[]{4001022, 4001156}, false);
+        }
+    }
+
+    private void lpqStage8(int time) {
+        if (getPlayer().getEventInstance().getProperty("8stageclear") != null) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(922010900));
+            return;
+        }
+        if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
+            if (getPlayer().getEventInstance().getPlayerCount() == 5) {
+                Point nextPosition = getPQPosition(getPlayer().getEventInstance().getPlayerEventId(getPlayer().getId()),
+                        lpqStage8Permutations[getPlayer().getEventInstance().getNextPQValue() % lpqStage8Permutations.length],
+                        kpqStage3Positions);
+                if (getPlayer().getPosition().equals(nextPosition)) {
+                    if (lpqRectangleStage(getPlayer())) {
+                        getPlayer().getEventInstance().setProperty("statusStg8", 1);
+                        getPlayer().getEventInstance().setProperty("8stageclear", "true");
+                        getPlayer().getEventInstance().showClearEffect(true);
+                        getPlayer().getEventInstance().linkToNextStage(8, "lpq", 922010800);
+                    } else {
+                        getPlayer().getEventInstance().showWrongEffect();
+                        getPlayer().getEventInstance().advancePQValue();
+                        delay = 3000;
+                    }
+                } else {
+                    moveBot((short) nextPosition.x, (short) nextPosition.y, time);
+                }
+            } else {
+                if (getPlayer().getPosition().equals(lpqStage8Positions[0])) {
+                    if (lpqRectangleStage(getPlayer())) {
+                        getPlayer().getEventInstance().setProperty("statusStg8", 1);
+                        getPlayer().getEventInstance().setProperty("8stageclear", "true");
+                        getPlayer().getEventInstance().showClearEffect(true);
+                        getPlayer().getEventInstance().linkToNextStage(8, "lpq", 922010800);
+                    } else {
+                        getPlayer().getEventInstance().showWrongEffect();
+                        getPlayer().getEventInstance().advancePQValue();
+                        delay = 3000;
+                    }
+                } else {
+                    moveBot((short) lpqStage8Positions[0].x, (short) lpqStage8Positions[0].y, time);
+                }
+            }
+        } else {
+            Point nextPosition = getPQPosition(getPlayer().getEventInstance().getPlayerEventId(getPlayer().getId()),
+                    lpqStage8Permutations[getPlayer().getEventInstance().getNextPQValue() % lpqStage8Permutations.length],
+                    lpqStage8Positions);
+            if (!getPlayer().getPosition().equals(nextPosition)) {
+                moveBot((short) nextPosition.x, (short) nextPosition.y, time);
+            } // else just wait
+        }
+    }
+
+    private void lpqStage9(int time) {
+        if (getPlayer().getEventInstance().getProperty("9stageclear") != null) {
+            changeMap(c.getChannelServer().getMapFactory().getMap(221024500));
+            currentMode = Mode.LEAVE_PARTY;
+            return;
+        }
+        if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
+            if (getPlayer().getItemQuantity(4001023, false) >= 1) {
+                gainItem(4001023, (short) -1);
+                List<Integer> list = getPlayer().getEventInstance().getClearStageBonus(9);
+                getPlayer().getEventInstance().giveEventPlayersExp(list.get(0));
+                getPlayer().getEventInstance().giveEventPlayersMeso(list.get(1));
+                getPlayer().getEventInstance().setProperty("9stageclear", "true");
+                getPlayer().getEventInstance().showClearEffect(true);
+                getPlayer().getEventInstance().clearPQ();
+            } else {
+                grind(time, 4001022, false);
+            }
+        } else {
+            grind(time, new int[]{4001022, 4001023}, false);
         }
     }
 
@@ -2608,5 +3389,14 @@ public class CharacterBot {
 
         // todo: delay times, decide what to do for different speeds
         // skillDelayTimes.putIfAbsent(-1, );
+    }
+
+    public static boolean containsItemId(List<MapObject> items, int itemId) {
+        for (MapObject i : items) {
+            if (((MapItem) i).getItemId() == itemId) {
+                return true;
+            }
+        }
+        return false;
     }
 }

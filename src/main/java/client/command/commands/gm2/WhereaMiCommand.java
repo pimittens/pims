@@ -30,7 +30,9 @@ import server.life.Monster;
 import server.life.NPC;
 import server.life.PlayerNPC;
 import server.maps.MapObject;
+import server.maps.Reactor;
 
+import java.awt.*;
 import java.util.HashSet;
 
 public class WhereaMiCommand extends Command {
@@ -90,5 +92,9 @@ public class WhereaMiCommand extends Command {
                 }
             }
         }
+        /*System.out.println("reactors:");
+        for (Reactor r : c.getPlayer().getMap().getAllReactors()) {
+            System.out.println("id: " + r.getId() + ", name: " + r.getName() + ", oid: " + r.getObjectId());
+        }*/
     }
 }

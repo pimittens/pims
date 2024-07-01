@@ -17,6 +17,9 @@ public class ManageBotLoginsTask implements Runnable {
 
     @Override
     public void run() {
+        if (true) {
+            return;
+        }
         List<Integer> levels = Server.getInstance().getBotManager().getLevels();
         /*List<Integer> loggedIn = new ArrayList<>();
         try (Connection con = DatabaseConnection.getConnection()) {
@@ -31,7 +34,7 @@ public class ManageBotLoginsTask implements Runnable {
             return;
         }*/
         int nextCount;
-        // logout bots down to 5 in each level bracket (except the brackets below 10)
+        // logout bots down to 10 in each level bracket (except the brackets below 10)
         for (int i = 200; i > 10; i -= 5) {
             nextCount = 0;
             for (Integer level : levels) {
@@ -39,11 +42,11 @@ public class ManageBotLoginsTask implements Runnable {
                     nextCount++;
                 }
             }
-            if (nextCount > 5) {
+            if (nextCount > 10) {
                 Server.getInstance().getBotManager().logoutBots(i, nextCount - 5);
             }
         }
-        // login bots up to 5 in each level bracket
+        // login bots up to 10 in each level bracket
         for (int i = 200; i > 10; i -= 5) {
             nextCount = 0;
             for (Integer level : levels) {
@@ -51,7 +54,7 @@ public class ManageBotLoginsTask implements Runnable {
                     nextCount++;
                 }
             }
-            if (nextCount < 5) {
+            if (nextCount < 10) {
                 List<Pair<String, Integer>> toLogin = new ArrayList<>();
                 try (Connection con = DatabaseConnection.getConnection()) {
                     try (PreparedStatement ps = con.prepareStatement("SELECT * FROM accounts WHERE name LIKE \"bot%\" AND loggedin = 0;");
@@ -84,7 +87,7 @@ public class ManageBotLoginsTask implements Runnable {
                     }
                 }
 
-                while (toLogin.size() > 5 - nextCount) {
+                while (toLogin.size() > 10 - nextCount) {
                     toLogin.remove(Randomizer.nextInt(toLogin.size()));
                 }
 
