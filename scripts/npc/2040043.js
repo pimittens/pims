@@ -146,6 +146,7 @@ function action(mode, type, selection) {
                             cm.dispose();
                         } else {
                             eim.showWrongEffect();
+							eim.advancePQValue();
                             cm.dispose();
                         }
                     } else {
