@@ -7593,7 +7593,7 @@ public class PacketCreator {
         return p;
     }
 
-    public static InPacket createMagicAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
+    public static InPacket createMagicAttackPacket(AbstractDealDamageHandler.AttackInfo attack) {
         final InPacket p = InPacket.create(SendOpcode.CLAIM_AVAILABLE_TIME);
         p.writeByte(0); // skipped
         p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
@@ -7632,7 +7632,7 @@ public class PacketCreator {
         return p;
     }
 
-    public static InPacket createRangedAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
+    public static InPacket createRangedAttackPacket(AbstractDealDamageHandler.AttackInfo attack) {
         final InPacket p = InPacket.create(SendOpcode.CLAIM_RESULT);
         p.writeByte(0); // skipped
         p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
@@ -7682,7 +7682,7 @@ public class PacketCreator {
         return p;
     }
 
-    public static InPacket createCloseRangeAttackPacket(AbstractDealDamageHandler.AttackInfo attack) { // todo
+    public static InPacket createCloseRangeAttackPacket(AbstractDealDamageHandler.AttackInfo attack) {
         final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
         p.writeByte(0); // skipped
         p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
@@ -7717,6 +7717,20 @@ public class PacketCreator {
             p.writeByte(0);
             p.writeByte(0); // skipped
         }
+        p.skip(2);
+        return p;
+    }
+
+    public static InPacket createReactorHitPacket(int oid, short stance) {
+        final InPacket p = InPacket.create(SendOpcode.CANCEL_CHAIR);
+        p.writeInt(oid); // reactor oid
+        p.writeInt(0); // char pos, seems to always be 0
+        p.writeShort(stance); // stance
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0);
+        p.writeByte(0); // skipped
+        p.writeInt(0); // skill id
         p.skip(2);
         return p;
     }

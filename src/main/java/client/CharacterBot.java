@@ -963,7 +963,8 @@ public class CharacterBot {
     }
 
     private void hitReactor(int time) {
-        // todo: generate and handle attack packet and hit reactor packet
+        // could create attack packet also but probably not really necessary
+        c.handlePacket(PacketCreator.createReactorHitPacket(targetReactor.getObjectId(), (short) (facingLeft ? 3 : 2)), (short) 205);
     }
 
     private void attack(int time) {
@@ -1113,6 +1114,9 @@ public class CharacterBot {
         }
         minDamage = (int) (minDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.6);
         maxDamage = (int) (maxDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.5);
+        if (maxDamage - minDamage + 1 < 1) {
+            return 0;
+        }
         return Math.max((int) ((Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage) * multiplier), 1);
     }
 
@@ -1299,10 +1303,59 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createPlayerMovementPacket((short) getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
         hasTargetItem = false;
         hasTargetMonster = false;
+        hasTargetReactor = false;
         if (isPQMap(target.getId())) {
             currentMode = Mode.PQ;
             doneWithPQTask = false;
         }
+    }
+
+    private int pickupItems(int time) {
+        boolean didAction = true;
+        while (time > 0 && didAction) {
+            didAction = false;
+            if (!hasTargetItem || ((MapItem) targetItem).isPickedUp()) {
+                if (!getPlayer().getMap().getItems().isEmpty()) {
+                    double minDistance = 1000000.0, nextDistance;
+                    for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            nextDistance = getPlayer().getPosition().distance(it.getPosition());
+                            if (nextDistance < minDistance) {
+                                minDistance = nextDistance;
+                                targetItem = it;
+                                hasTargetItem = true;
+                            }
+                        }
+                    }
+                    /*for (MapObject it : getPlayer().getMap().getItems()) {
+                        if (!((MapItem) it).isPickedUp() && ((MapItem) it).canBePickedBy(getPlayer())) {
+                            if (((MapItem) it).getItem() != null && !InventoryManipulator.checkSpace(c, ((MapItem) it).getItemId(), ((MapItem) it).getItem().getQuantity(), ((MapItem) it).getItem().getOwner())) {
+                                continue;
+                            }
+                            targetItem = it;
+                            hasTargetItem = true;
+                        }
+                    }*/
+                } else {
+                    hasTargetItem = false;
+                }
+            }
+            if (hasTargetItem) {
+                if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
+                    didAction = true;
+                }
+                if (getPlayer().getPosition().equals(targetItem.getPosition())) {
+                    pickupItem();
+                    time -= 50;
+                    didAction = true;
+                }
+            }
+        }
+        return time;
     }
 
     private int grind(int time) {
@@ -1634,10 +1687,13 @@ public class CharacterBot {
                     hasTargetItem = false;
                 }
             }
-            if (!hasTargetReactor) {
+            if (!hasTargetReactor || !targetReactor.isActive()) {
                 if (!getPlayer().getMap().getAllReactors().isEmpty()) {
                     double minDistance = 1000000.0, nextDistance;
                     for (Reactor r : getPlayer().getMap().getAllReactors()) {
+                        if (!r.isActive()) {
+                            continue;
+                        }
                         nextDistance = getPlayer().getPosition().distance(r.getPosition());
                         if (nextDistance < minDistance) {
                             minDistance = nextDistance;
@@ -1705,10 +1761,13 @@ public class CharacterBot {
                     hasTargetItem = false;
                 }
             }
-            if (!hasTargetReactor) {
+            if (!hasTargetReactor || !targetReactor.isActive()) {
                 if (!getPlayer().getMap().getAllReactors().isEmpty()) {
                     double minDistance = 1000000.0, nextDistance;
                     for (Reactor r : getPlayer().getMap().getAllReactors()) {
+                        if (!r.isActive()) {
+                            continue;
+                        }
                         nextDistance = getPlayer().getPosition().distance(r.getPosition());
                         if (nextDistance < minDistance) {
                             minDistance = nextDistance;
@@ -1784,10 +1843,13 @@ public class CharacterBot {
                     hasTargetMonster = false;
                 }
             }
-            if (!hasTargetReactor) {
+            if (!hasTargetReactor || !targetReactor.isActive()) {
                 if (!getPlayer().getMap().getAllReactors().isEmpty()) {
                     double minDistance = 1000000.0, nextDistance;
                     for (Reactor r : getPlayer().getMap().getAllReactors()) {
+                        if (!r.isActive()) {
+                            continue;
+                        }
                         nextDistance = getPlayer().getPosition().distance(r.getPosition());
                         if (nextDistance < minDistance) {
                             minDistance = nextDistance;
@@ -1874,10 +1936,13 @@ public class CharacterBot {
                     hasTargetMonster = false;
                 }
             }
-            if (!hasTargetReactor) {
+            if (!hasTargetReactor || !targetReactor.isActive()) {
                 if (!getPlayer().getMap().getAllReactors().isEmpty()) {
                     double minDistance = 1000000.0, nextDistance;
                     for (Reactor r : getPlayer().getMap().getAllReactors()) {
+                        if (!r.isActive()) {
+                            continue;
+                        }
                         nextDistance = getPlayer().getPosition().distance(r.getPosition());
                         if (nextDistance < minDistance) {
                             minDistance = nextDistance;
@@ -2868,7 +2933,7 @@ public class CharacterBot {
         if (doneWithPQTask) {
             if (getPlayer().getPosition().x == 52 && getPlayer().getPosition().y == -2643) {
                 if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
-                    grind(time); // pick up passes that other members drop
+                    pickupItems(time); // pick up passes that other members drop
                     if (getPlayer().getItemQuantity(4001022, false) >= 15) {
                         gainItem(4001022, (short) -15);
                         getPlayer().getEventInstance().setProperty("statusStg2", 1);
@@ -2891,7 +2956,7 @@ public class CharacterBot {
             }
         } else {
             hitReactors(time);
-            if (getPlayer().getMap().getAllReactors().isEmpty() && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+            if (allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
                 doneWithPQTask = true;
             }
         }
@@ -2903,7 +2968,7 @@ public class CharacterBot {
             changeMap(c.getChannelServer().getMapFactory().getMap(922010200));
         } else {
             hitReactors(time);
-            if (getPlayer().getMap().getAllReactors().isEmpty() && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+            if (allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
                 doneWithPQTask = true;
             }
         }
@@ -2946,7 +3011,7 @@ public class CharacterBot {
         if (doneWithPQTask) {
             if (getPlayer().getPosition().x == -16 && getPlayer().getPosition().y == -2171) {
                 if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
-                    grind(time);
+                    pickupItems(time);
                     if (getPlayer().getItemQuantity(4001022, false) >= 6) {
                         gainItem(4001022, (short) -6);
                         getPlayer().getEventInstance().setProperty("statusStg4", 1);
@@ -3001,7 +3066,7 @@ public class CharacterBot {
         if (doneWithPQTask) {
             if (getPlayer().getPosition().x == -34 && getPlayer().getPosition().y == -215) {
                 if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
-                    grind(time);
+                    pickupItems(time);
                     if (getPlayer().getItemQuantity(4001022, false) >= 24) {
                         gainItem(4001022, (short) -24);
                         getPlayer().getEventInstance().setProperty("statusStg5", 1);
@@ -3036,8 +3101,8 @@ public class CharacterBot {
                 changeMap(c.getChannelServer().getMapFactory().getMap(getPlayer().getMap().getId() + 1));
             }
         } else {
-            grind(time);
-            if (getPlayer().getMap().getAllReactors().isEmpty() && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+            hitReactors(time);
+            if (allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
                 doneWithPQTask = true;
             }
         }
@@ -3135,6 +3200,10 @@ public class CharacterBot {
 
     private void lpqStage9(int time) {
         if (getPlayer().getEventInstance().getProperty("9stageclear") != null) {
+            List<Integer> list = getPlayer().getEventInstance().getClearStageBonus(9);
+            getPlayer().getEventInstance().giveEventPlayersExp(list.get(0));
+            getPlayer().getEventInstance().giveEventPlayersMeso(list.get(1));
+            getPlayer().getEventInstance().giveEventReward(getPlayer());
             changeMap(c.getChannelServer().getMapFactory().getMap(221024500));
             currentMode = Mode.LEAVE_PARTY;
             return;
@@ -3142,9 +3211,6 @@ public class CharacterBot {
         if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
             if (getPlayer().getItemQuantity(4001023, false) >= 1) {
                 gainItem(4001023, (short) -1);
-                List<Integer> list = getPlayer().getEventInstance().getClearStageBonus(9);
-                getPlayer().getEventInstance().giveEventPlayersExp(list.get(0));
-                getPlayer().getEventInstance().giveEventPlayersMeso(list.get(1));
                 getPlayer().getEventInstance().setProperty("9stageclear", "true");
                 getPlayer().getEventInstance().showClearEffect(true);
                 getPlayer().getEventInstance().clearPQ();
@@ -3398,5 +3464,14 @@ public class CharacterBot {
             }
         }
         return false;
+    }
+
+    public static boolean allReactorsInactive(List<Reactor> reactors) {
+        for (Reactor r : reactors) {
+            if (r.isActive()) {
+                return false;
+            }
+        }
+        return true;
     }
 }

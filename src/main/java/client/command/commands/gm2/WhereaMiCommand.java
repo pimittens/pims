@@ -92,9 +92,9 @@ public class WhereaMiCommand extends Command {
                 }
             }
         }
-        /*System.out.println("reactors:");
+        System.out.println("reactors:");
         for (Reactor r : c.getPlayer().getMap().getAllReactors()) {
-            System.out.println("id: " + r.getId() + ", name: " + r.getName() + ", oid: " + r.getObjectId());
-        }*/
+            System.out.println("id: " + r.getId() + ", name: " + r.getName() + ", oid: " + r.getObjectId() + ", isActive: " + r.isActive() + ", isAlive: " + r.isAlive() + ", state: " + r.getState());
+        }
     }
 }
