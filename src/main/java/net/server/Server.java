@@ -48,6 +48,7 @@ import net.server.guild.Guild;
 import net.server.guild.GuildCharacter;
 import net.server.task.BossLogTask;
 import net.server.task.BotKPQManagerTask;
+import net.server.task.BotLPQManagerTask;
 import net.server.task.CharacterDiseaseTask;
 import net.server.task.CouponTask;
 import net.server.task.DueyFredrickTask;
@@ -1003,6 +1004,7 @@ public class Server {
         tMan.register(new ManageBotLoginsTask(), MINUTES.toMillis(15), MINUTES.toMillis(1));
         tMan.register(new UpdateFollowerBotsTask(), 200, SECONDS.toMillis(30));
         tMan.register(new BotKPQManagerTask(), MINUTES.toMillis(30), MINUTES.toMillis(5));
+        tMan.register(new BotLPQManagerTask(), MINUTES.toMillis(45), MINUTES.toMillis(6));
 
         timeLeft = getTimeLeftForNextDay();
         ExpeditionBossLog.resetBossLogTable();

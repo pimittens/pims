@@ -17,9 +17,6 @@ public class ManageBotLoginsTask implements Runnable {
 
     @Override
     public void run() {
-        if (true) {
-            return;
-        }
         List<Integer> levels = Server.getInstance().getBotManager().getLevels();
         /*List<Integer> loggedIn = new ArrayList<>();
         try (Connection con = DatabaseConnection.getConnection()) {
@@ -35,7 +32,7 @@ public class ManageBotLoginsTask implements Runnable {
         }*/
         int nextCount;
         // logout bots down to 10 in each level bracket (except the brackets below 10)
-        for (int i = 200; i > 10; i -= 5) {
+        /*for (int i = 200; i > 10; i -= 5) {
             nextCount = 0;
             for (Integer level : levels) {
                 if (level <= i && level > i - 5) {
@@ -45,7 +42,7 @@ public class ManageBotLoginsTask implements Runnable {
             if (nextCount > 10) {
                 Server.getInstance().getBotManager().logoutBots(i, nextCount - 5);
             }
-        }
+        }*/ // todo: logoutbots() has a deadlock so need to fix it
         // login bots up to 10 in each level bracket
         for (int i = 200; i > 10; i -= 5) {
             nextCount = 0;

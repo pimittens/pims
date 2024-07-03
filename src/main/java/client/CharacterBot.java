@@ -477,7 +477,7 @@ public class CharacterBot {
                 } else {
                     singleTargetAttack = Magician.MAGIC_CLAW;
                 }
-                if (getPlayer().getSkillLevel(ILWizard.THUNDERBOLT) > 0) {
+                if (getPlayer().getSkillLevel(ILWizard.THUNDERBOLT) > 9) {
                     mobAttack = ILWizard.THUNDERBOLT;
                 } else {
                     mobAttack = Magician.MAGIC_CLAW;
@@ -2013,94 +2013,94 @@ public class CharacterBot {
             // todo: 4th job skills
         }
         int remainingAP = getPlayer().getRemainingAp(), nextAP;
-        System.out.println("player " + getPlayer().getName() + " assigning " + remainingAP + " ap, job: " + getPlayer().getJob());
+        /*System.out.println("player " + getPlayer().getName() + " assigning " + remainingAP + " ap, job: " + getPlayer().getJob());
         System.out.println("starting str: " + getPlayer().getStr());
         System.out.println("starting dex: " + getPlayer().getDex());
         System.out.println("starting int: " + getPlayer().getInt());
-        System.out.println("starting luk: " + getPlayer().getLuk());
+        System.out.println("starting luk: " + getPlayer().getLuk());*/
         // todo: even with max secondary stat, they may be unable to equip the highest level items if the item being replaced give the stat, need to address this eventually
         if (getPlayer().getJob().equals(Job.BEGINNER)) {
             if (getPlayer().getTotalDex() < 60) {
                 nextAP = Math.min(remainingAP, 60 - getPlayer().getTotalDex());
-                System.out.println("nextAP: " + nextAP + " (dex)");
+                //System.out.println("nextAP: " + nextAP + " (dex)");
                 remainingAP -= nextAP;
                 getPlayer().assignDex(nextAP);
             }
-            System.out.println("remainingAP: " + remainingAP + " (str)");
+            //System.out.println("remainingAP: " + remainingAP + " (str)");
             getPlayer().assignStr(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 1) { // warrior
             if (getPlayer().getTotalDex() < 60 && getPlayer().getTotalDex() < getPlayer().getLevel() + 10) {
                 nextAP = Math.min(Math.min(remainingAP, 60 - getPlayer().getTotalDex()), getPlayer().getLevel() + 10 - getPlayer().getTotalDex());
-                System.out.println("nextAP: " + nextAP + " (dex)");
+                //System.out.println("nextAP: " + nextAP + " (dex)");
                 remainingAP -= nextAP;
                 getPlayer().assignDex(nextAP);
             }
-            System.out.println("remainingAP: " + remainingAP + " (str)");
+            //System.out.println("remainingAP: " + remainingAP + " (str)");
             getPlayer().assignStr(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 2) { // magician
             if (getPlayer().getTotalLuk() < 123 && getPlayer().getTotalLuk() < getPlayer().getLevel() + 3) {
                 nextAP = Math.min(Math.min(remainingAP, 123 - getPlayer().getTotalLuk()), getPlayer().getLevel() + 3 - getPlayer().getTotalLuk());
-                System.out.println("nextAP: " + nextAP + " (luk)");
+                //System.out.println("nextAP: " + nextAP + " (luk)");
                 remainingAP -= nextAP;
                 getPlayer().assignLuk(nextAP);
             }
-            System.out.println("remainingAP: " + remainingAP + " (int)");
+            //System.out.println("remainingAP: " + remainingAP + " (int)");
             getPlayer().assignInt(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 3) { // bowman
             if (getPlayer().getWeaponType().equals(WeaponType.BOW)) {
                 if (getPlayer().getTotalStr() < 125 && getPlayer().getTotalStr() < getPlayer().getLevel() + 5) {
                     nextAP = Math.min(Math.min(remainingAP, 125 - getPlayer().getTotalStr()), getPlayer().getLevel() + 5 - getPlayer().getTotalStr());
-                    System.out.println("nextAP: " + nextAP + " (str)");
+                    //System.out.println("nextAP: " + nextAP + " (str)");
                     remainingAP -= nextAP;
                     getPlayer().assignStr(nextAP);
                 }
             } else { // crossbow
                 if (getPlayer().getTotalStr() < 120 && getPlayer().getTotalStr() < getPlayer().getLevel()) {
                     nextAP = Math.min(Math.min(remainingAP, 120 - getPlayer().getTotalStr()), getPlayer().getLevel() - getPlayer().getTotalStr());
-                    System.out.println("nextAP: " + nextAP + " (str)");
+                    //System.out.println("nextAP: " + nextAP + " (str)");
                     remainingAP -= nextAP;
                     getPlayer().assignStr(nextAP);
                 }
             }
-            System.out.println("remainingAP: " + remainingAP + " (dex)");
+            //System.out.println("remainingAP: " + remainingAP + " (dex)");
             getPlayer().assignDex(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 4) { // thief
             if (getPlayer().getTotalDex() < 160 && getPlayer().getTotalDex() < getPlayer().getLevel() + 40) {
                 nextAP = Math.min(Math.min(remainingAP, 160 - getPlayer().getTotalDex()), getPlayer().getLevel() + 40 - getPlayer().getTotalDex());
-                System.out.println("nextAP: " + nextAP + " (dex)");
+                //System.out.println("nextAP: " + nextAP + " (dex)");
                 remainingAP -= nextAP;
                 getPlayer().assignDex(nextAP);
             }
             /*if (weaponType.equals(WeaponType.DAGGER_THIEVES)) {
                 // todo: str daggers?
             }*/
-            System.out.println("remainingAP: " + remainingAP + " (luk)");
+            //System.out.println("remainingAP: " + remainingAP + " (luk)");
             getPlayer().assignLuk(remainingAP);
         } else if (getPlayer().getJob().getId() / 100 == 5) { // pirate
             if (getPlayer().getWeaponType().equals(WeaponType.GUN)) {
                 if (getPlayer().getTotalStr() < 120 && getPlayer().getTotalStr() < getPlayer().getLevel()) {
                     nextAP = Math.min(Math.min(remainingAP, 120 - getPlayer().getTotalStr()), getPlayer().getLevel() - getPlayer().getTotalStr());
-                    System.out.println("nextAP: " + nextAP + " (str)");
+                    //System.out.println("nextAP: " + nextAP + " (str)");
                     remainingAP -= nextAP;
                     getPlayer().assignStr(nextAP);
                 }
-                System.out.println("remainingAP: " + remainingAP + " (dex)");
+                //System.out.println("remainingAP: " + remainingAP + " (dex)");
                 getPlayer().assignDex(remainingAP);
             } else { // knuckle
                 if (getPlayer().getTotalDex() < 120 && getPlayer().getTotalDex() < getPlayer().getLevel()) {
                     nextAP = Math.min(Math.min(remainingAP, 120 - getPlayer().getTotalDex()), getPlayer().getLevel() - getPlayer().getTotalDex());
-                    System.out.println("nextAP: " + nextAP + " (dex)");
+                    //System.out.println("nextAP: " + nextAP + " (dex)");
                     remainingAP -= nextAP;
                     getPlayer().assignDex(nextAP);
                 }
-                System.out.println("remainingAP: " + remainingAP + " (str)");
+                //System.out.println("remainingAP: " + remainingAP + " (str)");
                 getPlayer().assignStr(remainingAP);
             }
         }
-        System.out.println("ending str: " + getPlayer().getStr());
+        /*System.out.println("ending str: " + getPlayer().getStr());
         System.out.println("ending dex: " + getPlayer().getDex());
         System.out.println("ending int: " + getPlayer().getInt());
-        System.out.println("ending luk: " + getPlayer().getLuk());
+        System.out.println("ending luk: " + getPlayer().getLuk());*/
         this.level = getPlayer().getLevel();
         if (currentMode != Mode.PQ) {
             currentMode = Mode.WAITING; // pick new map? todo: only do this if you get into a new level range for maps probably
@@ -2679,6 +2679,8 @@ public class CharacterBot {
             case 922010700 -> lpqStage7(time);
             case 922010800 -> lpqStage8(time);
             case 922010900 -> lpqStage9(time);
+            case 922011000 -> lpqStage10(time);
+            case 922011100 -> lpqStage11();
             default -> currentMode = Mode.WAITING; // if not in a PQ map then switch modes
         }
     }
@@ -2931,6 +2933,10 @@ public class CharacterBot {
             return;
         }
         if (doneWithPQTask) {
+            if (!allReactorsInactive(getPlayer().getMap().getAllReactors()) || containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+                doneWithPQTask = false; // fix bug where this was set to true before the last pass dropped
+                return;
+            }
             if (getPlayer().getPosition().x == 52 && getPlayer().getPosition().y == -2643) {
                 if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
                     pickupItems(time); // pick up passes that other members drop
@@ -2958,18 +2964,24 @@ public class CharacterBot {
             hitReactors(time);
             if (allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
                 doneWithPQTask = true;
+                delay = 3000;
             }
         }
     }
 
     private void lpqStage2ExtraRoom1(int time) {
         if (doneWithPQTask) {
+            if (!allReactorsInactive(getPlayer().getMap().getAllReactors()) || containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+                doneWithPQTask = false; // fix bug where this was set to true before the last pass dropped
+                return;
+            }
             doneWithPQTask = false;
             changeMap(c.getChannelServer().getMapFactory().getMap(922010200));
         } else {
             hitReactors(time);
             if (allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
                 doneWithPQTask = true;
+                delay = 3000;
             }
         }
     }
@@ -3039,6 +3051,10 @@ public class CharacterBot {
 
     private void lpqStage4ExtraRooms(int time) {
         if (doneWithPQTask) {
+            if (containsItemId(getPlayer().getMap().getItems(), 4001022) || !getPlayer().getMap().getAllMonsters().isEmpty()) {
+                doneWithPQTask = false;
+                return;
+            }
             if (getPlayer().getMap().getId() == 922010405) {
                 changeMap(c.getChannelServer().getMapFactory().getMap(922010400));
             } else {
@@ -3049,6 +3065,7 @@ public class CharacterBot {
             grind(time);
             if (!containsItemId(getPlayer().getMap().getItems(), 4001022) && getPlayer().getMap().getAllMonsters().isEmpty()) {
                 doneWithPQTask = true;
+                delay = 3000;
             }
         }
     }
@@ -3094,6 +3111,10 @@ public class CharacterBot {
 
     private void lpqStage5ExtraRooms(int time) {
         if (doneWithPQTask) {
+            if (!allReactorsInactive(getPlayer().getMap().getAllReactors()) || containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+                doneWithPQTask = false;
+                return;
+            }
             if (getPlayer().getMap().getId() == 922010506) {
                 changeMap(c.getChannelServer().getMapFactory().getMap(922010500));
             } else {
@@ -3104,6 +3125,7 @@ public class CharacterBot {
             hitReactors(time);
             if (allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001022)) {
                 doneWithPQTask = true;
+                delay = 3000;
             }
         }
     }
@@ -3199,27 +3221,34 @@ public class CharacterBot {
     }
 
     private void lpqStage9(int time) {
-        if (getPlayer().getEventInstance().getProperty("9stageclear") != null) {
-            List<Integer> list = getPlayer().getEventInstance().getClearStageBonus(9);
-            getPlayer().getEventInstance().giveEventPlayersExp(list.get(0));
-            getPlayer().getEventInstance().giveEventPlayersMeso(list.get(1));
-            getPlayer().getEventInstance().giveEventReward(getPlayer());
-            changeMap(c.getChannelServer().getMapFactory().getMap(221024500));
-            currentMode = Mode.LEAVE_PARTY;
-            return;
-        }
         if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
             if (getPlayer().getItemQuantity(4001023, false) >= 1) {
                 gainItem(4001023, (short) -1);
+                List<Integer> list = getPlayer().getEventInstance().getClearStageBonus(9);
+                getPlayer().getEventInstance().giveEventPlayersExp(list.get(0));
+                getPlayer().getEventInstance().giveEventPlayersMeso(list.get(1));
                 getPlayer().getEventInstance().setProperty("9stageclear", "true");
                 getPlayer().getEventInstance().showClearEffect(true);
                 getPlayer().getEventInstance().clearPQ();
             } else {
                 grind(time, 4001022, false);
+                if (getPlayer().getItemQuantity(4001023, false) >= 1) {
+                    delay = 3000;
+                }
             }
         } else {
             grind(time, new int[]{4001022, 4001023}, false);
         }
+    }
+
+    private void lpqStage10(int time) {
+        hitReactors(time);
+    }
+
+    private void lpqStage11() {
+        getPlayer().getEventInstance().giveEventReward(getPlayer());
+        changeMap(c.getChannelServer().getMapFactory().getMap(221024500));
+        currentMode = Mode.LEAVE_PARTY;
     }
 
     public static void putSkillOrdersAndDelayTimes() {
