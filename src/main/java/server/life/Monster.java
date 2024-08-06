@@ -56,7 +56,6 @@ import org.slf4j.LoggerFactory;
 import scripting.event.EventInstanceManager;
 import server.StatEffect;
 import server.TimerManager;
-import server.life.LifeFactory.BanishInfo;
 import server.loot.LootManager;
 import server.maps.AbstractAnimatedMapObject;
 import server.maps.MapObjectType;

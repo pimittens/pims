@@ -1527,7 +1527,6 @@ public class Client extends ChannelInboundHandlerAdapter {
 
         player.getInventory(InventoryType.EQUIPPED).checked(false); //test
         player.getMap().removePlayer(player);
-        player.clearBanishPlayerData();
         player.getClient().getChannelServer().removePlayer(player);
 
         player.saveCharToDB();
