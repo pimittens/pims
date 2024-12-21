@@ -609,6 +609,8 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
         }
         if (ranged) {
             p.readByte();
+            ret.speed = p.readByte();
+            p.readByte();
             ret.rangedirection = p.readByte();
             //System.out.println("rangedirection: " + ret.rangedirection);
             p.skip(7);
@@ -616,6 +618,8 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
                 p.skip(4);
             }
         } else {
+            p.readByte();
+            ret.speed = p.readByte();
             p.skip(4);
         }
 
@@ -765,6 +769,7 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
             Point curPos = p.readPos();
             Point nextPos = p.readPos();
             short delay = p.readShort();
+            System.out.println("delay: " + delay);
             List<Integer> damageLines = new ArrayList<>();
             final Monster monster = chr.getMap().getMonsterByOid(oid);
             if (chr.getBuffEffect(BuffStat.WK_CHARGE) != null) {

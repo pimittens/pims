@@ -1006,7 +1006,7 @@ public class CharacterBot {
         attack.numAttacked = targets.size();
         attack.numDamage = Math.max(effect.getAttackCount(), effect.getBulletCount());
         attack.numAttackedAndDamage = attack.numAttacked * 16 + attack.numDamage;
-        attack.allDamage = new HashMap<>();
+        attack.targets = new HashMap<>();
         attack.speed = getPlayer().getWeaponSpeed();
         attack.display = 0; // todo: if using any attacks that use diplay update this
         attack.position = getPlayer().getPosition();
@@ -1021,7 +1021,7 @@ public class CharacterBot {
                 for (int i = 0; i < attack.numDamage; i++) {
                     damageNumbers.add(calcMagicDamage(skillId, m));
                 }
-                attack.allDamage.put(m.getObjectId(), damageNumbers);
+                attack.targets.put(m.getObjectId(), new AbstractDealDamageHandler.AttackTarget((short) 100, damageNumbers)); // todo: delay
             }
             c.handlePacket(PacketCreator.createMagicAttackPacket(attack), (short) 46);
         } else if (isRangedJob()) {
@@ -1032,7 +1032,7 @@ public class CharacterBot {
                 for (int i = 0; i < attack.numDamage; i++) {
                     damageNumbers.add(calcRangedDamage(skillId, m));
                 }
-                attack.allDamage.put(m.getObjectId(), damageNumbers);
+                attack.targets.put(m.getObjectId(), new AbstractDealDamageHandler.AttackTarget((short) 100, damageNumbers));
             }
             c.handlePacket(PacketCreator.createRangedAttackPacket(attack), (short) 45);
         } else {
@@ -1041,7 +1041,7 @@ public class CharacterBot {
                 for (int i = 0; i < attack.numDamage; i++) {
                     damageNumbers.add(calcCloseRangeDamage(skillId, m));
                 }
-                attack.allDamage.put(m.getObjectId(), damageNumbers);
+                attack.targets.put(m.getObjectId(), new AbstractDealDamageHandler.AttackTarget((short) 100, damageNumbers));
             }
             c.handlePacket(PacketCreator.createCloseRangeAttackPacket(attack), (short) 44);
         }

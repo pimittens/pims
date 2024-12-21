@@ -5,8 +5,8 @@ worlds:
     #Properties for Scania 0
   - flag: 0
     server_message: Welcome to pims!
-    event_message: 
-    why_am_i_recommended: 
+    event_message: Scania!
+    why_am_i_recommended: Welcome to Scania!
     channels: 4
     exp_rate: 2
     meso_rate: 2

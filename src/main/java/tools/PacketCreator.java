@@ -55,10 +55,13 @@ import constants.id.ItemId;
 import constants.id.MapId;
 import constants.id.NpcId;
 import constants.inventory.ItemConstants;
+import constants.skills.Bowmaster;
 import constants.skills.Buccaneer;
 import constants.skills.ChiefBandit;
 import constants.skills.Corsair;
+import constants.skills.Marksman;
 import constants.skills.ThunderBreaker;
+import constants.skills.WindArcher;
 import net.encryption.InitializationVector;
 import net.opcodes.SendOpcode;
 import net.packet.ByteBufOutPacket;
@@ -68,6 +71,7 @@ import net.packet.Packet;
 import net.server.PlayerCoolDownValueHolder;
 import net.server.Server;
 import net.server.channel.Channel;
+import net.server.channel.handlers.AbstractDealDamageHandler;
 import net.server.channel.handlers.AbstractDealDamageHandler.AttackTarget;
 import net.server.channel.handlers.PlayerInteractionHandler;
 import net.server.channel.handlers.SummonDamageHandler.SummonAttackTarget;
@@ -7361,7 +7365,7 @@ public class PacketCreator {
     /**
      * Sends a request to remove Mir<br>
      *
-     * @param charid - Needs the specific Character ID
+     * @param chrid - Needs the specific Character ID
      * @return The packet
      */
     public static Packet removeDragon(int chrId) {
@@ -7638,12 +7642,12 @@ public class PacketCreator {
         p.writeByte(0);
         p.writeByte(0);
         p.writeByte(0); // skipped
-        for (int i : attack.allDamage.keySet()) {
+        for (int i : attack.targets.keySet()) {
             p.writeInt(i); // oid of the target monster
             for (int j = 0; j < 14; j++) {
                 p.writeByte(0); // skipped
             }
-            for (int k : attack.allDamage.get(i)) {
+            for (int k : attack.targets.get(i).damageLines()) {
                 p.writeInt(k); // damage
             }
             p.writeByte(0);
@@ -7688,12 +7692,12 @@ public class PacketCreator {
             p.writeByte(0);
             p.writeByte(0); // skipped
         }
-        for (int i : attack.allDamage.keySet()) {
+        for (int i : attack.targets.keySet()) {
             p.writeInt(i); // oid of the target monster
             for (int j = 0; j < 14; j++) {
                 p.writeByte(0); // skipped
             }
-            for (int k : attack.allDamage.get(i)) {
+            for (int k : attack.targets.get(i).damageLines()) {
                 p.writeInt(k); // damage
             }
             p.writeByte(0);
@@ -7727,12 +7731,12 @@ public class PacketCreator {
         p.writeByte(0);
         p.writeByte(0);
         p.writeByte(0); // skipped
-        for (int i : attack.allDamage.keySet()) {
+        for (int i : attack.targets.keySet()) {
             p.writeInt(i); // oid of the target monster
             for (int j = 0; j < 14; j++) {
                 p.writeByte(0); // skipped
             }
-            for (int k : attack.allDamage.get(i)) {
+            for (int k : attack.targets.get(i).damageLines()) {
                 p.writeInt(k); // damage
             }
             p.writeByte(0);
