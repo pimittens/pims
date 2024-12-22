@@ -9,6 +9,8 @@ worlds:
     why_am_i_recommended: Welcome to Scania!
     channels: 4
     exp_rate: 2
+    mob_rate: 1.5                            #Mob count multiplier
+    max_mob_per_spawnpoint: 2                #Must be equal or higher than mob_rate
     meso_rate: 2
     drop_rate: 2
     boss_drop_rate: 5                      #NOTE: Boss drop rate OVERRIDES common drop rate, for bosses-only.

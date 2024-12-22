@@ -434,6 +434,8 @@ public class Server {
         log.info("Starting world {}", i);
 
         int exprate = YamlConfig.config.worlds.get(i).exp_rate;
+        float mobrate = YamlConfig.config.worlds.get(i).mob_rate;
+        int mobperspawnpoint = YamlConfig.config.worlds.get(i).max_mob_per_spawnpoint;
         int mesorate = YamlConfig.config.worlds.get(i).meso_rate;
         int droprate = YamlConfig.config.worlds.get(i).drop_rate;
         int bossdroprate = YamlConfig.config.worlds.get(i).boss_drop_rate;
@@ -448,7 +450,7 @@ public class Server {
         World world = new World(i,
                 flag,
                 event_message,
-                exprate, droprate, bossdroprate, mesorate, questrate, travelrate, fishingrate);
+                exprate, droprate, bossdroprate, mesorate, questrate, travelrate, fishingrate, mobrate, mobperspawnpoint);
 
         Map<Integer, String> channelInfo = new HashMap<>();
         long bootTime = getCurrentTime();
