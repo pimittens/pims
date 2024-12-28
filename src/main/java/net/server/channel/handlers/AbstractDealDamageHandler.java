@@ -769,7 +769,7 @@ public abstract class AbstractDealDamageHandler extends AbstractPacketHandler {
             Point curPos = p.readPos();
             Point nextPos = p.readPos();
             short delay = p.readShort();
-            System.out.println("delay: " + delay);
+            //System.out.println("delay: " + delay);
             List<Integer> damageLines = new ArrayList<>();
             final Monster monster = chr.getMap().getMonsterByOid(oid);
             if (chr.getBuffEffect(BuffStat.WK_CHARGE) != null) {

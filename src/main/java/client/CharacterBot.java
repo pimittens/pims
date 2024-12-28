@@ -2318,8 +2318,8 @@ public class CharacterBot {
     }
 
     private boolean jobAppropriateEquip(int itemId) {
-        if (ItemConstants.isWeapon(itemId) && !isJobAppropriateWeapon(itemId)) {
-            return false;
+        if (ItemConstants.isWeapon(itemId)) {
+            return isJobAppropriateWeapon(itemId);
         }
         ItemInformationProvider ii = ItemInformationProvider.getInstance();
         int reqJob = ii.getEquipStats(itemId).get("reqJob");
