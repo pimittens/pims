@@ -39,6 +39,7 @@ import tools.DatabaseConnection;
 import tools.PacketCreator;
 import tools.Pair;
 
+import java.awt.*;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -96,6 +97,18 @@ public class HiredMerchant extends AbstractMapObject {
         this.ownerName = owner.getName();
         this.description = desc;
         this.map = owner.getMap();
+    }
+
+    public HiredMerchant(int owner, String ownerName, int x, int y, String desc, int itemId, MapleMap map) {
+        this.setPosition(new Point(x, y));
+        this.start = System.currentTimeMillis();
+        this.ownerId = owner; // owner id should be negative so it won't be associated with an actual character (also used as a flag in a few places), and they should be unique
+        this.channel = 1;
+        this.world = 0;
+        this.itemId = itemId;
+        this.ownerName = ownerName; // these should be unique
+        this.description = desc;
+        this.map = map;
     }
 
     public void broadcastToVisitorsThreadsafe(Packet packet) {
@@ -305,7 +318,7 @@ public class HiredMerchant extends AbstractMapObject {
                     price -= Trade.getFee(price);  // thanks BHB for pointing out trade fees not applying here
 
                     synchronized (sold) {
-                        sold.add(new SoldItem(c.getPlayer().getName(), pItem.getItem().getItemId(), newItem.getQuantity(), price));
+                        sold.add(new SoldItem(c.getPlayer().getName(), pItem.getItem().getItemId(), newItem.getQuantity(), price, pItem.getPrice()));
                     }
 
                     pItem.setBundles((short) (pItem.getBundles() - quantity));
@@ -320,7 +333,7 @@ public class HiredMerchant extends AbstractMapObject {
                     Character owner = Server.getInstance().getWorld(world).getPlayerStorage().getCharacterByName(ownerName);
                     if (owner != null) {
                         owner.addMerchantMesos(price);
-                    } else {
+                    } else if (ownerId >= 0) {
                         try (Connection con = DatabaseConnection.getConnection()) {
                             long merchantMesos = 0;
                             try (PreparedStatement ps = con.prepareStatement("SELECT MerchantMesos FROM characters WHERE id = ?")) {
@@ -516,6 +529,12 @@ public class HiredMerchant extends AbstractMapObject {
         }
     }
 
+    public void clearSoldItems() {
+        synchronized (sold) {
+            sold.clear();
+        }
+    }
+
     public int getOwnerId() {
         return ownerId;
     }
@@ -565,6 +584,16 @@ public class HiredMerchant extends AbstractMapObject {
 
             items.add(item);
             return true;
+        }
+    }
+
+    public void removeItemByID(int item) {
+        synchronized (items) {
+            for (int i = items.size() - 1; i >= 0; i--) {
+                if (items.get(i).getItem().getItemId() == item) {
+                    items.remove(i);
+                }
+            }
         }
     }
 
@@ -659,6 +688,10 @@ public class HiredMerchant extends AbstractMapObject {
     }
 
     public void saveItems(boolean shutdown) throws SQLException {
+        if (ownerId < 0) {
+            return; // don't save market shops
+        }
+
         List<Pair<Item, InventoryType>> itemsWithType = new ArrayList<>();
         List<Short> bundles = new ArrayList<>();
 
@@ -794,15 +827,16 @@ public class HiredMerchant extends AbstractMapObject {
 
     public class SoldItem {
 
-        int itemid, mesos;
+        int itemid, mesos, unitPrice;
         short quantity;
         String buyer;
 
-        public SoldItem(String buyer, int itemid, short quantity, int mesos) {
+        public SoldItem(String buyer, int itemid, short quantity, int mesos, int unitPrice) {
             this.buyer = buyer;
             this.itemid = itemid;
             this.quantity = quantity;
             this.mesos = mesos;
+            this.unitPrice = unitPrice;
         }
 
         public String getBuyer() {
@@ -819,6 +853,10 @@ public class HiredMerchant extends AbstractMapObject {
 
         public int getMesos() {
             return mesos;
+        }
+
+        public int getUnitPrice() {
+            return unitPrice;
         }
     }
 }
