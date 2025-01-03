@@ -31,9 +31,7 @@ CREATE TABLE IF NOT EXISTS `marketequipment` (
 
 CREATE TABLE IF NOT EXISTS `marketitems` (
   `marketitemid` int(10) unsigned NOT NULL AUTO_INCREMENT,
-  `type` tinyint(3) unsigned NOT NULL,
   `itemid` int(11) NOT NULL DEFAULT '0',
-  `inventorytype` int(11) NOT NULL DEFAULT '0',
   `quantity` int(11) NOT NULL DEFAULT '0',
   `marketPrice` int(11) NOT NULL DEFAULT '0',
   `averageSalePrice` int(11) NOT NULL DEFAULT '0',
