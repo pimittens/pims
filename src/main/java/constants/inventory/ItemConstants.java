@@ -377,7 +377,7 @@ public final class ItemConstants {
 
     public static int getItemValue(int itemId, int quantity) {
         ItemInformationProvider ii = ItemInformationProvider.getInstance();
-        return ii.getPrice(itemId, quantity); // todo: store values for special items somewhere, have equips increase/decrease in value when scrolled or depending on slots left
+        return ii.getPrice(itemId, quantity);
     }
 
     public static boolean isCashStore(int itemId) {

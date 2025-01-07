@@ -40,6 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -109,6 +110,10 @@ public class Inventory implements Iterable<Item> {
         } finally {
             lock.unlock();
         }
+    }
+
+    public List<Short> getItemPositions() {
+        return new ArrayList(inventory.keySet());
     }
 
     public Item findById(int itemId) {

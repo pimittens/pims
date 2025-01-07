@@ -10,15 +10,15 @@ public class MarketItem {
     private int marketPrice;
     private int averageSalePrice;
     private int numSold;
-    private boolean isEquip; // the prices for equips are for a clean equip with average stats
+    private final boolean isEquip; // the prices for equips are for a clean equip with average stats
 
-    public MarketItem(int quantity, int marketPrice, int averageSalePrice, int numSold) {
-        //this.itemid = itemid;
+    public MarketItem(int quantity, int marketPrice, int averageSalePrice, int numSold, boolean isEquip) {
         this.quantity = quantity;
         this.previousQuantity = quantity;
         this.marketPrice = marketPrice;
         this.averageSalePrice = averageSalePrice;
         this.numSold = numSold;
+        this.isEquip = isEquip;
     }
 
     public void addQuantity(int amount) {
@@ -34,6 +34,18 @@ public class MarketItem {
 
     public int getMarketPrice() {
         return marketPrice;
+    }
+
+    public int getAverageSalePrice() {
+        return averageSalePrice;
+    }
+
+    public int getNumSold() {
+        return numSold;
+    }
+
+    public boolean isEquip() {
+        return isEquip;
     }
 
     public void updateMarketPrice() {

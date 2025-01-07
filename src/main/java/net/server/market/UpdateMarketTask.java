@@ -6,6 +6,6 @@ public class UpdateMarketTask implements Runnable {
 
     @Override
     public void run() {
-        Server.getInstance().getMarket().updatePrices();
+        Server.getInstance().getMarket().updatePrices(true);
     }
 }

@@ -9,6 +9,7 @@ import client.processor.stat.AssignSPProcessor;
 import constants.inventory.ItemConstants;
 import constants.skills.*;
 import net.PacketProcessor;
+import net.server.Server;
 import net.server.channel.handlers.AbstractDealDamageHandler;
 import net.server.world.Party;
 import org.w3c.dom.ranges.Range;
@@ -39,6 +40,8 @@ public class CharacterBot {
         BOSSING // fight a boss
 
     }
+
+    private static int[] worthlessItems = new int[]{2060000, 2061000, 2070000, 2330000};
 
     private static final int[] lv1to5Maps = {
             104000100, 104000200, 104000300, // lith maps
@@ -2246,10 +2249,14 @@ public class CharacterBot {
     private void gainItem(int itemId, short quantity) {
         if (quantity > 0) {
             InventoryType inventoryType = ItemConstants.getInventoryType(itemId);
-            while (!InventoryManipulator.checkSpace(c, itemId, quantity, "")) {
+            if (!InventoryManipulator.checkSpace(c, itemId, quantity, "")) {
                 // make sure not to give a quantity that can't fit in their inventory or this will get stuck
-                short lowestValueItemPos = getLowestValueItemPos(inventoryType);
-                InventoryManipulator.drop(c, inventoryType, lowestValueItemPos, InventoryManipulator.getQuantity(c, inventoryType, lowestValueItemPos));
+                Iterator<Item> it = getPlayer().getInventory(inventoryType).iterator();
+                Item next;
+                while (!InventoryManipulator.checkSpace(c, itemId, quantity, "") && it.hasNext()) {
+                    next = it.next();
+                    InventoryManipulator.drop(c, inventoryType, next.getPosition(), InventoryManipulator.getQuantity(c, inventoryType, next.getPosition()));
+                }
             }
             InventoryManipulator.addById(c, itemId, quantity);
         } else{
@@ -2262,7 +2269,7 @@ public class CharacterBot {
             return; // check that it actually is an equip
         }
         if (!InventoryManipulator.checkSpace(c, itemId, 1, "")) {
-            InventoryManipulator.drop(c, InventoryType.EQUIP, getLowestValueItemPos(InventoryType.EQUIP), (short) 1);
+            InventoryManipulator.drop(c, InventoryType.EQUIP, (short) 1, (short) 1);
         }
         InventoryManipulator.addById(c, itemId, (short) 1);
         InventoryManipulator.equip(c, InventoryManipulator.getPosition(c, itemId), (short) -11);
@@ -2533,15 +2540,28 @@ public class CharacterBot {
         getPlayer().getInventory(InventoryType.USE).lockInventory();
         getPlayer().getInventory(InventoryType.ETC).lockInventory();
         try {
-            short space, nextPos;
-            ItemInformationProvider ii = ItemInformationProvider.getInstance();
+            //short space, nextPos;
             for (InventoryType type : new InventoryType[]{InventoryType.EQUIP, InventoryType.USE, InventoryType.ETC}) {
-                space = getPlayer().getInventory(type).getNumFreeSlot();
+                /*space = getPlayer().getInventory(type).getNumFreeSlot();
                 while (space < 48) {
                     nextPos = getLowestValueItemPos(type);
-                    getPlayer().gainMeso(ii.getPrice(getPlayer().getInventory(type).getItem(nextPos).getItemId(), getPlayer().getInventory(type).getItem(nextPos).getQuantity()));
+                    if (type.equals(InventoryType.EQUIP)) {
+                        getPlayer().gainMeso(Server.getInstance().getMarket().sellEquip((Equip) getPlayer().getInventory(type).getItem(nextPos)));
+                    } else {
+                        getPlayer().gainMeso(Server.getInstance().getMarket().sellItem(getPlayer().getInventory(type).getItem(nextPos)));
+                    }
                     getPlayer().getInventory(type).removeItem(nextPos);
                     space = getPlayer().getInventory(type).getNumFreeSlot();
+                }*/
+                for (Short pos : getPlayer().getInventory(type).getItemPositions()) {
+                    if (!isWorthlessItem(getPlayer().getInventory(type).getItem(pos).getItemId())) {
+                        if (type.equals(InventoryType.EQUIP)) {
+                            getPlayer().gainMeso(Server.getInstance().getMarket().sellEquip((Equip) getPlayer().getInventory(type).getItem(pos)));
+                        } else {
+                            getPlayer().gainMeso(Server.getInstance().getMarket().sellItem(getPlayer().getInventory(type).getItem(pos)));
+                        }
+                    }
+                    getPlayer().getInventory(type).removeItem(pos);
                 }
             }
         } finally {
@@ -2551,7 +2571,16 @@ public class CharacterBot {
         }
     }
 
-    private short getLowestValueItemPos(InventoryType inventoryType) {
+    private boolean isWorthlessItem(int itemId) {
+        for (int i : worthlessItems) {
+            if (itemId == i) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /*private short getLowestValueItemPos(InventoryType inventoryType) {
         getPlayer().getInventory(inventoryType).lockInventory();
         try {
             int lowestValue = Integer.MAX_VALUE, nextValue;
@@ -2571,7 +2600,7 @@ public class CharacterBot {
         } finally {
             getPlayer().getInventory(inventoryType).unlockInventory();
         }
-    }
+    }*/
 
     private boolean isRangedJob() {
         int jobId = getPlayer().getJob().getId();

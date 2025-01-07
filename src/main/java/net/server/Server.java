@@ -1012,7 +1012,7 @@ public class Server {
         tMan.register(new UpdateFollowerBotsTask(), 200, SECONDS.toMillis(30));
         tMan.register(new BotKPQManagerTask(), MINUTES.toMillis(30), MINUTES.toMillis(5));
         tMan.register(new BotLPQManagerTask(), MINUTES.toMillis(45), MINUTES.toMillis(6));
-        tMan.register(new UpdateMarketTask(), MINUTES.toMillis(1), MINUTES.toMillis(1)); // todo: change to 10 when done testing
+        tMan.register(new UpdateMarketTask(), MINUTES.toMillis(5), MINUTES.toMillis(5)); // todo: change to 10 when done testing
 
         timeLeft = getTimeLeftForNextDay();
         ExpeditionBossLog.resetBossLogTable();
@@ -1938,7 +1938,7 @@ public class Server {
 
     private synchronized void shutdownInternal(boolean restart) {
         bots.logoutAllBots();
-        market.saveItems();
+        market.updatePrices(false);
         log.info("{} the server!", restart ? "Restarting" : "Shutting down");
         if (getWorlds() == null) {
             return;//already shutdown
