@@ -7620,7 +7620,7 @@ public class PacketCreator {
         return p;
     }
 
-    public static InPacket createMagicAttackPacket(AbstractDealDamageHandler.AttackInfo attack) {
+    public static InPacket createMagicAttackPacket(AbstractDealDamageHandler.AttackInfo attack, short delay) {
         final InPacket p = InPacket.create(SendOpcode.CLAIM_AVAILABLE_TIME);
         p.writeByte(0); // skipped
         p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
@@ -7644,9 +7644,15 @@ public class PacketCreator {
         p.writeByte(0); // skipped
         for (int i : attack.targets.keySet()) {
             p.writeInt(i); // oid of the target monster
-            for (int j = 0; j < 14; j++) {
-                p.writeByte(0); // skipped
-            }
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+            p.writeShort(0);
+            p.writeShort(0); // curpos
+            p.writeShort(0);
+            p.writeShort(0); // nextpos
+            p.writeShort(delay); // delay
             for (int k : attack.targets.get(i).damageLines()) {
                 p.writeInt(k); // damage
             }
@@ -7659,7 +7665,7 @@ public class PacketCreator {
         return p;
     }
 
-    public static InPacket createRangedAttackPacket(AbstractDealDamageHandler.AttackInfo attack) {
+    public static InPacket createRangedAttackPacket(AbstractDealDamageHandler.AttackInfo attack, short delay) {
         final InPacket p = InPacket.create(SendOpcode.CLAIM_RESULT);
         p.writeByte(0); // skipped
         p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
@@ -7694,9 +7700,15 @@ public class PacketCreator {
         }
         for (int i : attack.targets.keySet()) {
             p.writeInt(i); // oid of the target monster
-            for (int j = 0; j < 14; j++) {
-                p.writeByte(0); // skipped
-            }
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+            p.writeShort(0);
+            p.writeShort(0); // curpos
+            p.writeShort(0);
+            p.writeShort(0); // nextpos
+            p.writeShort(delay); // delay
             for (int k : attack.targets.get(i).damageLines()) {
                 p.writeInt(k); // damage
             }
@@ -7709,7 +7721,7 @@ public class PacketCreator {
         return p;
     }
 
-    public static InPacket createCloseRangeAttackPacket(AbstractDealDamageHandler.AttackInfo attack) {
+    public static InPacket createCloseRangeAttackPacket(AbstractDealDamageHandler.AttackInfo attack, short delay) {
         final InPacket p = InPacket.create(SendOpcode.REGULAR_ATTACK);
         p.writeByte(0); // skipped
         p.writeByte(attack.numAttackedAndDamage); // num attacked and damage
@@ -7733,9 +7745,15 @@ public class PacketCreator {
         p.writeByte(0); // skipped
         for (int i : attack.targets.keySet()) {
             p.writeInt(i); // oid of the target monster
-            for (int j = 0; j < 14; j++) {
-                p.writeByte(0); // skipped
-            }
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0);
+            p.writeByte(0); // skipped
+            p.writeShort(0);
+            p.writeShort(0); // curpos
+            p.writeShort(0);
+            p.writeShort(0); // nextpos
+            p.writeShort(delay); // delay
             for (int k : attack.targets.get(i).damageLines()) {
                 p.writeInt(k); // damage
             }
