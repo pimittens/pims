@@ -11297,8 +11297,4 @@ public class Character extends AbstractCharacterObject {
         }
         return ret / 100.0;
     }
-
-    public int getWeaponSpeed() {
-        return 4; // todo
-    }
 }

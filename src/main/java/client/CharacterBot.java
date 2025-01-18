@@ -11,11 +11,9 @@ import constants.skills.*;
 import net.PacketProcessor;
 import net.server.channel.handlers.AbstractDealDamageHandler;
 import net.server.world.Party;
-import org.w3c.dom.ranges.Range;
 import server.ItemInformationProvider;
 import server.StatEffect;
 import server.life.Monster;
-import server.life.MonsterDropEntry;
 import server.maps.*;
 import tools.PacketCreator;
 import tools.Randomizer;
@@ -118,7 +116,7 @@ public class CharacterBot {
     };
 
     private static Map<Job, int[][]> skillOrders = new HashMap<>();
-    private static Map<Integer, Integer> skillDelayTimes = new HashMap<>(); // todo: put delay times
+    private static Map<Integer, int[]> skillDelayTimes = new HashMap<>();
 
     private Character following = null;
     //private Foothold foothold;
@@ -292,7 +290,7 @@ public class CharacterBot {
         }
     }
 
-    private int moveBot(short targetX, short targetY, int time) {
+    private int moveBot(short targetX, short targetY, int time) { // todo: better movement
         if (time == 0) {
             return 0;
         }
@@ -448,8 +446,8 @@ public class CharacterBot {
                 }
                 break;
             case FP_MAGE:
-                if (getPlayer().getSkillLevel(FPMage.ELEMENT_AMPLIFICATION) > 0) {
-                    singleTargetAttack = FPMage.ELEMENT_AMPLIFICATION;
+                if (getPlayer().getSkillLevel(FPMage.ELEMENT_COMPOSITION) > 0) {
+                    singleTargetAttack = FPMage.ELEMENT_COMPOSITION;
                 } else {
                     singleTargetAttack = FPWizard.FIRE_ARROW;
                 }
@@ -463,7 +461,7 @@ public class CharacterBot {
                 if (getPlayer().getSkillLevel(FPArchMage.PARALYZE) > 0) {
                     singleTargetAttack = FPArchMage.PARALYZE;
                 } else {
-                    singleTargetAttack = FPMage.ELEMENT_AMPLIFICATION;
+                    singleTargetAttack = FPMage.ELEMENT_COMPOSITION;
                 }
                 if (getPlayer().getSkillLevel(FPArchMage.METEOR_SHOWER) > 0) {
                     mobAttack = FPArchMage.METEOR_SHOWER;
@@ -967,6 +965,10 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createReactorHitPacket(targetReactor.getObjectId(), (short) (facingLeft ? 3 : 2)), (short) 205);
     }
 
+    private int getAttackSpeed() {
+        return 2; // todo: calculate attack speed based on weapon and buffs
+    }
+
     private void attack(int time) {
         if (targetMonster.isBoss()) {
             doAttack(time, singleTargetAttack);
@@ -978,7 +980,7 @@ public class CharacterBot {
     private void doAttack(int time, int skillId) { // todo: combo orbs, arrow bomb, shadow partner, paladin charges, bucc stuff, are star att bonuses being use?
         if (skillId == -1) {
             doRegularAttack();
-            delay = 500 - time; // todo: accurate delay
+            delay = skillDelayTimes.get(skillId)[getAttackSpeed()] - time; // todo: accurate delay
             return;
         }
         List<Monster> targets = new ArrayList<>();
@@ -1007,13 +1009,14 @@ public class CharacterBot {
         attack.numDamage = Math.max(effect.getAttackCount(), effect.getBulletCount());
         attack.numAttackedAndDamage = attack.numAttacked * 16 + attack.numDamage;
         attack.targets = new HashMap<>();
-        attack.speed = getPlayer().getWeaponSpeed();
+        attack.speed = getAttackSpeed() + 2;
         attack.display = 0; // todo: if using any attacks that use diplay update this
         attack.position = getPlayer().getPosition();
         attack.stance = (!facingLeft || skillId == Bowmaster.HURRICANE || skillId == Corsair.RAPID_FIRE) ? 0 : -128;
         attack.direction = getDirection(skillId);
         attack.rangedirection = ((skillId == Bowmaster.HURRICANE || skillId == Corsair.RAPID_FIRE) && facingLeft) ? -128 : 0; // todo: figure out what this does, seems to increment with each skill usage
         List<Integer> damageNumbers;
+        int attackDelay = skillDelayTimes.get(skillId)[getAttackSpeed()];
         if (effect.getMatk() > 0) {
             attack.magic = true;
             for (Monster m : targets) {
@@ -1021,9 +1024,9 @@ public class CharacterBot {
                 for (int i = 0; i < attack.numDamage; i++) {
                     damageNumbers.add(calcMagicDamage(skillId, m));
                 }
-                attack.targets.put(m.getObjectId(), new AbstractDealDamageHandler.AttackTarget((short) 100, damageNumbers)); // todo: delay
+                attack.targets.put(m.getObjectId(), new AbstractDealDamageHandler.AttackTarget((short) attackDelay, damageNumbers)); // todo: delay
             }
-            c.handlePacket(PacketCreator.createMagicAttackPacket(attack), (short) 46);
+            c.handlePacket(PacketCreator.createMagicAttackPacket(attack, (short) attackDelay), (short) 46);
         } else if (isRangedJob()) {
             rechargeProjectiles();
             attack.ranged = true;
@@ -1032,20 +1035,20 @@ public class CharacterBot {
                 for (int i = 0; i < attack.numDamage; i++) {
                     damageNumbers.add(calcRangedDamage(skillId, m));
                 }
-                attack.targets.put(m.getObjectId(), new AbstractDealDamageHandler.AttackTarget((short) 100, damageNumbers));
+                attack.targets.put(m.getObjectId(), new AbstractDealDamageHandler.AttackTarget((short) attackDelay, damageNumbers));
             }
-            c.handlePacket(PacketCreator.createRangedAttackPacket(attack), (short) 45);
+            c.handlePacket(PacketCreator.createRangedAttackPacket(attack, (short) attackDelay), (short) 45);
         } else {
             for (Monster m : targets) {
                 damageNumbers = new ArrayList<>();
                 for (int i = 0; i < attack.numDamage; i++) {
                     damageNumbers.add(calcCloseRangeDamage(skillId, m));
                 }
-                attack.targets.put(m.getObjectId(), new AbstractDealDamageHandler.AttackTarget((short) 100, damageNumbers));
+                attack.targets.put(m.getObjectId(), new AbstractDealDamageHandler.AttackTarget((short) attackDelay, damageNumbers));
             }
-            c.handlePacket(PacketCreator.createCloseRangeAttackPacket(attack), (short) 44);
+            c.handlePacket(PacketCreator.createCloseRangeAttackPacket(attack, (short) attackDelay), (short) 44);
         }
-        delay = 500 - time; // todo: accurate delay
+        delay = attackDelay - time;
     }
 
     private int calcMagicDamage(int skillId, Monster target) {
@@ -3482,8 +3485,69 @@ public class CharacterBot {
         skillOrders.putIfAbsent(Job.BUCCANEER, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.CORSAIR, new int[][]{}); // todo
 
-        // todo: delay times, decide what to do for different speeds
-        // skillDelayTimes.putIfAbsent(-1, );
+        // attack speed ranges from 2 to 9, so the first value in the array corresponds to 2
+
+        // regular attack
+        skillDelayTimes.putIfAbsent(-1, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
+
+        // warrior skills
+        skillDelayTimes.putIfAbsent(Warrior.POWER_STRIKE, new int[]{570, 630, 660, 720, 750, 810, 870, 900}); // these are the polearm/spear values
+        skillDelayTimes.putIfAbsent(Warrior.SLASH_BLAST, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
+        skillDelayTimes.putIfAbsent(Hero.BRANDISH, new int[]{630, 690, 750, 810, 840, 900, 960, 960});
+        skillDelayTimes.putIfAbsent(WhiteKnight.CHARGE_BLOW, new int[]{600, 660, 720, 750, 810, 870, 900, 900});
+        skillDelayTimes.putIfAbsent(Paladin.BLAST, new int[]{630, 690, 750, 810, 840, 900, 960, 960});
+        skillDelayTimes.putIfAbsent(DragonKnight.SPEAR_CRUSHER, new int[]{810, 870, 930, 990, 1050, 1140, 1200, 1260});
+        skillDelayTimes.putIfAbsent(DragonKnight.SPEAR_DRAGON_FURY, new int[]{600, 660, 720, 750, 810, 870, 900, 960});
+
+        // wizard skills, note that these only have 3 speeds for booster 2, booster 1, and no booster
+        skillDelayTimes.putIfAbsent(Magician.ENERGY_BOLT, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(Magician.MAGIC_CLAW, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(FPWizard.FIRE_ARROW, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(FPMage.ELEMENT_COMPOSITION, new int[]{810, 870, 900});
+        skillDelayTimes.putIfAbsent(FPMage.EXPLOSION, new int[]{1500, 1620, 1710});
+        skillDelayTimes.putIfAbsent(FPArchMage.PARALYZE, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(FPArchMage.METEOR_SHOWER, new int[]{3060, 3270, 3480});
+        skillDelayTimes.putIfAbsent(ILWizard.COLD_BEAM, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(ILWizard.THUNDERBOLT, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(ILMage.ICE_STRIKE, new int[]{930, 990, 1050});
+        skillDelayTimes.putIfAbsent(ILMage.ELEMENT_COMPOSITION, new int[]{810, 870, 900});
+        skillDelayTimes.putIfAbsent(ILArchMage.CHAIN_LIGHTNING, new int[]{690, 750, 780});
+        skillDelayTimes.putIfAbsent(ILArchMage.BLIZZARD, new int[]{3060, 3270, 3480});
+        skillDelayTimes.putIfAbsent(Cleric.HOLY_ARROW, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(Priest.SHINING_RAY, new int[]{930, 990, 1050});
+        skillDelayTimes.putIfAbsent(Bishop.ANGEL_RAY, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(Bishop.GENESIS, new int[]{2700, 2700, 2700});
+
+        // bowman skills
+        skillDelayTimes.putIfAbsent(Archer.ARROW_BLOW, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(Archer.DOUBLE_SHOT, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(Hunter.ARROW_BOMB, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(Ranger.ARROW_RAIN, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(Ranger.STRAFE, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(Bowmaster.HURRICANE, new int[]{330, 330, 330, 330, 330, 330, 330, 330}); // todo: not sure how this one works
+        skillDelayTimes.putIfAbsent(Crossbowman.IRON_ARROW, new int[]{630, 690, 720, 780, 870, 870, 870, 870});
+        skillDelayTimes.putIfAbsent(Sniper.STRAFE, new int[]{630, 690, 720, 780, 870, 870, 870, 870});
+        skillDelayTimes.putIfAbsent(Sniper.ARROW_ERUPTION, new int[]{630, 690, 720, 780, 870, 870, 870, 870});
+        skillDelayTimes.putIfAbsent(Marksman.PIERCING_ARROW, new int[]{630, 690, 720, 780, 870, 870, 870, 870});
+
+        // thief skills
+        skillDelayTimes.putIfAbsent(Rogue.LUCKY_SEVEN, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(Rogue.DOUBLE_STAB, new int[]{600, 660, 720, 750, 750, 750, 750, 750});
+        skillDelayTimes.putIfAbsent(Hermit.AVENGER, new int[]{630, 690, 750, 810, 840, 840, 840, 840});
+        skillDelayTimes.putIfAbsent(NightLord.TRIPLE_THROW, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(Bandit.SAVAGE_BLOW, new int[]{720, 780, 840, 900, 900, 900, 900, 900});
+        skillDelayTimes.putIfAbsent(ChiefBandit.BAND_OF_THIEVES, new int[]{600, 660, 720, 750, 750, 750, 750, 750});
+        skillDelayTimes.putIfAbsent(Shadower.BOOMERANG_STEP, new int[]{2640, 2700, 2760, 2820, 2820, 2820, 2820, 2820});
+
+        // pirate skills
+        skillDelayTimes.putIfAbsent(Pirate.FLASH_FIST, new int[]{450, 510, 540, 570, 600, 600, 600, 600});
+        skillDelayTimes.putIfAbsent(Pirate.DOUBLE_SHOT, new int[]{390, 420, 450, 480, 480, 480, 480, 480});
+        skillDelayTimes.putIfAbsent(Pirate.SOMERSAULT_KICK, new int[]{660, 720, 780, 840, 840, 840, 840, 840});
+        skillDelayTimes.putIfAbsent(Gunslinger.INVISIBLE_SHOT, new int[]{630, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(Corsair.RAPID_FIRE, new int[]{330, 330, 330, 330, 330, 330, 330, 330}); // todo: not sure how this one works
+        skillDelayTimes.putIfAbsent(Brawler.DOUBLE_UPPERCUT, new int[]{3060, 3120, 3210, 3270, 3330, 3330, 3330, 3330});
+        skillDelayTimes.putIfAbsent(Buccaneer.BARRAGE, new int[]{5070, 5220, 5370, 5520, 5670, 5670, 5670, 5670});
+        skillDelayTimes.putIfAbsent(Buccaneer.DRAGON_STRIKE, new int[]{3330, 3420, 3510, 3600, 3690, 3690, 3690, 3690});
     }
 
     public static boolean containsItemId(List<MapObject> items, int itemId) {
