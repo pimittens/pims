@@ -79,7 +79,7 @@ public final class ScrollHandler extends AbstractPacketHandler {
                 if (ItemConstants.isCleanSlate(scroll.getItemId()) && !ii.canUseCleanSlate(toScroll)) {
                     announceCannotScroll(c, legendarySpirit);
                     return;
-                } else if (!ItemConstants.isModifierScroll(scroll.getItemId()) && toScroll.getUpgradeSlots() < 1) {
+                } else if (!ItemConstants.isModifierScroll(scroll.getItemId()) && !ItemConstants.isCleanSlate(scroll.getItemId()) && toScroll.getUpgradeSlots() < 1) {
                     announceCannotScroll(c, legendarySpirit);   // thanks onechord for noticing zero upgrade slots freezing Legendary Scroll UI
                     return;
                 }
@@ -180,7 +180,7 @@ public final class ScrollHandler extends AbstractPacketHandler {
 
     private static void announceCannotScroll(Client c, boolean legendarySpirit) {
         if (legendarySpirit) {
-            c.sendPacket(PacketCreator.getScrollEffect(c.getPlayer().getId(), Equip.ScrollResult.FAIL, false, false));
+            c.sendPacket(PacketCreator.legendarySpiritCannotScroll(c.getPlayer().getId()));
         } else {
             c.sendPacket(PacketCreator.getInventoryFull());
         }
