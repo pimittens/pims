@@ -2504,16 +2504,6 @@ public class PacketCreator {
         return p;
     }
 
-    public static Packet legendarySpiritCannotScroll(int chr) { // suggested by teto
-        OutPacket p = OutPacket.create(SendOpcode.SHOW_SCROLL_EFFECT);
-        p.writeInt(chr);
-        p.writeByte(-1); // CUIEnchantDlg::SetResult => CUtilDlg::Notice("You cannot use a Scroll with this item.");
-        p.writeBool(false);
-        p.writeBool(true); // bEnchantSkill
-        p.writeBool(false);
-        return p;
-    }
-
     public static Packet removePlayerFromMap(int chrId) {
         OutPacket p = OutPacket.create(SendOpcode.REMOVE_PLAYER_FROM_MAP);
         p.writeInt(chrId);
