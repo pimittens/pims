@@ -6,19 +6,11 @@ public class MarketItem {
 
     //private final int itemid;
     private int quantity;
-    private int previousQuantity;
-    private int marketPrice;
-    private int averageSalePrice;
-    private int numSold;
-    private final boolean isEquip; // the prices for equips are for a clean equip with average stats
+    private final int basePrice;
 
-    public MarketItem(int quantity, int marketPrice, int averageSalePrice, int numSold, boolean isEquip) {
+    public MarketItem(int quantity, int basePrice) {
         this.quantity = quantity;
-        this.previousQuantity = quantity;
-        this.marketPrice = marketPrice;
-        this.averageSalePrice = averageSalePrice;
-        this.numSold = numSold;
-        this.isEquip = isEquip;
+        this.basePrice = basePrice;
     }
 
     public void addQuantity(int amount) {
@@ -32,33 +24,17 @@ public class MarketItem {
         return quantity;
     }
 
+    public int getBasePrice() {
+        return basePrice;
+    }
+
     public int getMarketPrice() {
-        return marketPrice;
-    }
-
-    public int getAverageSalePrice() {
-        return averageSalePrice;
-    }
-
-    public int getNumSold() {
-        return numSold;
-    }
-
-    public boolean isEquip() {
-        return isEquip;
-    }
-
-    public void updateMarketPrice() {
-        marketPrice = (int) (averageSalePrice * (previousQuantity / (double) quantity));
-        previousQuantity = quantity;
-    }
-
-    public void itemSold(int price, int quantity) {
-        averageSalePrice = (numSold * averageSalePrice + price * quantity) / (numSold + quantity);
-        numSold += quantity;
-        this.quantity -= quantity;
-        if (quantity > 0) {
-            updateMarketPrice();
+        if (quantity == 0) {
+            return basePrice * 10;
         }
+        if (quantity >= 1000) {
+            return basePrice / 2;
+        }
+        return (int) ((-9 * Math.sqrt((double) quantity / 4000) + 6) * basePrice); // todo: maybe add random fluctuations
     }
 }

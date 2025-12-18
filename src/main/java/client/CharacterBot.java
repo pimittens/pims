@@ -32,14 +32,12 @@ public class CharacterBot {
         WAITING, // no mode decided
         SOCIALIZING, // hang out in henesys
         GRINDING, // pick a map and kill monsters
-        MANAGE_INVENTORY, // check if any equips are better than what they're using and sell lowest value items to make space
+        MANAGE_INVENTORY, // check if any equips are better than what they're using and sell items to make space
         PQ, // do a pq
         LEAVE_PARTY, // leave party after pq
         BOSSING // fight a boss
 
     }
-
-    private static int[] worthlessItems = new int[]{2060000, 2061000, 2070000, 2330000};
 
     private static final int[] lv1to5Maps = {
             104000100, 104000200, 104000300, // lith maps
@@ -118,11 +116,13 @@ public class CharacterBot {
             101030109 // tomb 5
     };
 
-    private static Map<Job, int[][]> skillOrders = new HashMap<>();
-    private static Map<Integer, int[]> skillDelayTimes = new HashMap<>();
+    private static final Map<Job, int[][]> skillOrders = new HashMap<>();
+    private static final Map<Integer, int[]> skillDelayTimes = new HashMap<>();
 
     private Character following = null;
     //private Foothold foothold;
+
+    private boolean automate = false;
     private Client c;
     private Monster targetMonster;
     private MapObject targetItem;
@@ -173,6 +173,16 @@ public class CharacterBot {
         decideAttackSkills();
         putBuffSkills();
         chooseMode();
+    }
+
+    public void initialize(Client client) {
+        // for automate
+        c = client;
+        automate = true;
+        level = getPlayer().getLevel();
+        decideAttackSkills();
+        putBuffSkills();
+        currentMode = Mode.GRINDING;
     }
 
     public void setLoggedOut() {
@@ -234,8 +244,8 @@ public class CharacterBot {
         switch (currentMode) {
             case MANAGE_INVENTORY -> {
                 checkEquips();
-                // todo: put items in fm shop
-                createInventorySpace();
+                sellItems();
+                tryUpgrade();
                 chooseMode();
             }
             case LEAVE_PARTY -> leaveParty();
@@ -252,13 +262,13 @@ public class CharacterBot {
         //System.out.println(currentMode);
         getPlayer().setHp(getPlayer().getMaxHp());
         getPlayer().setMp(getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
-        if (getPlayer().getLevel() > level || getPlayer().getRemainingSp() > 0) {
+        if (!automate && (getPlayer().getLevel() > level || getPlayer().getRemainingSp() > 0)) {
             levelup();
             decideAttackSkills();
             putBuffSkills();
             return;
         }
-        if (!currentMode.equals(Mode.PQ) && getPlayer().getMapId() != following.getMapId()) {
+        if (!automate && (!currentMode.equals(Mode.PQ) && getPlayer().getMapId() != following.getMapId())) {
             changeMap(following.getMap(), following.getMap().findClosestPortal(following.getPosition()));
             return;
         }
@@ -284,7 +294,7 @@ public class CharacterBot {
         switch (currentMode) {
             case MANAGE_INVENTORY -> {
                 checkEquips();
-                createInventorySpace();
+                sellItems();
                 chooseMode();
             }
             case WAITING, LEAVE_PARTY -> currentMode = Mode.GRINDING; // followers don't need to do these
@@ -980,7 +990,7 @@ public class CharacterBot {
         }
     }
 
-    private void doAttack(int time, int skillId) { // todo: combo orbs, arrow bomb, shadow partner, paladin charges, bucc stuff, are star att bonuses being use?
+    private void doAttack(int time, int skillId) { // todo: combo orbs, arrow bomb, shadow partner, paladin charges, bucc stuff, are star att bonuses being used?
         if (skillId == -1) {
             doRegularAttack();
             delay = skillDelayTimes.get(skillId)[getAttackSpeed()] - time; // todo: accurate delay
@@ -2538,7 +2548,7 @@ public class CharacterBot {
         return 0;
     }
 
-    private void createInventorySpace() {
+    private void sellItems() {
         getPlayer().getInventory(InventoryType.EQUIP).lockInventory();
         getPlayer().getInventory(InventoryType.USE).lockInventory();
         getPlayer().getInventory(InventoryType.ETC).lockInventory();
@@ -2557,12 +2567,10 @@ public class CharacterBot {
                     space = getPlayer().getInventory(type).getNumFreeSlot();
                 }*/
                 for (Short pos : getPlayer().getInventory(type).getItemPositions()) {
-                    if (!isWorthlessItem(getPlayer().getInventory(type).getItem(pos).getItemId())) {
-                        if (type.equals(InventoryType.EQUIP)) {
-                            getPlayer().gainMeso(Server.getInstance().getMarket().sellEquip((Equip) getPlayer().getInventory(type).getItem(pos)));
-                        } else {
-                            getPlayer().gainMeso(Server.getInstance().getMarket().sellItem(getPlayer().getInventory(type).getItem(pos)));
-                        }
+                    if (type.equals(InventoryType.EQUIP)) {
+                        getPlayer().gainMeso(Server.getInstance().getMarket().sellEquip((Equip) getPlayer().getInventory(type).getItem(pos)));
+                    } else {
+                        getPlayer().gainMeso(Server.getInstance().getMarket().sellItem(getPlayer().getInventory(type).getItem(pos)));
                     }
                     getPlayer().getInventory(type).removeItem(pos);
                 }
@@ -2574,13 +2582,14 @@ public class CharacterBot {
         }
     }
 
-    private boolean isWorthlessItem(int itemId) {
-        for (int i : worthlessItems) {
-            if (itemId == i) {
-                return true;
-            }
-        }
-        return false;
+    private void tryUpgrade() {
+        // try to upgrade current equips
+        // todo
+    }
+
+    private short getWorstEquip() {
+        // todo
+        return 0;
     }
 
     /*private short getLowestValueItemPos(InventoryType inventoryType) {

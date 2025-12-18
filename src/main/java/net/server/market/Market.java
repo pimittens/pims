@@ -4,6 +4,7 @@ import client.inventory.Equip;
 import client.inventory.Item;
 import constants.inventory.ItemConstants;
 import net.server.Server;
+import server.ItemInformationProvider;
 import server.maps.HiredMerchant;
 import server.maps.MapleMap;
 import server.maps.PlayerShopItem;
@@ -46,18 +47,14 @@ public class Market {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         itemId = rs.getInt("itemid");
-                        items.put(itemId, new MarketItem(rs.getInt("quantity"), rs.getInt("marketPrice"), rs.getInt("averageSalePrice"), rs.getInt("numSold"), ItemConstants.isEquipment(itemId)));
+                        items.put(itemId, new MarketItem(rs.getInt("quantity"), rs.getInt("basePrice")));
                     }
                 }
             }
             try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `marketequipment`")) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        itemId = rs.getInt("itemid");
                         equips.add((loadMarketEquipFromResultSet(rs)));
-                        if (!items.containsKey(itemId)) {
-                            items.put(itemId, new MarketItem(rs.getInt("quantity"), rs.getInt("marketPrice"), rs.getInt("averageSalePrice"), rs.getInt("numSold"), true));
-                        }
                     }
                 }
             }
@@ -72,27 +69,15 @@ public class Market {
     private void saveItems() {
         lock.lock();
         try (Connection con = DatabaseConnection.getConnection()) {
-            StringBuilder query = new StringBuilder();
-            query.append("DELETE FROM `marketitems`");
 
-            try (PreparedStatement ps = con.prepareStatement(query.toString())) {
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM `marketequipment`")) {
                 ps.executeUpdate();
             }
 
-            query = new StringBuilder();
-            query.append("DELETE FROM `marketequipment`");
-
-            try (PreparedStatement ps = con.prepareStatement(query.toString())) {
-                ps.executeUpdate();
-            }
-
-            try (PreparedStatement psItem = con.prepareStatement("INSERT INTO `marketitems` VALUES (DEFAULT, ?, ?, ?, ?, ?)")) {
+            try (PreparedStatement psItem = con.prepareStatement("UPDATE `marketitems` SET quantity = ? WHERE itemid = ?")) {
                 for (int i : items.keySet()) {
-                    psItem.setInt(1, i);
                     psItem.setInt(2, items.get(i).getQuantity());
-                    psItem.setInt(3, items.get(i).getMarketPrice());
-                    psItem.setInt(4, items.get(i).getAverageSalePrice());
-                    psItem.setInt(5, items.get(i).getNumSold());
+                    psItem.setInt(1, i);
                     psItem.executeUpdate();
                 }
             }
@@ -201,10 +186,7 @@ public class Market {
                             break;
                         }
                         nextId = itemIds.next();
-                        while (itemIds.hasNext() && items.get(nextId).isEquip()) {
-                            nextId = itemIds.next();
-                        }
-                        if (!items.get(nextId).isEquip() && items.get(nextId).getQuantity() > 0) {
+                        if (items.get(nextId).getQuantity() > 0) {
                             merchant.addItem(new PlayerShopItem(new Item(nextId, (short) 1, (short) 1), ItemConstants.isRechargeable(nextId) ? 1 : (short) Math.min(1000, items.get(nextId).getQuantity()), items.get(nextId).getMarketPrice()));
                         }
                     }
@@ -214,7 +196,7 @@ public class Market {
                             break;
                         }
                         next = equips.removeFirst();
-                        merchant.addItem(new PlayerShopItem(next, (short) 1, items.get(next.getItemId()).getMarketPrice()));
+                        merchant.addItem(new PlayerShopItem(next, (short) 1, getEquipPrice(next)));
                     }
                 }
             }
@@ -232,15 +214,15 @@ public class Market {
      * @param item the item to sell
      * @return the market price of the item
      */
-    public int sellItem(Item item) { // todo: don't let bots sell certain worthless items, and for rechargable items the quantity here should be 1
+    public int sellItem(Item item) {
         lock.lock();
         try {
             if (items.containsKey(item.getItemId())) {
-                items.get(item.getItemId()).addQuantity(item.getQuantity());
-            } else {
-                items.put(item.getItemId(), new MarketItem(item.getQuantity(), ItemConstants.getItemValue(item.getItemId(), item.getQuantity()), 0, 0, false));
+                int quantity = ItemConstants.isRechargeable(item.getItemId()) ? 1 : item.getQuantity();
+                items.get(item.getItemId()).addQuantity(quantity);
+                return items.get(item.getItemId()).getBasePrice() * quantity / 2; // minimum possible price
             }
-            return items.get(item.getItemId()).getMarketPrice() * item.getQuantity();
+            return 0;
         } finally {
             lock.unlock();
         }
@@ -255,12 +237,7 @@ public class Market {
         lock.lock();
         try {
             equips.add((Equip) equip.copy());
-            if (items.containsKey(equip.getItemId())) {
-                items.get(equip.getItemId()).addQuantity(1);
-            } else {
-                items.put(equip.getItemId(), new MarketItem(1, ItemConstants.getItemValue(equip.getItemId(), 1), 0, 0, true));
-            }
-            return items.get(equip.getItemId()).getMarketPrice();
+            return 100000;
         } finally {
             lock.unlock();
         }
@@ -286,18 +263,16 @@ public class Market {
                         itemIds.add(item.getItemId());
                     }
                 }
-                int quantity, price;
+                int quantity;
                 for (Integer id : itemIds) {
                     quantity = 0;
-                    price = 0;
                     for (HiredMerchant.SoldItem item : soldItems) {
                         if (item.getItemId() == id) {
-                            price = item.getUnitPrice();
                             quantity += item.getQuantity();
                         }
                     }
                     if (items.containsKey(id)) {
-                        items.get(id).itemSold(price, quantity);
+                        items.get(id).addQuantity(-quantity);
                     }
                 }
                 merchant.clearSoldItems();
@@ -314,7 +289,6 @@ public class Market {
 
     private static Equip loadMarketEquipFromResultSet(ResultSet rs) throws SQLException {
         Equip equip = new Equip(rs.getInt("itemid"), (short) 0);
-        equip.setQuantity((short) rs.getInt("quantity"));
         equip.setAcc((short) rs.getInt("acc"));
         equip.setAvoid((short) rs.getInt("avoid"));
         equip.setDex((short) rs.getInt("dex"));
@@ -339,5 +313,22 @@ public class Market {
         equip.setQuantity((short) 1);
 
         return equip;
+    }
+
+    private static int getEquipPrice(Equip eq) {
+        ItemInformationProvider ii = ItemInformationProvider.getInstance();
+        int ret = ii.getEquipLevelReq(eq.getItemId()) * 1000;
+        int statDiff = eq.getStr() + eq.getDex() + eq.getInt() + eq.getLuk() + eq.getMatk() -
+                ii.getEquipStats(eq.getItemId()).get("incSTR") -
+                ii.getEquipStats(eq.getItemId()).get("incDEX") -
+                ii.getEquipStats(eq.getItemId()).get("incINT") -
+                ii.getEquipStats(eq.getItemId()).get("incLUK") -
+                ii.getEquipStats(eq.getItemId()).get("incMAD");
+        int attDiff = eq.getWatk() - ii.getEquipStats(eq.getItemId()).get("incPAD");
+        double multiplier = Math.pow(2, statDiff / 10.0) * Math.pow(10, attDiff / 10.0);
+        if (multiplier >= (double) Integer.MAX_VALUE / ret) {
+            return Integer.MAX_VALUE;
+        }
+        return (int) (ret * multiplier);
     }
 }

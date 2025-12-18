@@ -25,6 +25,7 @@ package client.command;
 
 import client.Client;
 import client.command.commands.gm0.AddFollowerCommand;
+import client.command.commands.gm0.AutomateCommand;
 import client.command.commands.gm0.ChangeLanguageCommand;
 import client.command.commands.gm0.DismissFollowerCommand;
 import client.command.commands.gm0.DisposeCommand;
@@ -380,6 +381,7 @@ public class CommandsExecutor {
         addCommand("follower", AddFollowerCommand.class);
         addCommand("party", JoinPartyCommand.class);
         addCommand("dismiss", DismissFollowerCommand.class);
+        addCommand("automate", AutomateCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }
