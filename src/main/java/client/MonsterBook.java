@@ -135,6 +135,19 @@ public final class MonsterBook {
         }
     }
 
+    public int getCompletion() {
+        int completion = 0; // total is 343 cards and 5 levels each so 1715
+        lock.lock();
+        try {
+            for (int i : cards.keySet()) {
+                completion += cards.get(i);
+            }
+        } finally {
+            lock.unlock();
+        }
+        return completion;
+    }
+
     public int getNormalCard() {
         lock.lock();
         try {

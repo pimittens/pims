@@ -561,6 +561,50 @@ public class AbstractPlayerInteraction {
         return evolved;
     }
 
+    public void gainMonsterBookMedal(int id) {
+        Item item;
+
+        if (!InventoryManipulator.checkSpace(c, id, 1, "")) {
+            c.getPlayer().dropMessage(1, "Your inventory is full. Please remove an item from your " + ItemConstants.getInventoryType(id).name() + " inventory.");
+            return;
+        }
+
+        int completion = c.getPlayer().getMonsterBook().getCompletion();
+
+        short allStat = (short) (1000 * ((double) completion / 1715)), hpmp = (short) (10000 * ((double) completion / 1715)), att = (short) (100 * ((double) completion / 1715)); // todo:
+
+        ItemInformationProvider ii = ItemInformationProvider.getInstance();
+
+        if (ItemConstants.getInventoryType(id).equals(InventoryType.EQUIP)) {
+            item = ii.getEquipById(id);
+
+            if (item != null) {
+                Equip it = (Equip) item;
+                it.setUpgradeSlots(0);
+                it.setStr(allStat);
+                it.setDex(allStat);
+                it.setInt(allStat);
+                it.setLuk(allStat);
+                it.setWatk(att);
+                it.setMatk(att);
+                it.setHp(hpmp);
+                it.setMp(hpmp);
+                it.setAcc((short) 0);
+                it.setAvoid((short) 0);
+                it.setHands((short) 0);
+                it.setJump((short) 0);
+                it.setSpeed((short) 0);
+                it.setWdef((short) 0);
+                it.setMdef((short) 0);
+            }
+        } else {
+            return; // must be an equip
+        }
+
+        InventoryManipulator.addFromDrop(c, item, false, -1);
+        c.sendPacket(PacketCreator.getShowItemGain(id, (short) 1, true));
+    }
+
     public void gainItem(int id, short quantity) {
         gainItem(id, quantity, false, true);
     }
