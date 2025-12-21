@@ -387,6 +387,34 @@ public class CharacterBot {
 
     private void decideAttackSkills() {
         switch (getPlayer().getJob()) {
+            case DAWNWARRIOR1:
+                if (getPlayer().getSkillLevel(DawnWarrior.POWER_STRIKE) > 0) {
+                    singleTargetAttack = DawnWarrior.POWER_STRIKE;
+                }
+                if (getPlayer().getSkillLevel(DawnWarrior.SLASH_BLAST) > 0) {
+                    mobAttack = DawnWarrior.SLASH_BLAST;
+                }
+                break;
+            case DAWNWARRIOR2:
+                singleTargetAttack = DawnWarrior.POWER_STRIKE;
+                if (getPlayer().getSkillLevel(DawnWarrior.SOUL_BLADE) > 0) {
+                    mobAttack = DawnWarrior.SOUL_BLADE;
+                } else {
+                    mobAttack = DawnWarrior.SLASH_BLAST;
+                }
+                break;
+            case DAWNWARRIOR3:
+                if (getPlayer().getSkillLevel(DawnWarrior.BRANDISH) > 0) {
+                    singleTargetAttack = DawnWarrior.BRANDISH;
+                } else {
+                    singleTargetAttack = DawnWarrior.POWER_STRIKE;
+                }
+                if (getPlayer().getSkillLevel(DawnWarrior.SOUL_DRIVER) > 0) {
+                    mobAttack = DawnWarrior.SOUL_DRIVER;
+                } else {
+                    mobAttack = DawnWarrior.SOUL_BLADE;
+                }
+                break;
             case WARRIOR:
             case FIGHTER:
             case PAGE:
@@ -439,6 +467,38 @@ public class CharacterBot {
             case DARKKNIGHT:
                 singleTargetAttack = DragonKnight.SPEAR_CRUSHER;
                 mobAttack = DragonKnight.SPEAR_DRAGON_FURY;
+                break;
+            case BLAZEWIZARD1:
+                if (getPlayer().getSkillLevel(BlazeWizard.MAGIC_CLAW) > 0) {
+                    singleTargetAttack = BlazeWizard.MAGIC_CLAW;
+                    mobAttack = BlazeWizard.MAGIC_CLAW;
+                }
+                break;
+            case BLAZEWIZARD2:
+                if (getPlayer().getSkillLevel(BlazeWizard.FIRE_ARROW) > 0) {
+                    singleTargetAttack = BlazeWizard.FIRE_ARROW;
+                } else {
+                    singleTargetAttack = BlazeWizard.MAGIC_CLAW;
+                }
+                if (getPlayer().getSkillLevel(BlazeWizard.FIRE_PILLAR) > 0) {
+                    mobAttack = BlazeWizard.FIRE_PILLAR;
+                } else {
+                    mobAttack = BlazeWizard.MAGIC_CLAW;
+                }
+                break;
+            case BLAZEWIZARD3:
+                if (getPlayer().getSkillLevel(BlazeWizard.FIRE_STRIKE) > 0) {
+                    singleTargetAttack = BlazeWizard.FIRE_STRIKE;
+                } else {
+                    singleTargetAttack = BlazeWizard.FIRE_ARROW;
+                }
+                if (getPlayer().getSkillLevel(BlazeWizard.METEOR_SHOWER) > 0) {
+                    mobAttack = BlazeWizard.METEOR_SHOWER;
+                } else if (getPlayer().getSkillLevel(BlazeWizard.FLAME_GEAR) > 0) {
+                    mobAttack = BlazeWizard.FLAME_GEAR;
+                } else {
+                    mobAttack = BlazeWizard.FIRE_PILLAR;
+                }
                 break;
             case MAGICIAN:
                 if (getPlayer().getSkillLevel(Magician.MAGIC_CLAW) > 0) {
@@ -548,6 +608,27 @@ public class CharacterBot {
                     singleTargetAttack = Priest.SHINING_RAY;
                 }
                 break;
+            case WINDARCHER1:
+            case WINDARCHER2:
+                if (getPlayer().getSkillLevel(WindArcher.DOUBLE_SHOT) > 0) {
+                    singleTargetAttack = WindArcher.DOUBLE_SHOT;
+                    mobAttack = WindArcher.DOUBLE_SHOT;
+                }
+                break;
+            case WINDARCHER3:
+                if (getPlayer().getSkillLevel(WindArcher.HURRICANE) > 0) {
+                    singleTargetAttack = WindArcher.HURRICANE;
+                } else if (getPlayer().getSkillLevel(WindArcher.STRAFE) > 0) {
+                    singleTargetAttack = WindArcher.STRAFE;
+                } else {
+                    singleTargetAttack = WindArcher.DOUBLE_SHOT;
+                }
+                if (getPlayer().getSkillLevel(WindArcher.ARROW_RAIN) > 0) {
+                    mobAttack = WindArcher.ARROW_RAIN;
+                } else {
+                    mobAttack = WindArcher.DOUBLE_SHOT;
+                }
+                break;
             case BOWMAN:
                 if (getPlayer().getSkillLevel(Archer.DOUBLE_SHOT) > 0) {
                     singleTargetAttack = Archer.DOUBLE_SHOT;
@@ -613,6 +694,32 @@ public class CharacterBot {
                     mobAttack = Sniper.ARROW_ERUPTION;
                 }
                 break;
+            case NIGHTWALKER1:
+                if (getPlayer().getSkillLevel(NightWalker.LUCKY_SEVEN) > 0) {
+                    singleTargetAttack = NightWalker.LUCKY_SEVEN;
+                    mobAttack = NightWalker.LUCKY_SEVEN;
+                }
+                break;
+            case NIGHTWALKER2:
+                singleTargetAttack = NightWalker.LUCKY_SEVEN;
+                if (getPlayer().getSkillLevel(NightWalker.VAMPIRE) > 0) {
+                    singleTargetAttack = NightWalker.VAMPIRE;
+                } else {
+                    mobAttack = NightWalker.LUCKY_SEVEN;
+                }
+                break;
+            case NIGHTWALKER3:
+                if (getPlayer().getSkillLevel(NightWalker.TRIPLE_THROW) > 0) {
+                    singleTargetAttack = NightWalker.TRIPLE_THROW;
+                } else {
+                    singleTargetAttack = NightWalker.LUCKY_SEVEN;
+                }
+                if (getPlayer().getSkillLevel(NightWalker.AVENGER) > 0) {
+                    singleTargetAttack = NightWalker.AVENGER;
+                } else {
+                    mobAttack = NightWalker.VAMPIRE;
+                }
+                break;
             case THIEF:
                 if (getPlayer().getSkillLevel(Rogue.LUCKY_SEVEN) > 0) {
                     singleTargetAttack = Rogue.LUCKY_SEVEN;
@@ -663,6 +770,30 @@ public class CharacterBot {
                     singleTargetAttack = Bandit.SAVAGE_BLOW;
                 }
                 mobAttack = ChiefBandit.BAND_OF_THIEVES;
+                break;
+            case THUNDERBREAKER1:
+                if (getPlayer().getSkillLevel(ThunderBreaker.FIRST_STRIKE) > 0) {
+                    singleTargetAttack = ThunderBreaker.FIRST_STRIKE;
+                }
+                if (getPlayer().getSkillLevel(ThunderBreaker.SOMERSAULT_KICK) > 0) {
+                    mobAttack = ThunderBreaker.SOMERSAULT_KICK;
+                }
+                break;
+            case THUNDERBREAKER2:
+                singleTargetAttack = ThunderBreaker.FIRST_STRIKE;
+                mobAttack = ThunderBreaker.SOMERSAULT_KICK;
+                break;
+            case THUNDERBREAKER3:
+                if (getPlayer().getSkillLevel(ThunderBreaker.BARRAGE) > 0) {
+                    singleTargetAttack = ThunderBreaker.BARRAGE;
+                } else {
+                    singleTargetAttack = ThunderBreaker.FIRST_STRIKE;
+                }
+                if (getPlayer().getSkillLevel(ThunderBreaker.SHARK_WAVE) > 0) {
+                    mobAttack = ThunderBreaker.SHARK_WAVE;
+                } else {
+                    mobAttack = ThunderBreaker.SOMERSAULT_KICK;
+                }
                 break;
             case PIRATE:
                 if (getPlayer().getSkillLevel(Pirate.SOMERSAULT_KICK) > 0) {
@@ -734,6 +865,25 @@ public class CharacterBot {
     private void putBuffSkills() {
         buffSkills = new ArrayList<>();
         switch (getPlayer().getJob()) {
+            case DAWNWARRIOR3:
+                if (getPlayer().getSkillLevel(DawnWarrior.COMBO) > 0) {
+                    buffSkills.add(DawnWarrior.COMBO);
+                }
+                if (getPlayer().getSkillLevel(DawnWarrior.SOUL_CHARGE) > 0) {
+                    buffSkills.add(DawnWarrior.SOUL_CHARGE);
+                }
+            case DAWNWARRIOR2:
+                if (getPlayer().getSkillLevel(DawnWarrior.SWORD_BOOSTER) > 2) {
+                    buffSkills.add(DawnWarrior.SWORD_BOOSTER);
+                }
+                if (getPlayer().getSkillLevel(DawnWarrior.RAGE) > 0) {
+                    buffSkills.add(DawnWarrior.RAGE);
+                }
+            case DAWNWARRIOR1:
+                if (getPlayer().getSkillLevel(DawnWarrior.SOUL) > 0) {
+                    buffSkills.add(DawnWarrior.SOUL);
+                }
+                break;
             case WARRIOR:
                 if (getPlayer().getSkillLevel(Warrior.IRON_BODY) > 0) {
                     buffSkills.add(Warrior.IRON_BODY);
@@ -807,6 +957,22 @@ public class CharacterBot {
                     buffSkills.add(Spearman.HYPER_BODY);
                 }
                 break;
+            case BLAZEWIZARD3:
+            case BLAZEWIZARD2:
+                if (getPlayer().getSkillLevel(BlazeWizard.MEDITATION) > 2) {
+                    buffSkills.add(BlazeWizard.MEDITATION);
+                }
+                if (getPlayer().getSkillLevel(BlazeWizard.SPELL_BOOSTER) > 2) {
+                    buffSkills.add(BlazeWizard.SPELL_BOOSTER);
+                }
+            case BLAZEWIZARD1:
+                if (getPlayer().getSkillLevel(BlazeWizard.MAGIC_GUARD) > 0) {
+                    buffSkills.add(BlazeWizard.MAGIC_GUARD);
+                }
+                if (getPlayer().getSkillLevel(BlazeWizard.FLAME) > 0) {
+                    buffSkills.add(BlazeWizard.FLAME);
+                }
+                break;
             case MAGICIAN:
                 if (getPlayer().getSkillLevel(Magician.MAGIC_GUARD) > 0) {
                     buffSkills.add(Magician.MAGIC_GUARD);
@@ -868,6 +1034,16 @@ public class CharacterBot {
                     buffSkills.add(Cleric.INVINCIBLE);
                 }
                 break;
+            case WINDARCHER3:
+            case WINDARCHER2:
+                if (getPlayer().getSkillLevel(WindArcher.BOW_BOOSTER) > 2) {
+                    buffSkills.add(WindArcher.BOW_BOOSTER);
+                }
+            case WINDARCHER1:
+                if (getPlayer().getSkillLevel(WindArcher.STORM) > 0) {
+                    buffSkills.add(WindArcher.STORM);
+                }
+                break;
             case BOWMAN:
                 if (getPlayer().getSkillLevel(Archer.FOCUS) > 0) {
                     buffSkills.add(Archer.FOCUS);
@@ -908,6 +1084,22 @@ public class CharacterBot {
                     buffSkills.add(Crossbowman.SOUL_ARROW);
                 }
                 break;
+            case NIGHTWALKER3:
+                if (getPlayer().getSkillLevel(NightWalker.SHADOW_PARTNER) > 0) {
+                    buffSkills.add(NightWalker.SHADOW_PARTNER);
+                }
+            case NIGHTWALKER2:
+                if (getPlayer().getSkillLevel(NightWalker.CLAW_BOOSTER) > 2) {
+                    buffSkills.add(NightWalker.CLAW_BOOSTER);
+                }
+                if (getPlayer().getSkillLevel(NightWalker.HASTE) > 2) {
+                    buffSkills.add(NightWalker.HASTE);
+                }
+            case NIGHTWALKER1:
+                if (getPlayer().getSkillLevel(NightWalker.DARKNESS) > 0) {
+                    buffSkills.add(NightWalker.DARKNESS);
+                }
+                break;
             case NIGHTLORD:
                 if (getPlayer().getSkillLevel(NightLord.MAPLE_WARRIOR) > 0) {
                     buffSkills.add(NightLord.MAPLE_WARRIOR);
@@ -941,6 +1133,22 @@ public class CharacterBot {
                 }
                 if (getPlayer().getSkillLevel(Bandit.DAGGER_BOOSTER) > 2) {
                     buffSkills.add(Bandit.DAGGER_BOOSTER);
+                }
+                break;
+            case THUNDERBREAKER3:
+                if (getPlayer().getSkillLevel(ThunderBreaker.SPEED_INFUSION) > 0) {
+                    buffSkills.add(ThunderBreaker.SPEED_INFUSION);
+                }
+            case THUNDERBREAKER2:
+                if (getPlayer().getSkillLevel(ThunderBreaker.KNUCKLER_BOOSTER) > 2) {
+                    buffSkills.add(ThunderBreaker.KNUCKLER_BOOSTER);
+                }
+                if (getPlayer().getSkillLevel(ThunderBreaker.LIGHTNING_CHARGE) > 2) {
+                    buffSkills.add(ThunderBreaker.LIGHTNING_CHARGE);
+                }
+            case THUNDERBREAKER1:
+                if (getPlayer().getSkillLevel(ThunderBreaker.LIGHTNING) > 0) {
+                    buffSkills.add(ThunderBreaker.LIGHTNING);
                 }
                 break;
             case BUCCANEER:
