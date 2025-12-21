@@ -1249,7 +1249,7 @@ public class CharacterBot {
             }
             c.handlePacket(PacketCreator.createMagicAttackPacket(attack, (short) attackDelay), (short) 46);
         } else if (isRangedJob()) {
-            rechargeProjectiles();
+            gainProjectileIfMissing();
             attack.ranged = true;
             for (Monster m : targets) {
                 damageNumbers = new ArrayList<>();

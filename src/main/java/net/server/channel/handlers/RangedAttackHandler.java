@@ -191,9 +191,9 @@ public final class RangedAttackHandler extends AbstractDealDamageHandler {
 
                     if (slot < 0) {
                         log.warn("<ERROR> Projectile to use was unable to be found.");
-                    } else {
+                    } /*else {
                         InventoryManipulator.removeFromSlot(c, InventoryType.USE, slot, bulletConsume, false, true);
-                    }
+                    }*/
                 }
             }
 
