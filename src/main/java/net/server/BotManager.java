@@ -78,8 +78,10 @@ public class BotManager {
                 CharacterBot follower = new CharacterBot();
                 follower.initialize(client);
                 followers.add(follower);
+                client.getPlayer().message("Automate enabled.");
             } else {
                 followers.remove(found);
+                client.getPlayer().message("Automate disabled.");
             }
         } finally {
             lock.unlock();
