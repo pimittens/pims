@@ -3737,6 +3737,11 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(-1, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
 
         // warrior skills
+        skillDelayTimes.putIfAbsent(DawnWarrior.POWER_STRIKE, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
+        skillDelayTimes.putIfAbsent(DawnWarrior.SLASH_BLAST, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
+        skillDelayTimes.putIfAbsent(DawnWarrior.SOUL_BLADE, new int[]{750, 810, 870, 930, 990, 990, 990, 990});
+        skillDelayTimes.putIfAbsent(DawnWarrior.SOUL_DRIVER, new int[]{1230, 1350, 1440, 1530, 1650, 1650, 1650, 1650});
+        skillDelayTimes.putIfAbsent(DawnWarrior.BRANDISH, new int[]{630, 690, 750, 810, 840, 900, 960, 960});
         skillDelayTimes.putIfAbsent(Warrior.POWER_STRIKE, new int[]{570, 630, 660, 720, 750, 810, 870, 900}); // these are the polearm/spear values
         skillDelayTimes.putIfAbsent(Warrior.SLASH_BLAST, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
         skillDelayTimes.putIfAbsent(Hero.BRANDISH, new int[]{630, 690, 750, 810, 840, 900, 960, 960});
@@ -3746,6 +3751,13 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(DragonKnight.SPEAR_DRAGON_FURY, new int[]{600, 660, 720, 750, 810, 870, 900, 960});
 
         // wizard skills, note that these only have 3 speeds for booster 2, booster 1, and no booster
+        skillDelayTimes.putIfAbsent(BlazeWizard.MAGIC_CLAW, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FIRE_ARROW, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FIRE_PILLAR, new int[]{1050, 1140, 1200});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FIRE_PILLAR, new int[]{1050, 1140, 1200});
+        skillDelayTimes.putIfAbsent(BlazeWizard.METEOR_SHOWER, new int[]{3060, 3270, 3480});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FLAME_GEAR, new int[]{1260, 1350, 1440});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FIRE_STRIKE, new int[]{750, 810, 870});
         skillDelayTimes.putIfAbsent(Magician.ENERGY_BOLT, new int[]{720, 750, 810});
         skillDelayTimes.putIfAbsent(Magician.MAGIC_CLAW, new int[]{720, 750, 810});
         skillDelayTimes.putIfAbsent(FPWizard.FIRE_ARROW, new int[]{720, 750, 810});
@@ -3765,6 +3777,10 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(Bishop.GENESIS, new int[]{2700, 2700, 2700});
 
         // bowman skills
+        skillDelayTimes.putIfAbsent(WindArcher.DOUBLE_SHOT, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(WindArcher.ARROW_RAIN, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(WindArcher.HURRICANE, new int[]{330, 330, 330, 330, 330, 330, 330, 330}); // todo: not sure how this one works
+        skillDelayTimes.putIfAbsent(WindArcher.STRAFE, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Archer.ARROW_BLOW, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Archer.DOUBLE_SHOT, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Hunter.ARROW_BOMB, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
@@ -3777,6 +3793,10 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(Marksman.PIERCING_ARROW, new int[]{630, 690, 720, 780, 870, 870, 870, 870});
 
         // thief skills
+        skillDelayTimes.putIfAbsent(NightWalker.LUCKY_SEVEN, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(NightWalker.VAMPIRE, new int[]{1020, 1110, 1200, 1290, 1350, 1350, 1350, 1350});
+        skillDelayTimes.putIfAbsent(NightWalker.AVENGER, new int[]{630, 690, 750, 810, 840, 840, 840, 840});
+        skillDelayTimes.putIfAbsent(NightWalker.TRIPLE_THROW, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Rogue.LUCKY_SEVEN, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Rogue.DOUBLE_STAB, new int[]{600, 660, 720, 750, 750, 750, 750, 750});
         skillDelayTimes.putIfAbsent(Hermit.AVENGER, new int[]{630, 690, 750, 810, 840, 840, 840, 840});
@@ -3786,6 +3806,10 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(Shadower.BOOMERANG_STEP, new int[]{2640, 2700, 2760, 2820, 2820, 2820, 2820, 2820});
 
         // pirate skills
+        skillDelayTimes.putIfAbsent(ThunderBreaker.FIRST_STRIKE, new int[]{450, 510, 540, 570, 600, 600, 600, 600});
+        skillDelayTimes.putIfAbsent(ThunderBreaker.SOMERSAULT_KICK, new int[]{660, 720, 780, 840, 840, 840, 840, 840});
+        skillDelayTimes.putIfAbsent(ThunderBreaker.BARRAGE, new int[]{5070, 5220, 5370, 5520, 5670, 5670, 5670, 5670});
+        skillDelayTimes.putIfAbsent(ThunderBreaker.SHARK_WAVE, new int[]{810, 870, 930, 990, 1050, 1050, 1050, 1050});
         skillDelayTimes.putIfAbsent(Pirate.FLASH_FIST, new int[]{450, 510, 540, 570, 600, 600, 600, 600});
         skillDelayTimes.putIfAbsent(Pirate.DOUBLE_SHOT, new int[]{390, 420, 450, 480, 480, 480, 480, 480});
         skillDelayTimes.putIfAbsent(Pirate.SOMERSAULT_KICK, new int[]{660, 720, 780, 840, 840, 840, 840, 840});
