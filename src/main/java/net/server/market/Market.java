@@ -43,7 +43,7 @@ public class Market {
         lock.lock();
         try (Connection con = DatabaseConnection.getConnection()) {
             int itemId;
-            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `marketitems`")) {
+            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM marketitems")) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         itemId = rs.getInt("itemid");
@@ -51,7 +51,7 @@ public class Market {
                     }
                 }
             }
-            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM `marketequipment`")) {
+            try (PreparedStatement ps = con.prepareStatement("SELECT * FROM marketequipment")) {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         equips.add((loadMarketEquipFromResultSet(rs)));
@@ -70,18 +70,18 @@ public class Market {
         lock.lock();
         try (Connection con = DatabaseConnection.getConnection()) {
 
-            try (PreparedStatement ps = con.prepareStatement("DELETE FROM `marketequipment`")) {
+            try (PreparedStatement ps = con.prepareStatement("DELETE FROM marketequipment")) {
                 ps.executeUpdate();
             }
 
-            try (PreparedStatement psItem = con.prepareStatement("UPDATE `marketitems` SET quantity = ? WHERE itemid = ?")) {
+            try (PreparedStatement psItem = con.prepareStatement("UPDATE marketitems SET quantity = ? WHERE itemid = ?")) {
                 for (int i : items.keySet()) {
-                    psItem.setInt(2, items.get(i).getQuantity());
-                    psItem.setInt(1, i);
+                    psItem.setInt(1, items.get(i).getQuantity());
+                    psItem.setInt(2, i);
                     psItem.executeUpdate();
                 }
             }
-            try (PreparedStatement psEquip = con.prepareStatement("INSERT INTO `marketequipment` VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+            try (PreparedStatement psEquip = con.prepareStatement("INSERT INTO marketequipment VALUES (DEFAULT, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
                 for (Equip equip : equips) {
                     psEquip.setInt(1, equip.getItemId());
                     psEquip.setInt(2, equip.getUpgradeSlots());
