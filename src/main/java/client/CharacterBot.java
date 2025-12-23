@@ -123,6 +123,7 @@ public class CharacterBot {
     //private Foothold foothold;
 
     private boolean automate = false;
+    private long lastChargeTime;
     private Client c;
     private Monster targetMonster;
     private MapObject targetItem;
@@ -183,6 +184,7 @@ public class CharacterBot {
         decideAttackSkills();
         putBuffSkills();
         currentMode = Mode.GRINDING;
+        lastChargeTime = System.currentTimeMillis();
     }
 
     public void setLoggedOut() {
@@ -262,6 +264,16 @@ public class CharacterBot {
         //System.out.println(currentMode);
         getPlayer().setHp(getPlayer().getMaxHp());
         getPlayer().setMp(getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
+        if (automate) {
+            if (System.currentTimeMillis() - lastChargeTime > 10000) {
+                if (getPlayer().getMeso() >= getPlayer().getLevel() * 10) {
+                    getPlayer().gainMeso(-getPlayer().getLevel() * 10);
+                    lastChargeTime = System.currentTimeMillis();
+                } else {
+                    return;
+                }
+            }
+        }
         if (!automate && (getPlayer().getLevel() > level || getPlayer().getRemainingSp() > 0)) {
             levelup();
             decideAttackSkills();
