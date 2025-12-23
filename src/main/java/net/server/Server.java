@@ -46,6 +46,8 @@ import net.server.coordinator.session.SessionCoordinator;
 import net.server.guild.Alliance;
 import net.server.guild.Guild;
 import net.server.guild.GuildCharacter;
+import net.server.market.Market;
+import net.server.market.UpdateMarketTask;
 import net.server.task.BossLogTask;
 import net.server.task.BotKPQManagerTask;
 import net.server.task.BotLPQManagerTask;
@@ -117,6 +119,7 @@ public class Server {
     private static Server instance = null;
 
     private final BotManager bots = new BotManager();
+    private Market market;
 
     public static Server getInstance() {
         if (instance == null) {
@@ -955,6 +958,8 @@ public class Server {
         for (Channel ch : this.getAllChannels()) {
             ch.reloadEventScriptManager();
         }
+
+        market = new Market();
     }
 
     private ChannelDependencies registerChannelDependencies() {
@@ -1007,6 +1012,7 @@ public class Server {
         tMan.register(new UpdateFollowerBotsTask(), 200, SECONDS.toMillis(30));
         tMan.register(new BotKPQManagerTask(), MINUTES.toMillis(30), MINUTES.toMillis(5));
         tMan.register(new BotLPQManagerTask(), MINUTES.toMillis(45), MINUTES.toMillis(6));
+        tMan.register(new UpdateMarketTask(), MINUTES.toMillis(5), MINUTES.toMillis(5)); // todo: change when done testing
 
         timeLeft = getTimeLeftForNextDay();
         ExpeditionBossLog.resetBossLogTable();
@@ -1932,6 +1938,7 @@ public class Server {
 
     private synchronized void shutdownInternal(boolean restart) {
         bots.logoutAllBots();
+        market.updatePrices(false);
         log.info("{} the server!", restart ? "Restarting" : "Shutting down");
         if (getWorlds() == null) {
             return;//already shutdown
@@ -1994,5 +2001,9 @@ public class Server {
 
     public BotManager getBotManager() {
         return bots;
+    }
+
+    public Market getMarket() {
+        return market;
     }
 }

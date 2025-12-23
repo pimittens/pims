@@ -568,6 +568,12 @@ public class ItemInformationProvider {
         ret.put("reqINT", DataTool.getInt("reqINT", info, 0));
         ret.put("reqLUK", DataTool.getInt("reqLUK", info, 0));
         ret.put("reqPOP", DataTool.getInt("reqPOP", info, 0));
+        ret.put("incPAD", DataTool.getInt("incPAD", info, 0));
+        ret.put("incMAD", DataTool.getInt("incMAD", info, 0));
+        ret.put("incDEX", DataTool.getInt("incDEX", info, 0));
+        ret.put("incSTR", DataTool.getInt("incSTR", info, 0));
+        ret.put("incINT", DataTool.getInt("incINT", info, 0));
+        ret.put("incLUK", DataTool.getInt("incLUK", info, 0));
         ret.put("cash", DataTool.getInt("cash", info, 0));
         ret.put("tuc", DataTool.getInt("tuc", info, 0));
         ret.put("cursed", DataTool.getInt("cursed", info, 0));

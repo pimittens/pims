@@ -2,6 +2,7 @@ package net.server;
 
 import client.Character;
 import client.CharacterBot;
+import client.Client;
 import net.server.world.Party;
 import net.server.world.PartyCharacter;
 import tools.DatabaseConnection;
@@ -58,6 +59,30 @@ public class BotManager {
         lock.lock();
         try {
             followers.add(follower);
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void toggleAutomate(Client client) {
+        lock.lock();
+        try {
+            CharacterBot found = null;
+            for (CharacterBot follower : followers) {
+                if (follower.getPlayer().getName().equals(client.getPlayer().getName())) {
+                    found = follower;
+                    break;
+                }
+            }
+            if (found == null) {
+                CharacterBot follower = new CharacterBot();
+                follower.initialize(client);
+                followers.add(follower);
+                client.getPlayer().message("Automate enabled.");
+            } else {
+                followers.remove(found);
+                client.getPlayer().message("Automate disabled.");
+            }
         } finally {
             lock.unlock();
         }

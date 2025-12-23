@@ -5,3 +5,4 @@ These SQL files must be executed IN ORDER to set up the database:
 	- 2-db_drops.sql (Remaining data: monster drops, reactor drops)
 	- 3-db_shopupdate.sql (Custom shops - optional, requires provided WZs)
 	- 4-db_admin (Basic admin account - optional)
+	- 5-market (extra tables used for the market functionality when using bots - required whenever bots are being used)

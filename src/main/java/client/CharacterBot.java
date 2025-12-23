@@ -9,6 +9,7 @@ import client.processor.stat.AssignSPProcessor;
 import constants.inventory.ItemConstants;
 import constants.skills.*;
 import net.PacketProcessor;
+import net.server.Server;
 import net.server.channel.handlers.AbstractDealDamageHandler;
 import net.server.world.Party;
 import server.ItemInformationProvider;
@@ -31,7 +32,7 @@ public class CharacterBot {
         WAITING, // no mode decided
         SOCIALIZING, // hang out in henesys
         GRINDING, // pick a map and kill monsters
-        MANAGE_INVENTORY, // check if any equips are better than what they're using and sell lowest value items to make space
+        MANAGE_INVENTORY, // check if any equips are better than what they're using and sell items to make space
         PQ, // do a pq
         LEAVE_PARTY, // leave party after pq
         BOSSING // fight a boss
@@ -115,11 +116,13 @@ public class CharacterBot {
             101030109 // tomb 5
     };
 
-    private static Map<Job, int[][]> skillOrders = new HashMap<>();
-    private static Map<Integer, int[]> skillDelayTimes = new HashMap<>();
+    private static final Map<Job, int[][]> skillOrders = new HashMap<>();
+    private static final Map<Integer, int[]> skillDelayTimes = new HashMap<>();
 
     private Character following = null;
     //private Foothold foothold;
+
+    private boolean automate = false;
     private Client c;
     private Monster targetMonster;
     private MapObject targetItem;
@@ -170,6 +173,16 @@ public class CharacterBot {
         decideAttackSkills();
         putBuffSkills();
         chooseMode();
+    }
+
+    public void initialize(Client client) {
+        // for automate
+        c = client;
+        automate = true;
+        level = getPlayer().getLevel();
+        decideAttackSkills();
+        putBuffSkills();
+        currentMode = Mode.GRINDING;
     }
 
     public void setLoggedOut() {
@@ -231,8 +244,8 @@ public class CharacterBot {
         switch (currentMode) {
             case MANAGE_INVENTORY -> {
                 checkEquips();
-                // todo: put items in fm shop
-                createInventorySpace();
+                sellItems();
+                tryUpgrade();
                 chooseMode();
             }
             case LEAVE_PARTY -> leaveParty();
@@ -249,13 +262,13 @@ public class CharacterBot {
         //System.out.println(currentMode);
         getPlayer().setHp(getPlayer().getMaxHp());
         getPlayer().setMp(getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
-        if (getPlayer().getLevel() > level || getPlayer().getRemainingSp() > 0) {
+        if (!automate && (getPlayer().getLevel() > level || getPlayer().getRemainingSp() > 0)) {
             levelup();
             decideAttackSkills();
             putBuffSkills();
             return;
         }
-        if (!currentMode.equals(Mode.PQ) && getPlayer().getMapId() != following.getMapId()) {
+        if (!automate && (!currentMode.equals(Mode.PQ) && getPlayer().getMapId() != following.getMapId())) {
             changeMap(following.getMap(), following.getMap().findClosestPortal(following.getPosition()));
             return;
         }
@@ -281,7 +294,7 @@ public class CharacterBot {
         switch (currentMode) {
             case MANAGE_INVENTORY -> {
                 checkEquips();
-                createInventorySpace();
+                sellItems();
                 chooseMode();
             }
             case WAITING, LEAVE_PARTY -> currentMode = Mode.GRINDING; // followers don't need to do these
@@ -374,6 +387,34 @@ public class CharacterBot {
 
     private void decideAttackSkills() {
         switch (getPlayer().getJob()) {
+            case DAWNWARRIOR1:
+                if (getPlayer().getSkillLevel(DawnWarrior.POWER_STRIKE) > 0) {
+                    singleTargetAttack = DawnWarrior.POWER_STRIKE;
+                }
+                if (getPlayer().getSkillLevel(DawnWarrior.SLASH_BLAST) > 0) {
+                    mobAttack = DawnWarrior.SLASH_BLAST;
+                }
+                break;
+            case DAWNWARRIOR2:
+                singleTargetAttack = DawnWarrior.POWER_STRIKE;
+                if (getPlayer().getSkillLevel(DawnWarrior.SOUL_BLADE) > 0) {
+                    mobAttack = DawnWarrior.SOUL_BLADE;
+                } else {
+                    mobAttack = DawnWarrior.SLASH_BLAST;
+                }
+                break;
+            case DAWNWARRIOR3:
+                if (getPlayer().getSkillLevel(DawnWarrior.BRANDISH) > 0) {
+                    singleTargetAttack = DawnWarrior.BRANDISH;
+                } else {
+                    singleTargetAttack = DawnWarrior.POWER_STRIKE;
+                }
+                if (getPlayer().getSkillLevel(DawnWarrior.SOUL_DRIVER) > 0) {
+                    mobAttack = DawnWarrior.SOUL_DRIVER;
+                } else {
+                    mobAttack = DawnWarrior.SOUL_BLADE;
+                }
+                break;
             case WARRIOR:
             case FIGHTER:
             case PAGE:
@@ -426,6 +467,38 @@ public class CharacterBot {
             case DARKKNIGHT:
                 singleTargetAttack = DragonKnight.SPEAR_CRUSHER;
                 mobAttack = DragonKnight.SPEAR_DRAGON_FURY;
+                break;
+            case BLAZEWIZARD1:
+                if (getPlayer().getSkillLevel(BlazeWizard.MAGIC_CLAW) > 0) {
+                    singleTargetAttack = BlazeWizard.MAGIC_CLAW;
+                    mobAttack = BlazeWizard.MAGIC_CLAW;
+                }
+                break;
+            case BLAZEWIZARD2:
+                if (getPlayer().getSkillLevel(BlazeWizard.FIRE_ARROW) > 0) {
+                    singleTargetAttack = BlazeWizard.FIRE_ARROW;
+                } else {
+                    singleTargetAttack = BlazeWizard.MAGIC_CLAW;
+                }
+                if (getPlayer().getSkillLevel(BlazeWizard.FIRE_PILLAR) > 0) {
+                    mobAttack = BlazeWizard.FIRE_PILLAR;
+                } else {
+                    mobAttack = BlazeWizard.MAGIC_CLAW;
+                }
+                break;
+            case BLAZEWIZARD3:
+                if (getPlayer().getSkillLevel(BlazeWizard.FIRE_STRIKE) > 0) {
+                    singleTargetAttack = BlazeWizard.FIRE_STRIKE;
+                } else {
+                    singleTargetAttack = BlazeWizard.FIRE_ARROW;
+                }
+                if (getPlayer().getSkillLevel(BlazeWizard.METEOR_SHOWER) > 0) {
+                    mobAttack = BlazeWizard.METEOR_SHOWER;
+                } else if (getPlayer().getSkillLevel(BlazeWizard.FLAME_GEAR) > 0) {
+                    mobAttack = BlazeWizard.FLAME_GEAR;
+                } else {
+                    mobAttack = BlazeWizard.FIRE_PILLAR;
+                }
                 break;
             case MAGICIAN:
                 if (getPlayer().getSkillLevel(Magician.MAGIC_CLAW) > 0) {
@@ -535,6 +608,27 @@ public class CharacterBot {
                     singleTargetAttack = Priest.SHINING_RAY;
                 }
                 break;
+            case WINDARCHER1:
+            case WINDARCHER2:
+                if (getPlayer().getSkillLevel(WindArcher.DOUBLE_SHOT) > 0) {
+                    singleTargetAttack = WindArcher.DOUBLE_SHOT;
+                    mobAttack = WindArcher.DOUBLE_SHOT;
+                }
+                break;
+            case WINDARCHER3:
+                if (getPlayer().getSkillLevel(WindArcher.HURRICANE) > 0) {
+                    singleTargetAttack = WindArcher.HURRICANE;
+                } else if (getPlayer().getSkillLevel(WindArcher.STRAFE) > 0) {
+                    singleTargetAttack = WindArcher.STRAFE;
+                } else {
+                    singleTargetAttack = WindArcher.DOUBLE_SHOT;
+                }
+                if (getPlayer().getSkillLevel(WindArcher.ARROW_RAIN) > 0) {
+                    mobAttack = WindArcher.ARROW_RAIN;
+                } else {
+                    mobAttack = WindArcher.DOUBLE_SHOT;
+                }
+                break;
             case BOWMAN:
                 if (getPlayer().getSkillLevel(Archer.DOUBLE_SHOT) > 0) {
                     singleTargetAttack = Archer.DOUBLE_SHOT;
@@ -600,6 +694,32 @@ public class CharacterBot {
                     mobAttack = Sniper.ARROW_ERUPTION;
                 }
                 break;
+            case NIGHTWALKER1:
+                if (getPlayer().getSkillLevel(NightWalker.LUCKY_SEVEN) > 0) {
+                    singleTargetAttack = NightWalker.LUCKY_SEVEN;
+                    mobAttack = NightWalker.LUCKY_SEVEN;
+                }
+                break;
+            case NIGHTWALKER2:
+                singleTargetAttack = NightWalker.LUCKY_SEVEN;
+                if (getPlayer().getSkillLevel(NightWalker.VAMPIRE) > 0) {
+                    singleTargetAttack = NightWalker.VAMPIRE;
+                } else {
+                    mobAttack = NightWalker.LUCKY_SEVEN;
+                }
+                break;
+            case NIGHTWALKER3:
+                if (getPlayer().getSkillLevel(NightWalker.TRIPLE_THROW) > 0) {
+                    singleTargetAttack = NightWalker.TRIPLE_THROW;
+                } else {
+                    singleTargetAttack = NightWalker.LUCKY_SEVEN;
+                }
+                if (getPlayer().getSkillLevel(NightWalker.AVENGER) > 0) {
+                    singleTargetAttack = NightWalker.AVENGER;
+                } else {
+                    mobAttack = NightWalker.VAMPIRE;
+                }
+                break;
             case THIEF:
                 if (getPlayer().getSkillLevel(Rogue.LUCKY_SEVEN) > 0) {
                     singleTargetAttack = Rogue.LUCKY_SEVEN;
@@ -650,6 +770,30 @@ public class CharacterBot {
                     singleTargetAttack = Bandit.SAVAGE_BLOW;
                 }
                 mobAttack = ChiefBandit.BAND_OF_THIEVES;
+                break;
+            case THUNDERBREAKER1:
+                if (getPlayer().getSkillLevel(ThunderBreaker.FIRST_STRIKE) > 0) {
+                    singleTargetAttack = ThunderBreaker.FIRST_STRIKE;
+                }
+                if (getPlayer().getSkillLevel(ThunderBreaker.SOMERSAULT_KICK) > 0) {
+                    mobAttack = ThunderBreaker.SOMERSAULT_KICK;
+                }
+                break;
+            case THUNDERBREAKER2:
+                singleTargetAttack = ThunderBreaker.FIRST_STRIKE;
+                mobAttack = ThunderBreaker.SOMERSAULT_KICK;
+                break;
+            case THUNDERBREAKER3:
+                if (getPlayer().getSkillLevel(ThunderBreaker.BARRAGE) > 0) {
+                    singleTargetAttack = ThunderBreaker.BARRAGE;
+                } else {
+                    singleTargetAttack = ThunderBreaker.FIRST_STRIKE;
+                }
+                if (getPlayer().getSkillLevel(ThunderBreaker.SHARK_WAVE) > 0) {
+                    mobAttack = ThunderBreaker.SHARK_WAVE;
+                } else {
+                    mobAttack = ThunderBreaker.SOMERSAULT_KICK;
+                }
                 break;
             case PIRATE:
                 if (getPlayer().getSkillLevel(Pirate.SOMERSAULT_KICK) > 0) {
@@ -721,6 +865,25 @@ public class CharacterBot {
     private void putBuffSkills() {
         buffSkills = new ArrayList<>();
         switch (getPlayer().getJob()) {
+            case DAWNWARRIOR3:
+                if (getPlayer().getSkillLevel(DawnWarrior.COMBO) > 0) {
+                    buffSkills.add(DawnWarrior.COMBO);
+                }
+                if (getPlayer().getSkillLevel(DawnWarrior.SOUL_CHARGE) > 0) {
+                    buffSkills.add(DawnWarrior.SOUL_CHARGE);
+                }
+            case DAWNWARRIOR2:
+                if (getPlayer().getSkillLevel(DawnWarrior.SWORD_BOOSTER) > 2) {
+                    buffSkills.add(DawnWarrior.SWORD_BOOSTER);
+                }
+                if (getPlayer().getSkillLevel(DawnWarrior.RAGE) > 0) {
+                    buffSkills.add(DawnWarrior.RAGE);
+                }
+            case DAWNWARRIOR1:
+                if (getPlayer().getSkillLevel(DawnWarrior.SOUL) > 0) {
+                    buffSkills.add(DawnWarrior.SOUL);
+                }
+                break;
             case WARRIOR:
                 if (getPlayer().getSkillLevel(Warrior.IRON_BODY) > 0) {
                     buffSkills.add(Warrior.IRON_BODY);
@@ -794,6 +957,22 @@ public class CharacterBot {
                     buffSkills.add(Spearman.HYPER_BODY);
                 }
                 break;
+            case BLAZEWIZARD3:
+            case BLAZEWIZARD2:
+                if (getPlayer().getSkillLevel(BlazeWizard.MEDITATION) > 2) {
+                    buffSkills.add(BlazeWizard.MEDITATION);
+                }
+                if (getPlayer().getSkillLevel(BlazeWizard.SPELL_BOOSTER) > 2) {
+                    buffSkills.add(BlazeWizard.SPELL_BOOSTER);
+                }
+            case BLAZEWIZARD1:
+                if (getPlayer().getSkillLevel(BlazeWizard.MAGIC_GUARD) > 0) {
+                    buffSkills.add(BlazeWizard.MAGIC_GUARD);
+                }
+                if (getPlayer().getSkillLevel(BlazeWizard.FLAME) > 0) {
+                    buffSkills.add(BlazeWizard.FLAME);
+                }
+                break;
             case MAGICIAN:
                 if (getPlayer().getSkillLevel(Magician.MAGIC_GUARD) > 0) {
                     buffSkills.add(Magician.MAGIC_GUARD);
@@ -855,6 +1034,16 @@ public class CharacterBot {
                     buffSkills.add(Cleric.INVINCIBLE);
                 }
                 break;
+            case WINDARCHER3:
+            case WINDARCHER2:
+                if (getPlayer().getSkillLevel(WindArcher.BOW_BOOSTER) > 2) {
+                    buffSkills.add(WindArcher.BOW_BOOSTER);
+                }
+            case WINDARCHER1:
+                if (getPlayer().getSkillLevel(WindArcher.STORM) > 0) {
+                    buffSkills.add(WindArcher.STORM);
+                }
+                break;
             case BOWMAN:
                 if (getPlayer().getSkillLevel(Archer.FOCUS) > 0) {
                     buffSkills.add(Archer.FOCUS);
@@ -895,6 +1084,22 @@ public class CharacterBot {
                     buffSkills.add(Crossbowman.SOUL_ARROW);
                 }
                 break;
+            case NIGHTWALKER3:
+                if (getPlayer().getSkillLevel(NightWalker.SHADOW_PARTNER) > 0) {
+                    buffSkills.add(NightWalker.SHADOW_PARTNER);
+                }
+            case NIGHTWALKER2:
+                if (getPlayer().getSkillLevel(NightWalker.CLAW_BOOSTER) > 2) {
+                    buffSkills.add(NightWalker.CLAW_BOOSTER);
+                }
+                if (getPlayer().getSkillLevel(NightWalker.HASTE) > 2) {
+                    buffSkills.add(NightWalker.HASTE);
+                }
+            case NIGHTWALKER1:
+                if (getPlayer().getSkillLevel(NightWalker.DARKNESS) > 0) {
+                    buffSkills.add(NightWalker.DARKNESS);
+                }
+                break;
             case NIGHTLORD:
                 if (getPlayer().getSkillLevel(NightLord.MAPLE_WARRIOR) > 0) {
                     buffSkills.add(NightLord.MAPLE_WARRIOR);
@@ -928,6 +1133,22 @@ public class CharacterBot {
                 }
                 if (getPlayer().getSkillLevel(Bandit.DAGGER_BOOSTER) > 2) {
                     buffSkills.add(Bandit.DAGGER_BOOSTER);
+                }
+                break;
+            case THUNDERBREAKER3:
+                if (getPlayer().getSkillLevel(ThunderBreaker.SPEED_INFUSION) > 0) {
+                    buffSkills.add(ThunderBreaker.SPEED_INFUSION);
+                }
+            case THUNDERBREAKER2:
+                if (getPlayer().getSkillLevel(ThunderBreaker.KNUCKLER_BOOSTER) > 2) {
+                    buffSkills.add(ThunderBreaker.KNUCKLER_BOOSTER);
+                }
+                if (getPlayer().getSkillLevel(ThunderBreaker.LIGHTNING_CHARGE) > 2) {
+                    buffSkills.add(ThunderBreaker.LIGHTNING_CHARGE);
+                }
+            case THUNDERBREAKER1:
+                if (getPlayer().getSkillLevel(ThunderBreaker.LIGHTNING) > 0) {
+                    buffSkills.add(ThunderBreaker.LIGHTNING);
                 }
                 break;
             case BUCCANEER:
@@ -977,7 +1198,7 @@ public class CharacterBot {
         }
     }
 
-    private void doAttack(int time, int skillId) { // todo: combo orbs, arrow bomb, shadow partner, paladin charges, bucc stuff, are star att bonuses being use?
+    private void doAttack(int time, int skillId) { // todo: combo orbs, arrow bomb, shadow partner, paladin charges, bucc stuff, are star att bonuses being used?
         if (skillId == -1) {
             doRegularAttack();
             delay = skillDelayTimes.get(skillId)[getAttackSpeed()] - time; // todo: accurate delay
@@ -1028,7 +1249,7 @@ public class CharacterBot {
             }
             c.handlePacket(PacketCreator.createMagicAttackPacket(attack, (short) attackDelay), (short) 46);
         } else if (isRangedJob()) {
-            rechargeProjectiles();
+            gainProjectileIfMissing();
             attack.ranged = true;
             for (Monster m : targets) {
                 damageNumbers = new ArrayList<>();
@@ -2249,10 +2470,14 @@ public class CharacterBot {
     private void gainItem(int itemId, short quantity) {
         if (quantity > 0) {
             InventoryType inventoryType = ItemConstants.getInventoryType(itemId);
-            while (!InventoryManipulator.checkSpace(c, itemId, quantity, "")) {
+            if (!InventoryManipulator.checkSpace(c, itemId, quantity, "")) {
                 // make sure not to give a quantity that can't fit in their inventory or this will get stuck
-                short lowestValueItemPos = getLowestValueItemPos(inventoryType);
-                InventoryManipulator.drop(c, inventoryType, lowestValueItemPos, InventoryManipulator.getQuantity(c, inventoryType, lowestValueItemPos));
+                Iterator<Item> it = getPlayer().getInventory(inventoryType).iterator();
+                Item next;
+                while (!InventoryManipulator.checkSpace(c, itemId, quantity, "") && it.hasNext()) {
+                    next = it.next();
+                    InventoryManipulator.drop(c, inventoryType, next.getPosition(), InventoryManipulator.getQuantity(c, inventoryType, next.getPosition()));
+                }
             }
             InventoryManipulator.addById(c, itemId, quantity);
         } else{
@@ -2265,7 +2490,7 @@ public class CharacterBot {
             return; // check that it actually is an equip
         }
         if (!InventoryManipulator.checkSpace(c, itemId, 1, "")) {
-            InventoryManipulator.drop(c, InventoryType.EQUIP, getLowestValueItemPos(InventoryType.EQUIP), (short) 1);
+            InventoryManipulator.drop(c, InventoryType.EQUIP, (short) 1, (short) 1);
         }
         InventoryManipulator.addById(c, itemId, (short) 1);
         InventoryManipulator.equip(c, InventoryManipulator.getPosition(c, itemId), (short) -11);
@@ -2531,20 +2756,31 @@ public class CharacterBot {
         return 0;
     }
 
-    private void createInventorySpace() {
+    private void sellItems() {
         getPlayer().getInventory(InventoryType.EQUIP).lockInventory();
         getPlayer().getInventory(InventoryType.USE).lockInventory();
         getPlayer().getInventory(InventoryType.ETC).lockInventory();
         try {
-            short space, nextPos;
-            ItemInformationProvider ii = ItemInformationProvider.getInstance();
+            //short space, nextPos;
             for (InventoryType type : new InventoryType[]{InventoryType.EQUIP, InventoryType.USE, InventoryType.ETC}) {
-                space = getPlayer().getInventory(type).getNumFreeSlot();
+                /*space = getPlayer().getInventory(type).getNumFreeSlot();
                 while (space < 48) {
                     nextPos = getLowestValueItemPos(type);
-                    getPlayer().gainMeso(ii.getPrice(getPlayer().getInventory(type).getItem(nextPos).getItemId(), getPlayer().getInventory(type).getItem(nextPos).getQuantity()));
+                    if (type.equals(InventoryType.EQUIP)) {
+                        getPlayer().gainMeso(Server.getInstance().getMarket().sellEquip((Equip) getPlayer().getInventory(type).getItem(nextPos)));
+                    } else {
+                        getPlayer().gainMeso(Server.getInstance().getMarket().sellItem(getPlayer().getInventory(type).getItem(nextPos)));
+                    }
                     getPlayer().getInventory(type).removeItem(nextPos);
                     space = getPlayer().getInventory(type).getNumFreeSlot();
+                }*/
+                for (Short pos : getPlayer().getInventory(type).getItemPositions()) {
+                    if (type.equals(InventoryType.EQUIP)) {
+                        getPlayer().gainMeso(Server.getInstance().getMarket().sellEquip((Equip) getPlayer().getInventory(type).getItem(pos)));
+                    } else {
+                        getPlayer().gainMeso(Server.getInstance().getMarket().sellItem(getPlayer().getInventory(type).getItem(pos)));
+                    }
+                    getPlayer().getInventory(type).removeItem(pos);
                 }
             }
         } finally {
@@ -2554,7 +2790,17 @@ public class CharacterBot {
         }
     }
 
-    private short getLowestValueItemPos(InventoryType inventoryType) {
+    private void tryUpgrade() {
+        // try to upgrade current equips
+        // todo
+    }
+
+    private short getWorstEquip() {
+        // todo
+        return 0;
+    }
+
+    /*private short getLowestValueItemPos(InventoryType inventoryType) {
         getPlayer().getInventory(inventoryType).lockInventory();
         try {
             int lowestValue = Integer.MAX_VALUE, nextValue;
@@ -2574,7 +2820,7 @@ public class CharacterBot {
         } finally {
             getPlayer().getInventory(inventoryType).unlockInventory();
         }
-    }
+    }*/
 
     private boolean isRangedJob() {
         int jobId = getPlayer().getJob().getId();
@@ -3491,6 +3737,11 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(-1, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
 
         // warrior skills
+        skillDelayTimes.putIfAbsent(DawnWarrior.POWER_STRIKE, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
+        skillDelayTimes.putIfAbsent(DawnWarrior.SLASH_BLAST, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
+        skillDelayTimes.putIfAbsent(DawnWarrior.SOUL_BLADE, new int[]{750, 810, 870, 930, 990, 990, 990, 990});
+        skillDelayTimes.putIfAbsent(DawnWarrior.SOUL_DRIVER, new int[]{1230, 1350, 1440, 1530, 1650, 1650, 1650, 1650});
+        skillDelayTimes.putIfAbsent(DawnWarrior.BRANDISH, new int[]{630, 690, 750, 810, 840, 900, 960, 960});
         skillDelayTimes.putIfAbsent(Warrior.POWER_STRIKE, new int[]{570, 630, 660, 720, 750, 810, 870, 900}); // these are the polearm/spear values
         skillDelayTimes.putIfAbsent(Warrior.SLASH_BLAST, new int[]{570, 630, 660, 720, 750, 810, 870, 900});
         skillDelayTimes.putIfAbsent(Hero.BRANDISH, new int[]{630, 690, 750, 810, 840, 900, 960, 960});
@@ -3500,6 +3751,13 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(DragonKnight.SPEAR_DRAGON_FURY, new int[]{600, 660, 720, 750, 810, 870, 900, 960});
 
         // wizard skills, note that these only have 3 speeds for booster 2, booster 1, and no booster
+        skillDelayTimes.putIfAbsent(BlazeWizard.MAGIC_CLAW, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FIRE_ARROW, new int[]{720, 750, 810});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FIRE_PILLAR, new int[]{1050, 1140, 1200});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FIRE_PILLAR, new int[]{1050, 1140, 1200});
+        skillDelayTimes.putIfAbsent(BlazeWizard.METEOR_SHOWER, new int[]{3060, 3270, 3480});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FLAME_GEAR, new int[]{1260, 1350, 1440});
+        skillDelayTimes.putIfAbsent(BlazeWizard.FIRE_STRIKE, new int[]{750, 810, 870});
         skillDelayTimes.putIfAbsent(Magician.ENERGY_BOLT, new int[]{720, 750, 810});
         skillDelayTimes.putIfAbsent(Magician.MAGIC_CLAW, new int[]{720, 750, 810});
         skillDelayTimes.putIfAbsent(FPWizard.FIRE_ARROW, new int[]{720, 750, 810});
@@ -3519,6 +3777,10 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(Bishop.GENESIS, new int[]{2700, 2700, 2700});
 
         // bowman skills
+        skillDelayTimes.putIfAbsent(WindArcher.DOUBLE_SHOT, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(WindArcher.ARROW_RAIN, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(WindArcher.HURRICANE, new int[]{330, 330, 330, 330, 330, 330, 330, 330}); // todo: not sure how this one works
+        skillDelayTimes.putIfAbsent(WindArcher.STRAFE, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Archer.ARROW_BLOW, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Archer.DOUBLE_SHOT, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Hunter.ARROW_BOMB, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
@@ -3531,6 +3793,10 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(Marksman.PIERCING_ARROW, new int[]{630, 690, 720, 780, 870, 870, 870, 870});
 
         // thief skills
+        skillDelayTimes.putIfAbsent(NightWalker.LUCKY_SEVEN, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
+        skillDelayTimes.putIfAbsent(NightWalker.VAMPIRE, new int[]{1020, 1110, 1200, 1290, 1350, 1350, 1350, 1350});
+        skillDelayTimes.putIfAbsent(NightWalker.AVENGER, new int[]{630, 690, 750, 810, 840, 840, 840, 840});
+        skillDelayTimes.putIfAbsent(NightWalker.TRIPLE_THROW, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Rogue.LUCKY_SEVEN, new int[]{600, 660, 720, 750, 810, 810, 810, 810});
         skillDelayTimes.putIfAbsent(Rogue.DOUBLE_STAB, new int[]{600, 660, 720, 750, 750, 750, 750, 750});
         skillDelayTimes.putIfAbsent(Hermit.AVENGER, new int[]{630, 690, 750, 810, 840, 840, 840, 840});
@@ -3540,6 +3806,10 @@ public class CharacterBot {
         skillDelayTimes.putIfAbsent(Shadower.BOOMERANG_STEP, new int[]{2640, 2700, 2760, 2820, 2820, 2820, 2820, 2820});
 
         // pirate skills
+        skillDelayTimes.putIfAbsent(ThunderBreaker.FIRST_STRIKE, new int[]{450, 510, 540, 570, 600, 600, 600, 600});
+        skillDelayTimes.putIfAbsent(ThunderBreaker.SOMERSAULT_KICK, new int[]{660, 720, 780, 840, 840, 840, 840, 840});
+        skillDelayTimes.putIfAbsent(ThunderBreaker.BARRAGE, new int[]{5070, 5220, 5370, 5520, 5670, 5670, 5670, 5670});
+        skillDelayTimes.putIfAbsent(ThunderBreaker.SHARK_WAVE, new int[]{810, 870, 930, 990, 1050, 1050, 1050, 1050});
         skillDelayTimes.putIfAbsent(Pirate.FLASH_FIST, new int[]{450, 510, 540, 570, 600, 600, 600, 600});
         skillDelayTimes.putIfAbsent(Pirate.DOUBLE_SHOT, new int[]{390, 420, 450, 480, 480, 480, 480, 480});
         skillDelayTimes.putIfAbsent(Pirate.SOMERSAULT_KICK, new int[]{660, 720, 780, 840, 840, 840, 840, 840});
