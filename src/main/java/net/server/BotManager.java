@@ -4,7 +4,6 @@ import client.Character;
 import client.CharacterBot;
 import client.Client;
 import net.server.world.Party;
-import net.server.world.PartyCharacter;
 import tools.DatabaseConnection;
 import tools.Pair;
 import tools.Randomizer;
@@ -95,7 +94,7 @@ public class BotManager {
             for (Pair<String, Integer> t : data) {
                 nextBot = new CharacterBot();
                 try {
-                    nextBot.login(t.getLeft(), "botpw", t.getRight());
+                    nextBot.login(t.getLeft(), "botpw", t.getRight(), 1);
                 } catch (SQLException e) {
                     System.out.println("failed to login a bot");
                     continue;
@@ -149,7 +148,7 @@ public class BotManager {
         return ret;
     }
 
-    public void createFollower(Character character) {
+    public void createFollower(Character character, int channel) {
         /*lock.lock();
         try {
 
@@ -160,12 +159,12 @@ public class BotManager {
         character.message("This mode is not yet implemented");
     }
 
-    public void createFollower(Character character, String job) {
+    public void createFollower(Character character, String job, int channel) {
         // todo: find a bot with the specified job in level range, if none exist then call createFollower(character);
         character.message("This mode is not yet implemented");
     }
 
-    public void createFollower(Character character, String login, String password, String characterName) {
+    public void createFollower(Character character, String login, String password, String characterName, int channel) {
         lock.lock();;
         try {
             int accountId;
@@ -207,7 +206,7 @@ public class BotManager {
             }
             CharacterBot follower = new CharacterBot();
             try {
-                follower.login(login, password, charId);
+                follower.login(login, password, charId, channel);
             } catch (SQLException e) {
                 character.message("There was an error trying to log in the follower.");
                 return;
@@ -319,6 +318,59 @@ public class BotManager {
                 }
             }
             return ret;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void createFollowerPQParty(int partySize, int minLevel, int maxLevel, Character humanPlayer, int channel) {
+        lock.lock();
+        List<Pair<String, String>> botInfo;
+        try {
+            if (!Party.createParty(humanPlayer, false)) {
+                humanPlayer.message("party failed to be created");
+                return;
+            }
+            try (Connection con = DatabaseConnection.getConnection()) {
+                List<Integer> botIds = new ArrayList<>();
+                List<String> accountNames = new ArrayList<>();
+                botInfo = new ArrayList<>();
+                try (PreparedStatement ps = con.prepareStatement("SELECT id, name FROM accounts WHERE loggedin = 0;");
+                     ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        if (rs.getString("name").contains("bot")) {
+                            botIds.add(rs.getInt("id"));
+                            accountNames.add(rs.getString("name"));
+                        }
+                    }
+                }
+                if (botIds.size() < partySize - 1) {
+                    humanPlayer.message("not enough bots available to create party");
+                    return;
+                }
+                try (PreparedStatement ps = con.prepareStatement("SELECT accountid, `name` FROM characters WHERE level BETWEEN " + minLevel + " AND " + maxLevel + ";");
+                     ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        if (botIds.contains(rs.getInt("accountid"))) {
+                            int location = botIds.indexOf(rs.getInt("accountid"));
+                            botInfo.add(new Pair<>(accountNames.get(location), rs.getString("name")));
+                        }
+                    }
+                }
+                if (botInfo.size() < partySize - 1) {
+                    humanPlayer.message("not enough bots available to create party");
+                    return;
+                }
+            } catch (SQLException se) {
+                System.out.println("error - add follower command could not access database");
+                humanPlayer.message("There was an error trying to access the database.");
+                return;
+            }
+            Collections.shuffle(botInfo); // so different bots get a chance
+            for (int i = 0; i < partySize - 1; i++) {
+                createFollower(humanPlayer, botInfo.get(i).left, "botpw", botInfo.get(i).right, channel);
+            }
+            partyCommand(humanPlayer);
         } finally {
             lock.unlock();
         }

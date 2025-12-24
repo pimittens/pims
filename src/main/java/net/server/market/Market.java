@@ -188,6 +188,8 @@ public class Market {
                         nextId = itemIds.next();
                         if (items.get(nextId).getQuantity() > 0) {
                             merchant.addItem(new PlayerShopItem(new Item(nextId, (short) 1, (short) 1), ItemConstants.isRechargeable(nextId) ? 1 : (short) Math.min(1000, items.get(nextId).getQuantity()), items.get(nextId).getMarketPrice()));
+                        } else {
+                            i -= 1;
                         }
                     }
                 } else {

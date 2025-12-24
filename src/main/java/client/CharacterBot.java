@@ -153,16 +153,16 @@ public class CharacterBot {
         return c.getPlayer();
     }
 
-    public void login(String login, String password, int charID) throws SQLException {
+    public void login(String login, String password, int charID, int channel) throws SQLException {
         this.login = login;
         this.charID = charID;
-        c = Client.createLoginClient(-1, "127.0.0.1", PacketProcessor.getLoginServerProcessor(), 0, 1);
+        c = Client.createLoginClient(-1, "127.0.0.1", PacketProcessor.getLoginServerProcessor(), 0, channel);
         c.setBotClient();
         c.handlePacket(PacketCreator.createLoginPasswordPacket(login, password), (short) 1);
         c.handlePacket(PacketCreator.createServerListRequestPacket(), (short) 11);
         c.handlePacket(PacketCreator.createCharListRequestPacket(), (short) 5);
         c.handlePacket(PacketCreator.createCharSelectedPacket(charID), (short) 19);
-        c = Client.createChannelClient(-1, "127.0.0.1", PacketProcessor.getChannelServerProcessor(0, 1), 0, 1);
+        c = Client.createChannelClient(-1, "127.0.0.1", PacketProcessor.getChannelServerProcessor(0, channel), 0, channel);
         c.setBotClient();
         c.handlePacket(PacketCreator.createLoginPacket(charID), (short) 20);
         c.handlePacket(PacketCreator.createPartySearchUpdatePacket(), (short) 223);
@@ -891,10 +891,6 @@ public class CharacterBot {
                 if (getPlayer().getSkillLevel(DawnWarrior.RAGE) > 0) {
                     buffSkills.add(DawnWarrior.RAGE);
                 }
-            case DAWNWARRIOR1:
-                if (getPlayer().getSkillLevel(DawnWarrior.SOUL) > 0) {
-                    buffSkills.add(DawnWarrior.SOUL);
-                }
                 break;
             case WARRIOR:
                 if (getPlayer().getSkillLevel(Warrior.IRON_BODY) > 0) {
@@ -981,9 +977,6 @@ public class CharacterBot {
                 if (getPlayer().getSkillLevel(BlazeWizard.MAGIC_GUARD) > 0) {
                     buffSkills.add(BlazeWizard.MAGIC_GUARD);
                 }
-                if (getPlayer().getSkillLevel(BlazeWizard.FLAME) > 0) {
-                    buffSkills.add(BlazeWizard.FLAME);
-                }
                 break;
             case MAGICIAN:
                 if (getPlayer().getSkillLevel(Magician.MAGIC_GUARD) > 0) {
@@ -1051,10 +1044,6 @@ public class CharacterBot {
                 if (getPlayer().getSkillLevel(WindArcher.BOW_BOOSTER) > 2) {
                     buffSkills.add(WindArcher.BOW_BOOSTER);
                 }
-            case WINDARCHER1:
-                if (getPlayer().getSkillLevel(WindArcher.STORM) > 0) {
-                    buffSkills.add(WindArcher.STORM);
-                }
                 break;
             case BOWMAN:
                 if (getPlayer().getSkillLevel(Archer.FOCUS) > 0) {
@@ -1107,10 +1096,6 @@ public class CharacterBot {
                 if (getPlayer().getSkillLevel(NightWalker.HASTE) > 2) {
                     buffSkills.add(NightWalker.HASTE);
                 }
-            case NIGHTWALKER1:
-                if (getPlayer().getSkillLevel(NightWalker.DARKNESS) > 0) {
-                    buffSkills.add(NightWalker.DARKNESS);
-                }
                 break;
             case NIGHTLORD:
                 if (getPlayer().getSkillLevel(NightLord.MAPLE_WARRIOR) > 0) {
@@ -1157,10 +1142,6 @@ public class CharacterBot {
                 }
                 if (getPlayer().getSkillLevel(ThunderBreaker.LIGHTNING_CHARGE) > 2) {
                     buffSkills.add(ThunderBreaker.LIGHTNING_CHARGE);
-                }
-            case THUNDERBREAKER1:
-                if (getPlayer().getSkillLevel(ThunderBreaker.LIGHTNING) > 0) {
-                    buffSkills.add(ThunderBreaker.LIGHTNING);
                 }
                 break;
             case BUCCANEER:

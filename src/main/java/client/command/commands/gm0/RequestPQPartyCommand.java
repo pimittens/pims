@@ -23,27 +23,30 @@
 */
 package client.command.commands.gm0;
 
+import client.Character;
 import client.Client;
 import client.command.Command;
 import net.server.Server;
+import net.server.world.Party;
+import net.server.world.PartyCharacter;
+import scripting.event.EventManager;
 
-public class AddFollowerCommand extends Command {
+import java.util.ArrayList;
+import java.util.List;
+
+public class RequestPQPartyCommand extends Command {
     {
         setDescription("Summon a follower.");
     }
 
     @Override
     public void execute(Client c, String[] params) {
-        if (Server.getInstance().getBotManager().getNumFollowers(c.getPlayer()) >= 5) {
-            c.getPlayer().message("You have reached the maximum number of followers.");
-            return;
-        }
-        if (params.length < 1) {
-            Server.getInstance().getBotManager().createFollower(c.getPlayer(), c.getChannel());
-        } else if (params.length < 3) {
-            Server.getInstance().getBotManager().createFollower(c.getPlayer(), params[0], c.getChannel());
+        if (params.length > 0) {
+            if (params[0].equals("kpq")) {
+                Server.getInstance().getBotManager().createFollowerPQParty(4, 21, 30, c.getPlayer(), c.getChannel());
+            }
         } else {
-            Server.getInstance().getBotManager().createFollower(c.getPlayer(), params[0], params[1], params[2], c.getChannel());
+            c.getPlayer().message("please enter a pq (kpq).");
         }
     }
 }

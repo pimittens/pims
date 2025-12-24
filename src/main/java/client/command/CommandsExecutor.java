@@ -44,6 +44,7 @@ import client.command.commands.gm0.RanksCommand;
 import client.command.commands.gm0.RatesCommand;
 import client.command.commands.gm0.ReadPointsCommand;
 import client.command.commands.gm0.ReportBugCommand;
+import client.command.commands.gm0.RequestPQPartyCommand;
 import client.command.commands.gm0.SaveCharacterCommand;
 import client.command.commands.gm0.ShowRatesCommand;
 import client.command.commands.gm0.StaffCommand;
@@ -382,6 +383,7 @@ public class CommandsExecutor {
         addCommand("party", JoinPartyCommand.class);
         addCommand("dismiss", DismissFollowerCommand.class);
         addCommand("automate", AutomateCommand.class);
+        addCommand("reqpq", RequestPQPartyCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }
