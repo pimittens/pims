@@ -24,7 +24,8 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 * Players can create follower bots using the @follower command. These bots will follow the player character when changing maps. Each player may only have up to 5 followers at a time.
 * Follower bots can be added to the player's party using the @party command.
 * Follower bots can be dismissed using the @dismiss command.
-* Players can automate grinding and PQs. This uses a bot assigned to the player's character, although the bot's actions will not be displayed on the player's client. Using the @automate command toggles this feature on or off.
+* Players can automate grinding and PQs. This uses a bot assigned to the player's character, although the bot's actions will not be displayed on the player's client. Using the @automate command toggles this feature on or off. Having the feature toggled on charges the player a number of mesos equal to their level times 10 every 10 seconds.
+* Using the @reqpq command will request bots to join the player's party in order to participate in a specific party quest. The bots will be randomly selected from those which are in the appropriate level range and not already logged in.
 
 ## Other Features/Changes
 
@@ -39,6 +40,6 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 * More realistic bot actions (movement and attacks). Currently bots ignore footholds/ladders/jumping since this is too much work, and packets are sometimes sent too quickly.
 * Bots creating/joining guilds.
 * Random bot chat messages and smegas.
-* Free market: bots should create their own shops and buy items from other shops.
+* Free market (in progress, currently all items collected by bots and not equipped are sold and will appear in fm shops).
 * Bots should spend their nx on gachapon tickets and use them at a random gachapon.
 * Include a way for bots to get random cash item equips and wear them.
