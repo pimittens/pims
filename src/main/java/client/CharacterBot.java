@@ -1611,6 +1611,12 @@ public class CharacterBot {
                 } else {
                     hasTargetItem = false;
                 }
+                if (hasTargetItem && currentMode != Mode.GRINDING) {
+                    // give bots a delay when looting if not grinding because otherwise it is too fast and humans probably won't be able to loot boss drops
+                    // todo: this is kind of awkward, should figure out something better probably
+                    delay = 2000 + (int) (3000 * Randomizer.nextDouble());
+                    return time;
+                }
                 time1 += System.currentTimeMillis() - otherStartTime;
             }
             if (!hasTargetMonster || !targetMonster.isAlive()) {
@@ -1712,6 +1718,11 @@ public class CharacterBot {
                     }*/
                 } else {
                     hasTargetItem = false;
+                }
+                if (!seek && hasTargetItem && currentMode != Mode.GRINDING) {
+                    // give bots a delay when looting if not grinding because otherwise it is too fast and humans probably won't be able to loot boss drops
+                    delay = 2000 + (int) (3000 * Randomizer.nextDouble());
+                    return false;
                 }
                 time1 += System.currentTimeMillis() - otherStartTime;
             }
@@ -1818,6 +1829,11 @@ public class CharacterBot {
                     }*/
                 } else {
                     hasTargetItem = false;
+                }
+                if (!seek && hasTargetItem && currentMode != Mode.GRINDING) {
+                    // give bots a delay when looting if not grinding because otherwise it is too fast and humans probably won't be able to loot boss drops
+                    delay = 2000 + (int) (3000 * Randomizer.nextDouble());
+                    return false;
                 }
             }
             if (!hasTargetMonster || !targetMonster.isAlive()) {
