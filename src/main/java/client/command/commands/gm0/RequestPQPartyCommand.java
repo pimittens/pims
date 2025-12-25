@@ -44,9 +44,13 @@ public class RequestPQPartyCommand extends Command {
         if (params.length > 0) {
             if (params[0].equals("kpq")) {
                 Server.getInstance().getBotManager().createFollowerPQParty(4, 21, 30, c.getPlayer(), c.getChannel());
+            } else if (params[0].equals("lpq")) {
+                Server.getInstance().getBotManager().createFollowerPQParty(6, 35, 50, c.getPlayer(), c.getChannel());
+            } else {
+                c.getPlayer().message("please enter a valid pq (kpq, lpq).");
             }
         } else {
-            c.getPlayer().message("please enter a pq (kpq).");
+            c.getPlayer().message("please enter a pq (kpq, lpq).");
         }
     }
 }
