@@ -1331,9 +1331,6 @@ public class CharacterBot {
         }
         minDamage = (int) (minDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.6);
         maxDamage = (int) (maxDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.5);
-        if (maxDamage - minDamage + 1 < 1) {
-            return 0;
-        }
         return Math.max((int) ((Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage) * multiplier), 1);
     }
 
@@ -1614,7 +1611,7 @@ public class CharacterBot {
                 if (hasTargetItem && currentMode != Mode.GRINDING) {
                     // give bots a delay when looting if not grinding because otherwise it is too fast and humans probably won't be able to loot boss drops
                     // todo: this is kind of awkward, should figure out something better probably
-                    delay = 2000 + (int) (3000 * Randomizer.nextDouble());
+                    delay = 2000 + Randomizer.nextInt(1000);
                     return time;
                 }
                 time1 += System.currentTimeMillis() - otherStartTime;
@@ -1721,7 +1718,7 @@ public class CharacterBot {
                 }
                 if (!seek && hasTargetItem && currentMode != Mode.GRINDING) {
                     // give bots a delay when looting if not grinding because otherwise it is too fast and humans probably won't be able to loot boss drops
-                    delay = 2000 + (int) (3000 * Randomizer.nextDouble());
+                    delay = 2000 + Randomizer.nextInt(1000);
                     return false;
                 }
                 time1 += System.currentTimeMillis() - otherStartTime;
@@ -1832,7 +1829,7 @@ public class CharacterBot {
                 }
                 if (!seek && hasTargetItem && currentMode != Mode.GRINDING) {
                     // give bots a delay when looting if not grinding because otherwise it is too fast and humans probably won't be able to loot boss drops
-                    delay = 2000 + (int) (3000 * Randomizer.nextDouble());
+                    delay = 2000 + Randomizer.nextInt(1000);
                     return false;
                 }
             }
