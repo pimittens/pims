@@ -24538,3 +24538,6 @@ SET minimum_quantity = CASE
 (9500333, 2290076, 1, 1, 0, 10000),
 (9500333, 2290104, 1, 1, 0, 10000),
 (9500333, 2290117, 1, 1, 0, 10000);
+
+# remove basic arrow drops
+DELETE FROM drop_data WHERE itemid = 2060000 OR itemid = 2061000;
