@@ -1252,7 +1252,7 @@ public class ItemInformationProvider {
             return 0;
         }
         int lMaxRange = (int) Math.min(Math.ceil(defaultValue * 0.1), maxRange);
-        return (short) ((defaultValue - lMaxRange) + Math.floor(Randomizer.nextDouble() * (lMaxRange * 2 + 1)));
+        return (short) ((defaultValue - lMaxRange) + Math.floor(Randomizer.nextDouble() * (Math.max(lMaxRange, maxRange) * 2 + 1)));
     }
 
     public Equip randomizeStats(Equip equip) {
