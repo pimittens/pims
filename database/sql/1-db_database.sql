@@ -1,4 +1,4 @@
-﻿/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
 /*!40101 SET NAMES utf8 */;
@@ -12797,7 +12797,6 @@ CREATE TABLE IF NOT EXISTS `drop_data_global` (
 ) ENGINE=InnoDB  DEFAULT CHARSET=latin1 ROW_FORMAT=DYNAMIC AUTO_INCREMENT=5 ;
 
 INSERT INTO `drop_data_global` (`id`, `continent`, `itemid`, `minimum_quantity`, `maximum_quantity`, `questid`, `chance`, `comments`) VALUES
-(1, -1, 4031866, 1, 1, 0, 20000, 'NX Card 250 PTS'),
 (2, -1, 4001126, 1, 2, 0, 8000, 'Maple Leaves');
 
 CREATE TABLE IF NOT EXISTS `dueyitems` (
