@@ -222,7 +222,7 @@ public class Market {
             if (items.containsKey(item.getItemId())) {
                 int quantity = ItemConstants.isRechargeable(item.getItemId()) ? 1 : item.getQuantity();
                 items.get(item.getItemId()).addQuantity(quantity);
-                return items.get(item.getItemId()).getBasePrice() * quantity / 2; // minimum possible price
+                return items.get(item.getItemId()).getBasePrice() * quantity / 100;
             }
             return 0;
         } finally {
@@ -238,8 +238,12 @@ public class Market {
     public int sellEquip(Equip equip) {
         lock.lock();
         try {
+            ItemInformationProvider ii = ItemInformationProvider.getInstance();
+            if (ii.getEquipLevelReq(equip.getItemId())  < 70) {
+                return 1000;
+            }
             equips.add((Equip) equip.copy());
-            return 100000;
+            return 50000; // todo: decide when to just turn them into monster crystals
         } finally {
             lock.unlock();
         }
