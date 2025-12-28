@@ -46,6 +46,7 @@ import client.command.commands.gm0.ReadPointsCommand;
 import client.command.commands.gm0.ReportBugCommand;
 import client.command.commands.gm0.RequestPQPartyCommand;
 import client.command.commands.gm0.SaveCharacterCommand;
+import client.command.commands.gm0.SetExpRateCommand;
 import client.command.commands.gm0.ShowRatesCommand;
 import client.command.commands.gm0.StaffCommand;
 import client.command.commands.gm0.StatDexCommand;
@@ -386,6 +387,7 @@ public class CommandsExecutor {
         addCommand("automate", AutomateCommand.class);
         addCommand("reqpq", RequestPQPartyCommand.class);
         addCommand("toggleloot", ToggleFollowerLootCommand.class);
+        addCommand("exp", SetExpRateCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }

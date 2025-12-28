@@ -195,7 +195,7 @@ public class Character extends AbstractCharacterObject {
     private int mesosTraded = 0;
     private int possibleReports = 10;
     private int ariantPoints, dojoPoints, vanquisherStage, dojoStage, dojoEnergy, vanquisherKills;
-    private int expRate = 1, mesoRate = 1, dropRate = 1, expCoupon = 1, mesoCoupon = 1, dropCoupon = 1;
+    private int personalExpRate = 1, expRate = 1, mesoRate = 1, dropRate = 1, expCoupon = 1, mesoCoupon = 1, dropCoupon = 1;
     private int omokwins, omokties, omoklosses, matchcardwins, matchcardties, matchcardlosses;
     private int owlSearch;
     private long lastfametime, lastUsedCashItem, lastExpression = 0, lastHealed, lastDeathtime, jailExpiration = -1;
@@ -3115,7 +3115,7 @@ public class Character extends AbstractCharacterObject {
     }
 
     private synchronized void gainExpInternal(long gain, int equip, int party, boolean show, boolean inChat, boolean white) {   // need of method synchonization here detected thanks to MedicOP
-        long total = Math.max(gain + equip + party, -exp.get());
+        long total = Math.max(gain * personalExpRate + equip + party, -exp.get());
 
         if (level < getMaxLevel() && (allowExpGain || this.getEventInstance() != null)) {
             long leftover = 0;
@@ -3128,7 +3128,7 @@ public class Character extends AbstractCharacterObject {
             updateSingleStat(Stat.EXP, exp.addAndGet((int) total));
             totalExpGained += total;
             if (show) {
-                announceExpGain(gain, equip, party, inChat, white);
+                announceExpGain(gain * personalExpRate, equip, party, inChat, white);
             }
             while (exp.get() >= ExpTable.getExpNeededForLevel(level)) {
                 levelUp(true);
@@ -4904,7 +4904,7 @@ public class Character extends AbstractCharacterObject {
     }
 
     public boolean hasNoviceExpRate() {
-        return YamlConfig.config.server.USE_ENFORCE_NOVICE_EXPRATE && level < 71;
+        return YamlConfig.config.server.USE_ENFORCE_NOVICE_EXPRATE && level < 11;
     }
 
     public int getExpRate() {
@@ -11296,5 +11296,9 @@ public class Character extends AbstractCharacterObject {
             ret += getBuffEffect(BuffStat.SHARP_EYES).getY() - 100;
         }
         return ret / 100.0;
+    }
+
+    public void setPersonalExpRate(int rate) {
+        personalExpRate = rate;
     }
 }

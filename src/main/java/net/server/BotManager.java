@@ -298,7 +298,7 @@ public class BotManager {
                 if (character.getParty().getMembers().size() > 5) {
                     return;
                 }
-                if (bot.getFollowing().equals(character)) {
+                if (bot.getFollowing() != null && bot.getFollowing().equals(character)) {
                     Party.joinParty(bot.getPlayer(), character.getPartyId(), false);
                 }
             }

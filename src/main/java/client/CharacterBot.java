@@ -173,6 +173,9 @@ public class CharacterBot {
         Foothold foothold = getPlayer().getMap().getFootholds().findBelow(getPlayer().getPosition());
         c.handlePacket(PacketCreator.createPlayerMovementPacket((short) getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
         level = getPlayer().getLevel();
+        if (level > 19) {
+            c.getPlayer().setPersonalExpRate(level / 10);
+        }
         decideAttackSkills();
         putBuffSkills();
         chooseMode();

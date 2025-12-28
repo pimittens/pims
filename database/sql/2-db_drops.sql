@@ -24543,3 +24543,6 @@ SET minimum_quantity = CASE
 DELETE FROM drop_data WHERE itemid = 2060000 OR itemid = 2061000;
 # make scroll drops more likely
 UPDATE drop_data SET chance = (10 * chance) WHERE itemid >= 2040000 AND itemid <= 2050000;
+# hard to find monster card drops
+UPDATE drop_data SET chance = 200000 WHERE itemid >= 2384021 AND itemid <= 2384023;
+UPDATE drop_data SET chance = 200000 WHERE itemid >= 2388067 AND itemid <= 2388070;
