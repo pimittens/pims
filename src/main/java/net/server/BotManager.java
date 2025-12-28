@@ -68,7 +68,7 @@ public class BotManager {
         try {
             CharacterBot found = null;
             for (CharacterBot follower : followers) {
-                if (follower.getPlayer().getName().equals(client.getPlayer().getName())) {
+                if (follower.getPlayer() != null && follower.getPlayer().getName().equals(client.getPlayer().getName())) {
                     found = follower;
                     break;
                 }
@@ -81,6 +81,25 @@ public class BotManager {
             } else {
                 followers.remove(found);
                 client.getPlayer().message("Automate disabled.");
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public void toggleFollowerLoot(Client c) {
+        lock.lock();
+        try {
+            boolean toggle = false;
+            for (CharacterBot bot : followers) {
+                if (bot.getFollowing() != null && bot.getFollowing().equals(c.getPlayer())) {
+                    toggle = bot.toggleFollowerLoot();
+                }
+            }
+            if (toggle) {
+                c.getPlayer().message("Follower looting enabled.");
+            } else {
+                c.getPlayer().message("Follower looting disabled.");
             }
         } finally {
             lock.unlock();
@@ -138,7 +157,7 @@ public class BotManager {
         lock.lock();
         try {
             for (CharacterBot bot : bots) {
-                if (bot.isLoggedIn()) {
+                if (bot.isLoggedIn() && bot.getPlayer() != null) {
                     ret.add(bot.getPlayer().getLevel());
                 }
             }
@@ -223,7 +242,7 @@ public class BotManager {
         try {
             CharacterBot toDismiss = null;
             for (CharacterBot bot : followers) {
-                if (bot.getFollowing().equals(character) && bot.getPlayer().getName().equals(name)) {
+                if (bot.getFollowing() != null && bot.getFollowing().equals(character) && bot.getPlayer().getName().equals(name)) {
                     toDismiss = bot;
                     break;
                 }
@@ -244,7 +263,7 @@ public class BotManager {
         try {
             List<CharacterBot> toRemove = new ArrayList<>();
             for (CharacterBot bot : followers) {
-                if (bot.getFollowing().equals(character)) {
+                if (bot.getFollowing() != null && bot.getFollowing().equals(character)) {
                     bot.logout();
                     toRemove.add(bot);
                 }

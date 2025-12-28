@@ -54,6 +54,7 @@ import client.command.commands.gm0.StatLukCommand;
 import client.command.commands.gm0.StatStrCommand;
 import client.command.commands.gm0.TimeCommand;
 import client.command.commands.gm0.ToggleExpCommand;
+import client.command.commands.gm0.ToggleFollowerLootCommand;
 import client.command.commands.gm0.UptimeCommand;
 import client.command.commands.gm1.BossHpCommand;
 import client.command.commands.gm1.BuffMeCommand;
@@ -384,6 +385,7 @@ public class CommandsExecutor {
         addCommand("dismiss", DismissFollowerCommand.class);
         addCommand("automate", AutomateCommand.class);
         addCommand("reqpq", RequestPQPartyCommand.class);
+        addCommand("toggleloot", ToggleFollowerLootCommand.class);
 
         commandsNameDesc.add(levelCommandsCursor);
     }

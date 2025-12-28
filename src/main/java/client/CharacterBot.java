@@ -120,6 +120,8 @@ public class CharacterBot {
     private static final Map<Integer, int[]> skillDelayTimes = new HashMap<>();
 
     private Character following = null;
+
+    private boolean followerLoot = true; // whether followers should loot items
     //private Foothold foothold;
 
     private boolean automate = false;
@@ -202,6 +204,11 @@ public class CharacterBot {
 
     public boolean isFollower() {
         return following != null;
+    }
+
+    public boolean toggleFollowerLoot() {
+        followerLoot = !followerLoot;
+        return followerLoot;
     }
 
     public void setMode(Mode newMode) {
@@ -1289,6 +1296,9 @@ public class CharacterBot {
                 minDamage = (int) (minDamage * SkillFactory.getSkill(FPMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100.0);
             }
         }
+        if (automate) {
+            System.out.println("maxdamage: " + maxDamage + ", mindamage: " + minDamage);
+        }
         return Math.max((Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage), 1);
     }
 
@@ -1313,6 +1323,9 @@ public class CharacterBot {
         }
         minDamage = (int) (minDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.6);
         maxDamage = (int) (maxDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.5);
+        if (automate) {
+            System.out.println("maxdamage: " + maxDamage + ", mindamage: " + minDamage + ", multiplier: " + multiplier);
+        }
         return Math.max((int) ((Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage) * multiplier), 1);
     }
 
@@ -1331,6 +1344,9 @@ public class CharacterBot {
         }
         minDamage = (int) (minDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.6);
         maxDamage = (int) (maxDamage * (1 - 0.01 * leveldelta) - monsterPhysicalDefense * 0.5);
+        if (automate) {
+            System.out.println("maxdamage: " + maxDamage + ", mindamage: " + minDamage + ", multiplier: " + multiplier);
+        }
         return Math.max((int) ((Randomizer.nextInt(maxDamage - minDamage + 1) + minDamage) * multiplier), 1);
     }
 
@@ -1608,12 +1624,6 @@ public class CharacterBot {
                 } else {
                     hasTargetItem = false;
                 }
-                if (hasTargetItem && currentMode != Mode.GRINDING) {
-                    // give bots a delay when looting if not grinding because otherwise it is too fast and humans probably won't be able to loot boss drops
-                    // todo: this is kind of awkward, should figure out something better probably
-                    delay = 2000 + Randomizer.nextInt(1000);
-                    return time;
-                }
                 time1 += System.currentTimeMillis() - otherStartTime;
             }
             if (!hasTargetMonster || !targetMonster.isAlive()) {
@@ -1645,7 +1655,7 @@ public class CharacterBot {
                 }
                 time2 += System.currentTimeMillis() - otherStartTime;
             }
-            if (hasTargetItem) {
+            if (hasTargetItem && (!isFollower() || followerLoot)) {
                 otherStartTime = System.currentTimeMillis();
                 if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
                     time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
@@ -1716,11 +1726,6 @@ public class CharacterBot {
                 } else {
                     hasTargetItem = false;
                 }
-                if (!seek && hasTargetItem && currentMode != Mode.GRINDING) {
-                    // give bots a delay when looting if not grinding because otherwise it is too fast and humans probably won't be able to loot boss drops
-                    delay = 2000 + Randomizer.nextInt(1000);
-                    return false;
-                }
                 time1 += System.currentTimeMillis() - otherStartTime;
             }
             if (!hasTargetMonster || !targetMonster.isAlive()) {
@@ -1752,7 +1757,7 @@ public class CharacterBot {
                 }
                 time2 += System.currentTimeMillis() - otherStartTime;
             }
-            if (hasTargetItem) {
+            if (hasTargetItem && (!isFollower() || followerLoot)) {
                 otherStartTime = System.currentTimeMillis();
                 if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
                     time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
@@ -1827,11 +1832,6 @@ public class CharacterBot {
                 } else {
                     hasTargetItem = false;
                 }
-                if (!seek && hasTargetItem && currentMode != Mode.GRINDING) {
-                    // give bots a delay when looting if not grinding because otherwise it is too fast and humans probably won't be able to loot boss drops
-                    delay = 2000 + Randomizer.nextInt(1000);
-                    return false;
-                }
             }
             if (!hasTargetMonster || !targetMonster.isAlive()) {
                 if (!getPlayer().getMap().getAllMonsters().isEmpty()) {
@@ -1860,7 +1860,7 @@ public class CharacterBot {
                     hasTargetMonster = false;
                 }
             }
-            if (hasTargetItem) {
+            if (hasTargetItem && (!isFollower() || followerLoot)) {
                 if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
                     time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
                     didAction = true;
@@ -1935,7 +1935,7 @@ public class CharacterBot {
                     hasTargetReactor = false;
                 }
             }
-            if (hasTargetItem) {
+            if (hasTargetItem && (!isFollower() || followerLoot)) {
                 if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
                     time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
                     didAction = true;
@@ -2009,7 +2009,7 @@ public class CharacterBot {
                     hasTargetReactor = false;
                 }
             }
-            if (hasTargetItem) {
+            if (hasTargetItem && (!isFollower() || followerLoot)) {
                 if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
                     time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
                     didAction = true;
@@ -2091,7 +2091,7 @@ public class CharacterBot {
                     hasTargetReactor = false;
                 }
             }
-            if (hasTargetItem) {
+            if (hasTargetItem && (!isFollower() || followerLoot)) {
                 if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
                     time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
                     didAction = true;
@@ -2184,7 +2184,7 @@ public class CharacterBot {
                     hasTargetReactor = false;
                 }
             }
-            if (hasTargetItem) {
+            if (hasTargetItem && (!isFollower() || followerLoot)) {
                 if (!getPlayer().getPosition().equals(targetItem.getPosition())) {
                     time = moveBot((short) targetItem.getPosition().x, (short) targetItem.getPosition().y, time);
                     didAction = true;
