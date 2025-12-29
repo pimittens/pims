@@ -2789,7 +2789,7 @@ public class CharacterBot {
                     } else {
                         getPlayer().gainMeso(Server.getInstance().getMarket().sellItem(getPlayer().getInventory(type).getItem(pos)));
                     }
-                    getPlayer().getInventory(type).removeItem(pos);
+                    getPlayer().getInventory(type).removeItem(pos, getPlayer().getInventory(type).getItem(pos).getQuantity(), false);
                 }
             }
         } finally {
