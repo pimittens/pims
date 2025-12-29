@@ -3191,8 +3191,9 @@ public class CharacterBot {
             return;
         }
         if (doneWithPQTask) {
-            if (!allReactorsInactive(getPlayer().getMap().getAllReactors()) || containsItemId(getPlayer().getMap().getItems(), 4001022)) {
+            if (!getPlayer().getEventInstance().isEventLeader(getPlayer()) && (!allReactorsInactive(getPlayer().getMap().getAllReactors()) || containsItemId(getPlayer().getMap().getItems(), 4001022))) {
                 doneWithPQTask = false; // fix bug where this was set to true before the last pass dropped
+                delay = 3000;
                 return;
             }
             if (getPlayer().getPosition().x == 52 && getPlayer().getPosition().y == -2643) {
