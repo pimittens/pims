@@ -223,7 +223,7 @@ public class CharacterBot {
     }
 
     public void update() {
-        if (loggedOut || level >= 69) {
+        if (loggedOut || level >= 119) {
             return;
         }
         if (!currentMode.equals(Mode.PQ) && System.currentTimeMillis() - currentModeStartTime > MINUTES.toMillis(30)) {
@@ -3570,9 +3570,56 @@ public class CharacterBot {
                 {Spearman.POLEARM_BOOSTER, 20},
                 {Spearman.FINAL_ATTACK_POLEARM, 30}
         });
-        skillOrders.putIfAbsent(Job.CRUSADER, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.WHITEKNIGHT, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.DRAGONKNIGHT, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.CRUSADER, new int[][]{
+                {Crusader.COMBO, 30},
+                {Crusader.SHOUT, 30},
+                {Crusader.ARMOR_CRASH, 20},
+                {Crusader.IMPROVING_MPREC, 1},
+                {Crusader.SWORD_PANIC, 1},
+                {Crusader.AXE_PANIC, 1},
+                {Crusader.SWORD_COMA, 1},
+                {Crusader.AXE_COMA, 1},
+                {Crusader.SHIELD_MASTERY, 20},
+                {Crusader.IMPROVING_MPREC, 20},
+                {Crusader.SWORD_PANIC, 30},
+                {Crusader.AXE_PANIC, 30},
+                {Crusader.SWORD_COMA, 30},
+                {Crusader.AXE_COMA, 30}
+        });
+        skillOrders.putIfAbsent(Job.WHITEKNIGHT, new int[][]{
+                {WhiteKnight.CHARGE_BLOW, 30},
+                {WhiteKnight.MAGIC_CRASH, 20},
+                {WhiteKnight.IMPROVING_MP_RECOVERY, 1},
+                {WhiteKnight.BW_FIRE_CHARGE, 1},
+                {WhiteKnight.SWORD_FIRE_CHARGE, 1},
+                {WhiteKnight.BW_ICE_CHARGE, 1},
+                {WhiteKnight.SWORD_ICE_CHARGE, 1},
+                {WhiteKnight.BW_LIT_CHARGE, 1},
+                {WhiteKnight.SWORD_LIT_CHARGE, 1},
+                {WhiteKnight.SHIELD_MASTERY, 20},
+                {WhiteKnight.BW_FIRE_CHARGE, 30},
+                {WhiteKnight.SWORD_FIRE_CHARGE, 30},
+                {WhiteKnight.BW_ICE_CHARGE, 30},
+                {WhiteKnight.SWORD_ICE_CHARGE, 30},
+                {WhiteKnight.BW_LIT_CHARGE, 30},
+                {WhiteKnight.SWORD_LIT_CHARGE, 30},
+                {WhiteKnight.IMPROVING_MP_RECOVERY, 20}
+        });
+        skillOrders.putIfAbsent(Job.DRAGONKNIGHT, new int[][]{
+                {DragonKnight.SPEAR_CRUSHER, 30},
+                {DragonKnight.SPEAR_DRAGON_FURY, 30},
+                {DragonKnight.DRAGON_BLOOD, 20},
+                {DragonKnight.POWER_CRASH, 20},
+                {DragonKnight.POLE_ARM_CRUSHER, 1},
+                {DragonKnight.POLE_ARM_DRAGON_FURY, 1},
+                {DragonKnight.SACRIFICE, 3},
+                {DragonKnight.ELEMENTAL_RESISTANCE, 1},
+                {DragonKnight.DRAGON_ROAR, 30},
+                {DragonKnight.ELEMENTAL_RESISTANCE, 20},
+                {DragonKnight.POLE_ARM_CRUSHER, 30},
+                {DragonKnight.POLE_ARM_DRAGON_FURY, 30},
+                {DragonKnight.SACRIFICE, 30}
+        });
         skillOrders.putIfAbsent(Job.HERO, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.PALADIN, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.DARKKNIGHT, new int[][]{}); // todo
@@ -3619,11 +3666,44 @@ public class CharacterBot {
                 {Cleric.HOLY_ARROW, 30},
                 {Cleric.INVINCIBLE, 20},
                 {Cleric.MP_EATER, 20},
-                {Cleric.TELEPORT, 20},
+                {Cleric.TELEPORT, 20}
         });
-        skillOrders.putIfAbsent(Job.FP_MAGE, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.IL_MAGE, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.PRIEST, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.FP_MAGE, new int[][]{
+                {FPMage.EXPLOSION, 30},
+                {FPMage.ELEMENT_AMPLIFICATION, 30},
+                {FPMage.SPELL_BOOSTER, 20},
+                {FPMage.PARTIAL_RESISTANCE, 1},
+                {FPMage.POISON_MIST, 1},
+                {FPMage.SEAL, 1},
+                {FPMage.ELEMENT_COMPOSITION, 30},
+                {FPMage.SEAL, 20},
+                {FPMage.POISON_MIST, 30},
+                {FPMage.PARTIAL_RESISTANCE, 20}
+        });
+        skillOrders.putIfAbsent(Job.IL_MAGE, new int[][]{
+                {ILMage.ICE_STRIKE, 30},
+                {ILMage.ELEMENT_AMPLIFICATION, 30},
+                {ILMage.SPELL_BOOSTER, 20},
+                {ILMage.PARTIAL_RESISTANCE, 1},
+                {ILMage.THUNDER_SPEAR, 1},
+                {ILMage.SEAL, 1},
+                {ILMage.ELEMENT_COMPOSITION, 30},
+                {ILMage.SEAL, 20},
+                {ILMage.THUNDER_SPEAR, 30},
+                {ILMage.PARTIAL_RESISTANCE, 20}
+        });
+        skillOrders.putIfAbsent(Job.PRIEST, new int[][]{
+                {Priest.SHINING_RAY, 30},
+                {Priest.DISPEL, 3},
+                {Priest.HOLY_SYMBOL, 30},
+                {Priest.MYSTIC_DOOR, 20},
+                {Priest.DOOM, 1},
+                {ILMage.PARTIAL_RESISTANCE, 1},
+                {Priest.SUMMON_DRAGON, 30},
+                {ILMage.PARTIAL_RESISTANCE, 20},
+                {Priest.DISPEL, 20},
+                {Priest.DOOM, 30}
+        });
         skillOrders.putIfAbsent(Job.FP_ARCHMAGE, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.IL_ARCHMAGE, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.BISHOP, new int[][]{}); // todo
@@ -3658,8 +3738,32 @@ public class CharacterBot {
                 {Crossbowman.FINAL_ATTACK, 30},
                 {Crossbowman.POWER_KNOCKBACK, 20}
         });
-        skillOrders.putIfAbsent(Job.RANGER, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.SNIPER, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.RANGER, new int[][]{
+                {Ranger.MORTAL_BLOW, 5},
+                {Ranger.ARROW_RAIN, 30},
+                {Ranger.STRAFE, 30},
+                {Ranger.PUPPET, 5},
+                {Ranger.SILVER_HAWK, 1},
+                {Ranger.THRUST, 1},
+                {Ranger.INFERNO, 30},
+                {Ranger.MORTAL_BLOW, 20},
+                {Ranger.PUPPET, 20},
+                {Ranger.SILVER_HAWK, 30},
+                {Ranger.THRUST, 20}
+        });
+        skillOrders.putIfAbsent(Job.SNIPER, new int[][]{
+                {Sniper.MORTAL_BLOW, 5},
+                {Sniper.ARROW_ERUPTION, 30},
+                {Sniper.STRAFE, 30},
+                {Sniper.PUPPET, 5},
+                {Sniper.GOLDEN_EAGLE, 1},
+                {Sniper.THRUST, 1},
+                {Sniper.BLIZZARD, 30},
+                {Sniper.MORTAL_BLOW, 20},
+                {Sniper.PUPPET, 20},
+                {Sniper.GOLDEN_EAGLE, 30},
+                {Sniper.THRUST, 20}
+        });
         skillOrders.putIfAbsent(Job.BOWMASTER, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.MARKSMAN, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.THIEF, new int[][]{
@@ -3694,8 +3798,31 @@ public class CharacterBot {
                 {Bandit.ENDURE, 20},
                 {Bandit.STEAL, 30}
         });
-        skillOrders.putIfAbsent(Job.HERMIT, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.CHIEFBANDIT, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.HERMIT, new int[][]{
+                {Hermit.AVENGER, 30},
+                {Hermit.SHADOW_PARTNER, 30},
+                {Hermit.MESO_UP, 20},
+                {Hermit.ALCHEMIST, 1},
+                {Hermit.SHADOW_WEB, 1},
+                {Hermit.SHADOW_MESO, 1},
+                {Hermit.FLASH_JUMP, 20},
+                {Hermit.ALCHEMIST, 20},
+                {Hermit.SHADOW_WEB, 20},
+                {Hermit.SHADOW_MESO, 30}
+        });
+        skillOrders.putIfAbsent(Job.CHIEFBANDIT, new int[][]{
+                {ChiefBandit.BAND_OF_THIEVES, 30},
+                {ChiefBandit.SHIELD_MASTERY, 20},
+                {ChiefBandit.CHAKRA, 3},
+                {ChiefBandit.ASSAULTER, 1},
+                {ChiefBandit.MESO_EXPLOSION, 3},
+                {ChiefBandit.PICKPOCKET, 1},
+                {ChiefBandit.MESO_GUARD, 20},
+                {ChiefBandit.CHAKRA, 30},
+                {ChiefBandit.ASSAULTER, 30},
+                {ChiefBandit.MESO_EXPLOSION, 30},
+                {ChiefBandit.PICKPOCKET, 20}
+        });
         skillOrders.putIfAbsent(Job.NIGHTLORD, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.SHADOWER, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.PIRATE, new int[][]{
@@ -3735,8 +3862,27 @@ public class CharacterBot {
                 {Gunslinger.RECOIL_SHOT, 20},
                 {Gunslinger.GRENADE, 20}
         });
-        skillOrders.putIfAbsent(Job.MARAUDER, new int[][]{}); // todo
-        skillOrders.putIfAbsent(Job.OUTLAW, new int[][]{}); // todo
+        skillOrders.putIfAbsent(Job.MARAUDER, new int[][]{
+                {Marauder.ENERGY_CHARGE, 40},
+                {Marauder.STUN_MASTERY, 20},
+                {Marauder.ENERGY_BLAST, 30},
+                {Marauder.ENERGY_DRAIN, 1},
+                {Marauder.TRANSFORMATION, 1},
+                {Marauder.SHOCKWAVE, 30},
+                {Marauder.TRANSFORMATION, 20},
+                {Marauder.ENERGY_DRAIN, 20}
+        });
+        skillOrders.putIfAbsent(Job.OUTLAW, new int[][]{
+                {Outlaw.BURST_FIRE, 20},
+                {Outlaw.FLAME_THROWER, 30},
+                {Outlaw.OCTOPUS, 1},
+                {Outlaw.GAVIOTA, 1},
+                {Outlaw.ICE_SPLITTER, 1},
+                {Outlaw.HOMING_BEACON, 30},
+                {Outlaw.OCTOPUS, 30},
+                {Outlaw.GAVIOTA, 30},
+                {Outlaw.ICE_SPLITTER, 30}
+        });
         skillOrders.putIfAbsent(Job.BUCCANEER, new int[][]{}); // todo
         skillOrders.putIfAbsent(Job.CORSAIR, new int[][]{}); // todo
 
