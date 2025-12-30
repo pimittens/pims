@@ -596,6 +596,8 @@ public class AbstractPlayerInteraction {
                 it.setSpeed((short) 0);
                 it.setWdef((short) 0);
                 it.setMdef((short) 0);
+            } else {
+                return;
             }
         } else {
             return; // must be an equip
