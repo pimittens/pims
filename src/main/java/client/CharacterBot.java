@@ -169,7 +169,7 @@ public class CharacterBot {
         c.handlePacket(PacketCreator.createLoginPacket(charID), (short) 20);
         c.handlePacket(PacketCreator.createPartySearchUpdatePacket(), (short) 223);
         c.handlePacket(PacketCreator.createPlayerMapTransitionPacket(), (short) 207);
-        //character will be floating at this point, so update position so send a packet to change their state and update their position so they are on the ground
+        //character will be floating at this point, so send a packet to change their state and update their position, so they are on the ground
         Foothold foothold = getPlayer().getMap().getFootholds().findBelow(getPlayer().getPosition());
         c.handlePacket(PacketCreator.createPlayerMovementPacket((short) getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
         level = getPlayer().getLevel();
