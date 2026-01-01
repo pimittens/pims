@@ -2338,7 +2338,8 @@ public class CharacterBot {
         System.out.println("ending dex: " + getPlayer().getDex());
         System.out.println("ending int: " + getPlayer().getInt());
         System.out.println("ending luk: " + getPlayer().getLuk());*/
-        this.level = getPlayer().getLevel();
+        level = getPlayer().getLevel();
+        tryBuyEquips();
         if (currentMode != Mode.PQ) {
             currentMode = Mode.WAITING; // pick new map? todo: only do this if you get into a new level range for maps probably
         }
@@ -2375,7 +2376,7 @@ public class CharacterBot {
                 case FIGHTER -> gainAndEquip(1402002);
                 case PAGE -> gainAndEquip(1422001);
                 case SPEARMAN -> gainAndEquip(1432002);
-                case FP_WIZARD, IL_WIZARD, CLERIC -> gainAndEquip(1372003);
+                case FP_WIZARD, IL_WIZARD, CLERIC -> gainAndEquip(1382017);
                 case HUNTER -> gainAndEquip(1452005);
                 case CROSSBOWMAN -> gainAndEquip(1462000);
                 case ASSASSIN -> gainAndEquip(1472007);
@@ -2385,6 +2386,110 @@ public class CharacterBot {
             }
         }
         assignSP();
+    }
+
+    private void tryBuyEquips() {
+        // if at a level breakpoint gain equips as if buying from npc shops
+        // note that lv 10 and 30 weapons are gained through the job advance function
+        if (getPlayer().getJob().isA(Job.WARRIOR)) {
+            if (level == 15) {
+                gainItem(1302005, (short) 1); // sabre
+            } else if (level == 20) {
+                gainItem(1302002, (short) 1); // viking sword
+            } else if (level == 25) {
+                gainItem(1302022, (short) 1); // bamboo sword
+            } else if (level == 35) {
+                if (getPlayer().getJob().equals(Job.FIGHTER)) {
+                    gainItem(1302004, (short) 1); // cutlus
+                } else if (getPlayer().getJob().equals(Job.PAGE)) {
+                    gainItem(1322015, (short) 1); // heavy hammer
+                } else if (getPlayer().getJob().equals(Job.SPEARMAN)) {
+                    gainItem(1432003, (short) 1); // nakamaki
+                }
+            } else if (level == 40) {
+                if (getPlayer().getJob().equals(Job.FIGHTER)) {
+                    gainItem(1302009, (short) 1); // traus
+                } else if (getPlayer().getJob().equals(Job.PAGE)) {
+                    gainItem(1322016, (short) 1); // jacker
+                } else if (getPlayer().getJob().equals(Job.SPEARMAN)) {
+                    gainItem(1432005, (short) 1); // zeco
+                }
+            }
+        } else if (getPlayer().getJob().isA(Job.MAGICIAN)) {
+            if (level == 15) {
+                gainItem(1382003, (short) 1); // sapphire staff
+            } else if (level == 20) {
+                gainItem(1382004, (short) 1); // old wooden staff
+            } else if (level == 25) {
+                gainItem(1382002, (short) 1); // wizard staff
+            } else if (level == 35) {
+                gainItem(1382018, (short) 1); // petal staff
+            } else if (level == 40) {
+                gainItem(1382019, (short) 1); // hall staff
+            }
+        } else if (getPlayer().getJob().isA(Job.BOWMAN)) {
+            if (level == 15) {
+                gainItem(1452003, (short) 1); // composite bow
+            } else if (level == 20) {
+                gainItem(1452001, (short) 1); // hunter's bow
+            } else if (level == 25) {
+                gainItem(1452000, (short) 1); // battle bow
+            } else if (level == 35 && getPlayer().getJob().equals(Job.HUNTER)) {
+                    gainItem(1452006, (short) 1); // red viper
+            } else if (level == 38 && getPlayer().getJob().equals(Job.CROSSBOWMAN)) {
+                gainItem(1462005, (short) 1); // heckler
+            }else if (level == 40 && getPlayer().getJob().equals(Job.HUNTER)) {
+                gainItem(1452007, (short) 1); // vaulter 2000
+            }
+        } else if (getPlayer().getJob().isA(Job.THIEF)) {
+            if (level == 15) {
+                gainItem(1472001, (short) 1); // steel titans
+            } else if (level == 20) {
+                gainItem(1472004, (short) 1); // bronze igor
+            } else if (level == 25) {
+                gainItem(1472007, (short) 1); // meba
+            } else if (level == 35) {
+                if (getPlayer().getJob().equals(Job.ASSASSIN)) {
+                    gainItem(1472011, (short) 1); // bronze guardian
+                } else if (getPlayer().getJob().equals(Job.BANDIT)) {
+                    gainItem(1332014, (short) 1); // gephart
+                }
+            } else if (level == 40) {
+                if (getPlayer().getJob().equals(Job.ASSASSIN)) {
+                    gainItem(1472014, (short) 1); // steel avarice
+                } else if (getPlayer().getJob().equals(Job.BANDIT)) {
+                    gainItem(1332031, (short) 1); // dragon toenail
+                }
+            }
+        } else if (getPlayer().getJob().isA(Job.PIRATE)) {
+            if (getPlayer().getWeaponType().equals(WeaponType.GUN)) {
+                if (level == 15) {
+                    gainItem(1492001, (short) 1); // dellinger special
+                } else if (level == 20) {
+                    gainItem(1492002, (short) 1); // the negotiator
+                } else if (level == 25) {
+                    gainItem(1492003, (short) 1); // golden hook
+                } else if (level == 35) {
+                    gainItem(1492005, (short) 1); // shooting star
+                } else if (level == 40) {
+                    gainItem(1492006, (short) 1); // lunar shooter
+                }
+            } else {
+                if (level == 15) {
+                    gainItem(1482001, (short) 1); // leather arms
+                } else if (level == 20) {
+                    gainItem(1482002, (short) 1); // double tail knuckler
+                } else if (level == 25) {
+                    gainItem(1482003, (short) 1); // norman grip
+                } else if (level == 35) {
+                    gainItem(1482005, (short) 1); // silver maiden
+                } else if (level == 40) {
+                    gainItem(1482006, (short) 1); // neohazard
+                }
+            }
+        }
+        // todo: armor
+        checkEquips();
     }
 
     private void assignSP() {
