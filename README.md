@@ -25,7 +25,7 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 * Players can create follower bots using the @follower command. These bots will follow the player character when changing maps. Each player may only have up to 5 followers at a time.
 * Follower bots can be added to the player's party using the @party command.
 * Follower bots can be dismissed using the @dismiss command.
-* Players can automate grinding and PQs. This uses a bot assigned to the player's character, although the bot's actions will not be displayed on the player's client. Using the @automate command toggles this feature on or off. Having the feature toggled on charges the player a number of mesos equal to their level times 10 every 10 seconds. This feature will work for Cygnus Knight characters, but not Arans (in general Arans are ignored).
+* Players can automate grinding and PQs. This uses a bot assigned to the player's character, although the bot's actions will not be displayed on the player's client. Using the @automate command toggles this feature on or off. Having the feature toggled on charges the player a number of mesos equal to their level squared every 10 seconds. This feature will work for Cygnus Knight characters, but not Arans (in general Arans are ignored).
 * Using the @reqpq command will request bots to join the player's party in order to participate in a specific party quest. The bots will be randomly selected from those which are in the appropriate level range and not already logged in.
 * The @toggleloot command will toggle whether the followers loot items.
 

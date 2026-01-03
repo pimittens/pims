@@ -280,8 +280,8 @@ public class CharacterBot {
         getPlayer().setMp(getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
         if (automate) {
             if (System.currentTimeMillis() - lastChargeTime > 10000) {
-                if (getPlayer().getMeso() >= getPlayer().getLevel() * 10) {
-                    getPlayer().gainMeso(-getPlayer().getLevel() * 10);
+                if (getPlayer().getMeso() >= getPlayer().getLevel() * getPlayer().getLevel()) {
+                    getPlayer().gainMeso(-getPlayer().getLevel() * getPlayer().getLevel());
                     lastChargeTime = System.currentTimeMillis();
                 } else {
                     return;
