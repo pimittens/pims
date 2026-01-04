@@ -9,7 +9,9 @@ import java.util.List;
 
 public class PQConstants {
 
-    public static final int[] pqMaps = {103000800, 922010100}; // first map for each pq
+    // first map for each pq, need to include all the lmpq ones since it puts you in a random room
+    public static final int[] pqMaps = {103000800, 922010100, 809050000, 809050001, 809050002, 809050003, 809050004,
+            809050005, 809050006, 809050007, 809050008, 809050009, 809050010, 809050011, 809050012, 809050013, 809050014, 809050015};
     // for positions the party leader should stand at position 0 if there too many party members
     public static Point[] kpqStage2Positions = {new Point(-623, 118), new Point(-753, -11),
             new Point(-719, -254), new Point(-584, -254), new Point(-481, -11)},

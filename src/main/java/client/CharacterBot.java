@@ -1537,7 +1537,9 @@ public class CharacterBot {
     private void changeMap(MapleMap target, Portal targetPortal) {
         getPlayer().changeMap(target, targetPortal);
         Foothold foothold = getPlayer().getMap().getFootholds().findBelow(getPlayer().getPosition());
-        c.handlePacket(PacketCreator.createPlayerMovementPacket((short) getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
+        if (foothold != null) { // todo: sometimes this is null (when going to map 220000000)
+            c.handlePacket(PacketCreator.createPlayerMovementPacket((short) getPlayer().getPosition().x, (short) foothold.getY1(), (byte) 4, (short) 100), (short) 41);
+        }
         hasTargetItem = false;
         hasTargetMonster = false;
         hasTargetReactor = false;
@@ -3048,6 +3050,11 @@ public class CharacterBot {
             case 922010900 -> lpqStage9(time);
             case 922011000 -> lpqStage10(time);
             case 922011100 -> lpqStage11();
+            case 809050000 -> lmpqStage1();
+            case 809050005 -> lmpqStage2(time);
+            case 809050006 -> lmpqStage3(time);
+            case 809050015 -> lmpqStage4();
+            case 809050016 -> lmpqStage5();
             default -> currentMode = Mode.WAITING; // if not in a PQ map then switch modes
         }
     }
@@ -3619,6 +3626,72 @@ public class CharacterBot {
         currentMode = Mode.LEAVE_PARTY;
     }
 
+    private void lmpqStage1() {
+        changeMap(c.getChannelServer().getMapFactory().getMap(809050005));
+        delay = 5000; // delay to emulate the amount of time it takes for a human player to navigate the rooms
+    }
+
+    private void lmpqStage2(int time) {
+        if (doneWithPQTask) {
+            if (!(allMonstersDead(getPlayer().getMap().getAllMonsters()) && allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001106))) {
+                doneWithPQTask = false; // fix bug where this was set to true before the last pass dropped
+                delay = 1000;
+                return;
+            }
+            doneWithPQTask = false;
+            changeMap(c.getChannelServer().getMapFactory().getMap(809050006));
+            delay = 5000;
+        } else {
+            grindAndHitReactors(time, 4001106, getPlayer().getEventInstance().isEventLeader(getPlayer()));
+            if (allMonstersDead(getPlayer().getMap().getAllMonsters()) && allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001106)) {
+                doneWithPQTask = true;
+                delay = 1000;
+            }
+        }
+    }
+
+    private void lmpqStage3(int time) {
+        if (doneWithPQTask) {
+            if (!(allMonstersDead(getPlayer().getMap().getAllMonsters()) && allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001106))) {
+                doneWithPQTask = false; // fix bug where this was set to true before the last pass dropped
+                delay = 1000;
+                return;
+            }
+            doneWithPQTask = false;
+            changeMap(c.getChannelServer().getMapFactory().getMap(809050015));
+            delay = 5000;
+        } else {
+            grindAndHitReactors(time, 4001106, getPlayer().getEventInstance().isEventLeader(getPlayer()));
+            if (allMonstersDead(getPlayer().getMap().getAllMonsters()) && allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001106)) {
+                doneWithPQTask = true;
+                delay = 1000;
+            }
+        }
+    }
+
+    private void lmpqStage4() {
+        if (getPlayer().getEventInstance().isEventLeader(getPlayer())) {
+            if (!getPlayer().getEventInstance().isEventTeamTogether()) {
+                return;
+            }
+            if (getPlayer().getItemQuantity(4001106, false) >= 30) {
+                int qty = getPlayer().getItemQuantity(4001106, false);
+                gainItem(4001106, (short) -qty);
+                getPlayer().getEventInstance().giveEventPlayersExp(50 * qty);
+                getPlayer().getEventInstance().clearPQ();
+            } else {
+                // failed to get enough passes somehow, this shouldn't happen unless there's some kind of bug
+                System.out.println("lmpq failed");
+            }
+        }
+    }
+
+    private void lmpqStage5() {
+        getPlayer().getEventInstance().giveEventReward(getPlayer()); // if they don't have space too bad
+        changeMap(c.getChannelServer().getMapFactory().getMap(220000000));
+        currentMode = Mode.LEAVE_PARTY;
+    }
+
     public static void putSkillOrdersAndDelayTimes() {
         skillOrders.putIfAbsent(Job.BEGINNER, new int[][]{
                 {Beginner.THREE_SNAILS, 3},
@@ -4097,6 +4170,15 @@ public class CharacterBot {
     public static boolean allReactorsInactive(List<Reactor> reactors) {
         for (Reactor r : reactors) {
             if (r.isActive()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public static boolean allMonstersDead(List<Monster> monsters) {
+        for (Monster m : monsters) {
+            if (m.isAlive()) {
                 return false;
             }
         }
