@@ -55,6 +55,6 @@ public class SetExpRateCommand extends Command {
         }
         player.setPersonalExpRate(amount);
         player.dropMessage("Your exp rate has been set to " + amount);
-        player.dropMessage("Your current max exp rate is" + maxRate);
+        player.dropMessage("Your current max exp rate is " + maxRate);
     }
 }
