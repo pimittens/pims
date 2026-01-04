@@ -38,6 +38,7 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 * Characters have an individual exp rate which can be changed using the @exp command. The maximum exp rate is currently level / 10.
 * Players can receive a medal with bonus stats based on the number of monster cards they have collected. Medals are given by the Agent E npc (this npc has some other leftover custom features which still need to be changed/removed). The stats of the medals scale linearly up to +1000 all stat, +10000 hp/mp, +100 att/m.att (might be changed). The main purpose of the medals is to remove the need for hp washing and assigning points to secondary stats.
 * PQ rewards have been changed, removing some useless items and adding useful scrolls. Some notable examples: LMPQ has shield att. and shield m. att. scrolls.
+* @shop command which allows players to access the nlc shop from anywhere.
 
 ## Planned Features
 
