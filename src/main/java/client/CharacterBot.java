@@ -3050,7 +3050,8 @@ public class CharacterBot {
             case 922010900 -> lpqStage9(time);
             case 922011000 -> lpqStage10(time);
             case 922011100 -> lpqStage11();
-            case 809050000 -> lmpqStage1();
+            case 809050000, 809050001, 809050002, 809050003, 809050004, 809050007, 809050008, 809050009, 809050010,
+                    809050011, 809050012, 809050013, 809050014 -> lmpqStage1();
             case 809050005 -> lmpqStage2(time);
             case 809050006 -> lmpqStage3(time);
             case 809050015 -> lmpqStage4();
@@ -3628,7 +3629,7 @@ public class CharacterBot {
 
     private void lmpqStage1() {
         changeMap(c.getChannelServer().getMapFactory().getMap(809050005));
-        delay = 5000; // delay to emulate the amount of time it takes for a human player to navigate the rooms
+        delay = 15000; // delay to emulate the amount of time it takes for a human player to navigate the rooms
     }
 
     private void lmpqStage2(int time) {
@@ -3640,7 +3641,7 @@ public class CharacterBot {
             }
             doneWithPQTask = false;
             changeMap(c.getChannelServer().getMapFactory().getMap(809050006));
-            delay = 5000;
+            delay = 15000;
         } else {
             grindAndHitReactors(time, 4001106, getPlayer().getEventInstance().isEventLeader(getPlayer()));
             if (allMonstersDead(getPlayer().getMap().getAllMonsters()) && allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001106)) {
@@ -3659,7 +3660,7 @@ public class CharacterBot {
             }
             doneWithPQTask = false;
             changeMap(c.getChannelServer().getMapFactory().getMap(809050015));
-            delay = 5000;
+            delay = 15000;
         } else {
             grindAndHitReactors(time, 4001106, getPlayer().getEventInstance().isEventLeader(getPlayer()));
             if (allMonstersDead(getPlayer().getMap().getAllMonsters()) && allReactorsInactive(getPlayer().getMap().getAllReactors()) && !containsItemId(getPlayer().getMap().getItems(), 4001106)) {
