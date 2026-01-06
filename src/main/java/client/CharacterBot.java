@@ -234,8 +234,8 @@ public class CharacterBot {
             chooseMode();
             return;
         }
-        getPlayer().setHp(getPlayer().getMaxHp());
-        getPlayer().setMp(getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
+        getPlayer().setHp(getPlayer().getCurrentMaxHp());
+        getPlayer().setMp(getPlayer().getCurrentMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
         if (getPlayer().getLevel() > level || getPlayer().getRemainingSp() > 0) {
             levelup();
             decideAttackSkills();
@@ -276,8 +276,8 @@ public class CharacterBot {
             return;
         }
         //System.out.println(currentMode);
-        getPlayer().setHp(getPlayer().getMaxHp());
-        getPlayer().setMp(getPlayer().getMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
+        getPlayer().setHp(getPlayer().getCurrentMaxHp());
+        getPlayer().setMp(getPlayer().getCurrentMaxMp()); // todo: accurate potion usage, for now just refresh their hp/mp each update
         if (automate) {
             if (System.currentTimeMillis() - lastChargeTime > 10000) {
                 if (getPlayer().getMeso() >= getPlayer().getLevel() * getPlayer().getLevel()) {
