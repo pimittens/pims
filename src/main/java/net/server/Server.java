@@ -1013,7 +1013,7 @@ public class Server {
         tMan.register(new UpdateFollowerBotsTask(), 200, SECONDS.toMillis(30));
         tMan.register(new BotKPQManagerTask(), MINUTES.toMillis(30), MINUTES.toMillis(5));
         tMan.register(new BotLPQManagerTask(), MINUTES.toMillis(45), MINUTES.toMillis(6));
-        tMan.register(new BotLMPQManagerTask(), MINUTES.toMillis(10), MINUTES.toMillis(5));
+        tMan.register(new BotLMPQManagerTask(), MINUTES.toMillis(5), MINUTES.toMillis(5));
         tMan.register(new UpdateMarketTask(), MINUTES.toMillis(5), MINUTES.toMillis(5)); // todo: change when done testing
 
         timeLeft = getTimeLeftForNextDay();
