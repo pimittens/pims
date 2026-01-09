@@ -1302,6 +1302,12 @@ public class CharacterBot {
                 maxDamage = (int) (maxDamage * SkillFactory.getSkill(FPMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100.0);
                 minDamage = (int) (minDamage * SkillFactory.getSkill(FPMage.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100.0);
             }
+        } else if (getPlayer().getJob() == Job.BLAZEWIZARD3) {
+            int skillLvl = getPlayer().getSkillLevel(BlazeWizard.ELEMENT_AMPLIFICATION);
+            if (skillLvl > 0) {
+                maxDamage = (int) (maxDamage * SkillFactory.getSkill(BlazeWizard.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100.0);
+                minDamage = (int) (minDamage * SkillFactory.getSkill(BlazeWizard.ELEMENT_AMPLIFICATION).getEffect(skillLvl).getY() / 100.0);
+            }
         }
         if (automate) {
             System.out.println("maxdamage: " + maxDamage + ", mindamage: " + minDamage);
