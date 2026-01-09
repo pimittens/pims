@@ -1904,6 +1904,16 @@ public class ItemInformationProvider {
         return ret;
     }
 
+    public ArrayList<Pair<Integer, String>> getItemDataByExactName(String name) {
+        ArrayList<Pair<Integer, String>> ret = new ArrayList<>();
+        for (Pair<Integer, String> itemPair : ItemInformationProvider.getInstance().getAllItems()) {
+            if (itemPair.getRight().equalsIgnoreCase(name)) {
+                ret.add(itemPair);
+            }
+        }
+        return ret;
+    }
+
     private Data getEquipLevelInfo(int itemId) {
         Data equipLevelData = equipLevelInfoCache.get(itemId);
         if (equipLevelData == null) {

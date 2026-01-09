@@ -54,7 +54,12 @@ public class WhoDropsCommand extends Command {
             try {
                 String searchString = player.getLastCommandMessage();
                 String output = "";
-                Iterator<Pair<Integer, String>> listIterator = ItemInformationProvider.getInstance().getItemDataByName(searchString).iterator();
+                Iterator<Pair<Integer, String>> listIterator;
+                if (params[0].equalsIgnoreCase("exact")) {
+                    listIterator = ItemInformationProvider.getInstance().getItemDataByExactName(searchString.substring(6)).iterator();
+                } else {
+                    listIterator = ItemInformationProvider.getInstance().getItemDataByName(searchString).iterator();
+                }
                 if (listIterator.hasNext()) {
                     int count = 1;
                     while (listIterator.hasNext() && count <= 3) {
