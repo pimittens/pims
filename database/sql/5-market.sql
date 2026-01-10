@@ -119,69 +119,69 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2040009, 0, 1000), # helmet def 30
 (2040010, 0, 1000), # helmet hp 70
 (2040011, 0, 1000), # helmet hp 30
-(2040012, 0, 9000000), # helmet int 70
-(2040013, 0, 7000000), # helmet int 30
-(2040014, 0, 8000000), # helmet acc 70
-(2040015, 0, 4000000), # helmet acc 30
+(2040012, 0, 1000000), # helmet int 70
+(2040013, 0, 1000000), # helmet int 30
+(2040014, 0, 1000000), # helmet acc 70
+(2040015, 0, 1000000), # helmet acc 30
 (2040016, 0, 1000000), # helmet acc 10
-(2040017, 0, 45000000), # helmet acc 60
+(2040017, 0, 1000000), # helmet acc 60
 (2040018, 0, 1000), # helmet acc 100
 (2040019, 0, 1000), # helmet def 65
 (2040020, 0, 1000), # helmet def 15
 (2040021, 0, 1000), # helmet hp 65
 (2040022, 0, 1000), # helmet hp 15
-(2040024, 0, 5000000), # helmet int 100
-(2040025, 0, 45000000), # helmet int 60
-(2040026, 0, 1000000), # helmet int 10
-(2040027, 0, 40000000), # helmet dex 100
-(2040028, 0, 30000000), # helmet dex 70
-(2040029, 0, 100000000), # helmet dex 60
-(2040030, 0, 8000000), # helmet dex 30
-(2040031, 0, 1000000), # helmet dex 10
+(2040024, 0, 1000000), # helmet int 100
+(2040025, 0, 1000000), # helmet int 60
+(2040026, 0, 300000), # helmet int 10
+(2040027, 0, 1000000), # helmet dex 100
+(2040028, 0, 1000000), # helmet dex 70
+(2040029, 0, 1000000), # helmet dex 60
+(2040030, 0, 1000000), # helmet dex 30
+(2040031, 0, 300000), # helmet dex 10
 (2040100, 0, 1000), # face hp 10
 (2040101, 0, 1000), # face hp 60
 (2040102, 0, 1000), # face hp 100
 (2040103, 0, 1000), # face hp 30
 (2040104, 0, 1000), # face hp 70
-(2040105, 0, 500000), # face avoid 10
-(2040106, 0, 10000000), # face avoid 60
+(2040105, 0, 300000), # face avoid 10
+(2040106, 0, 1000000), # face avoid 60
 (2040107, 0, 1000), # face avoid 100
 (2040108, 0, 1000000), # face avoid 30
-(2040109, 0, 1500000), # face avoid 70
-(2040200, 0, 100000), # eye acc 10
-(2040201, 0, 3000000), # eye acc 60
+(2040109, 0, 1000000), # face avoid 70
+(2040200, 0, 300000), # eye acc 10
+(2040201, 0, 1000000), # eye acc 60
 (2040202, 0, 1000), # eye acc 100
-(2040203, 0, 500000), # eye acc 30
-(2040204, 0, 200000), # eye acc 70
-(2040205, 0, 1000000), # eye int 10
-(2040206, 0, 5000000), # eye int 60
+(2040203, 0, 1000000), # eye acc 30
+(2040204, 0, 1000000), # eye acc 70
+(2040205, 0, 300000), # eye int 10
+(2040206, 0, 1000000), # eye int 60
 (2040207, 0, 1000000), # eye int 100
-(2040208, 0, 2000000), # eye int 30
-(2040209, 0, 5000000), # eye int 70
+(2040208, 0, 1000000), # eye int 30
+(2040209, 0, 1000000), # eye int 70
 (2040300, 0, 1000), # earring int 100
-(2040301, 0, 4000000), # earring int 60
-(2040302, 0, 1000000), # earring int 10
-(2040303, 0, 5000000), # earring int 30
+(2040301, 0, 1000000), # earring int 60
+(2040302, 0, 300000), # earring int 10
+(2040303, 0, 1000000), # earring int 30
 (2040304, 0, 1000000), # earring int 70
-(2040305, 0, 20000000), # earring int 30
-(2040306, 0, 7000000), # earring dex 70
-(2040307, 0, 7000000), # earring dex 30
+(2040305, 0, 1000000), # earring int 30
+(2040306, 0, 1000000), # earring dex 70
+(2040307, 0, 1000000), # earring dex 30
 (2040308, 0, 1000), # earring def 70
 (2040309, 0, 1000), # earring def 30
 (2040310, 0, 1000), # earring def 10
 (2040311, 0, 1000), # earring def 60
 (2040312, 0, 1000), # earring def 100
-(2040313, 0, 5000000), # earring int 65
-(2040314, 0, 2000000), # earring int 15
-(2040315, 0, 5000000), # earring int 40
-(2040316, 0, 5000000), # earring dex 100
-(2040317, 0, 40000000), # earring dex 60
-(2040318, 0, 1000000), # earring dex 10
-(2040319, 0, 5000000), # earring luk 100
-(2040320, 0, 9000000), # earring luk 70
-(2040321, 0, 15000000), # earring luk 60
-(2040322, 0, 10000000), # earring luk 30
-(2040323, 0, 1000000), # earring luk 10
+(2040313, 0, 1000000), # earring int 65
+(2040314, 0, 1000000), # earring int 15
+(2040315, 0, 1000000), # earring int 40
+(2040316, 0, 1000000), # earring dex 100
+(2040317, 0, 1000000), # earring dex 60
+(2040318, 0, 300000), # earring dex 10
+(2040319, 0, 1000000), # earring luk 100
+(2040320, 0, 1000000), # earring luk 70
+(2040321, 0, 1000000), # earring luk 60
+(2040322, 0, 1000000), # earring luk 30
+(2040323, 0, 300000), # earring luk 10
 (2040324, 0, 1000), # earring hp 100
 (2040325, 0, 1000), # earring hp 70
 (2040326, 0, 1000), # earring hp 60
@@ -193,63 +193,63 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2040403, 0, 1000), # top def 100
 (2040404, 0, 1000), # top def 70
 (2040405, 0, 1000), # top def 30
-(2040406, 0, 7000000), # top str 70
-(2040407, 0, 6000000), # top str 30
+(2040406, 0, 1000000), # top str 70
+(2040407, 0, 1000000), # top str 30
 (2040408, 0, 1000), # top hp 70
 (2040409, 0, 1000), # top hp 30
-(2040410, 0, 7000000), # top luk 70
-(2040411, 0, 5000000), # top luk 30
-(2040412, 0, 1000000), # top luk 10
-(2040413, 0, 10000000), # top luk 60
-(2040414, 0, 4000000), # top luk 100
+(2040410, 0, 1000000), # top luk 70
+(2040411, 0, 1000000), # top luk 30
+(2040412, 0, 300000), # top luk 10
+(2040413, 0, 1000000), # top luk 60
+(2040414, 0, 1000000), # top luk 100
 (2040415, 0, 1000), # top def 65
 (2040416, 0, 1000), # top def 15
 (2040417, 0, 1000000), # top str 100
-(2040418, 0, 10000000), # top str 60
-(2040419, 0, 2000000), # top str 10
+(2040418, 0, 1000000), # top str 60
+(2040419, 0, 300000), # top str 10
 (2040420, 0, 1000), # top hp 100
 (2040421, 0, 1000), # top hp 60
 (2040422, 0, 1000), # top hp 10
-(2040423, 0, 4000000), # top luk 100
-(2040424, 0, 7000000), # top luk 70
-(2040425, 0, 10000000), # top luk 60
-(2040426, 0, 5000000), # top luk 30
-(2040427, 0, 1000000), # top luk 10
+(2040423, 0, 1000000), # top luk 100
+(2040424, 0, 1000000), # top luk 70
+(2040425, 0, 1000000), # top luk 60
+(2040426, 0, 1000000), # top luk 30
+(2040427, 0, 300000), # top luk 10
 (2040500, 0, 1000), # overall dex 100
-(2040501, 0, 10000000), # overall dex 60
-(2040502, 0, 1000000), # overall dex 10
+(2040501, 0, 1000000), # overall dex 60
+(2040502, 0, 300000), # overall dex 10
 (2040503, 0, 1000), # overall def 100
 (2040504, 0, 1000), # overall def 60
 (2040505, 0, 1000), # overall def 10
-(2040506, 0, 100000000), # overall dex 100
+(2040506, 0, 1000000), # overall dex 100
 (2040507, 0, 1000), # overall def 30
-(2040508, 0, 7000000), # overall dex 70
-(2040509, 0, 20000000), # overall dex 30
+(2040508, 0, 1000000), # overall dex 70
+(2040509, 0, 1000000), # overall dex 30
 (2040510, 0, 1000), # overall def 70
 (2040511, 0, 1000), # overall def 30
 (2040512, 0, 1000000), # overall int 100
-(2040513, 0, 8000000), # overall int 60
-(2040514, 0, 4000000), # overall int 10
+(2040513, 0, 1000000), # overall int 60
+(2040514, 0, 300000), # overall int 10
 (2040515, 0, 1000000), # overall luk 100
-(2040516, 0, 20000000), # overall luk 60
-(2040517, 0, 1000000), # overall luk 10
-(2040518, 0, 8000000), # overall int 70
-(2040519, 0, 20000000), # overall int 30
-(2040520, 0, 8000000), # overall luk 70
-(2040521, 0, 6000000), # overall luk 30
-(2040522, 0, 20000000), # overall dex 65
-(2040523, 0, 30000000), # overall dex 15
-(2040524, 0, 20000000), # overall def 65
-(2040525, 0, 30000000), # overall def 15
-(2040526, 0, 10000000), # overall int 65
-(2040527, 0, 5000000), # overall int 15
-(2040528, 0, 15000000), # overall luk 65
-(2040529, 0, 10000000), # overall luk 15
-(2040530, 0, 500000), # overall str 100
-(2040531, 0, 8000000), # overall str 70
-(2040532, 0, 8000000), # overall str 60
-(2040533, 0, 10000000), # overall str 30
-(2040534, 0, 10000000), # overall str 10
+(2040516, 0, 1000000), # overall luk 60
+(2040517, 0, 300000), # overall luk 10
+(2040518, 0, 1000000), # overall int 70
+(2040519, 0, 1000000), # overall int 30
+(2040520, 0, 1000000), # overall luk 70
+(2040521, 0, 1000000), # overall luk 30
+(2040522, 0, 1000000), # overall dex 65
+(2040523, 0, 1000000), # overall dex 15
+(2040524, 0, 1000), # overall def 65
+(2040525, 0, 1000), # overall def 15
+(2040526, 0, 1000000), # overall int 65
+(2040527, 0, 1000000), # overall int 15
+(2040528, 0, 1000000), # overall luk 65
+(2040529, 0, 1000000), # overall luk 15
+(2040530, 0, 1000000), # overall str 100
+(2040531, 0, 1000000), # overall str 70
+(2040532, 0, 1000000), # overall str 60
+(2040533, 0, 1000000), # overall str 30
+(2040534, 0, 300000), # overall str 10
 (2040600, 0, 1000), # bottomwear def 100
 (2040601, 0, 1000), # bottomwear def 60
 (2040602, 0, 1000), # bottomwear def 10
@@ -260,11 +260,11 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2040607, 0, 1000), # bottomwear def 30
 (2040608, 0, 1000), # bottomwear hp 70
 (2040609, 0, 1000), # bottomwear hp 30
-(2040610, 0, 8000000), # bottomwear dex 70
-(2040611, 0, 9000000), # bottomwear dex 30
-(2040612, 0, 1000000), # bottomwear dex 10
-(2040613, 0, 10000000), # bottomwear dex 60
-(2040614, 0, 500000), # bottomwear dex 100
+(2040610, 0, 1000000), # bottomwear dex 70
+(2040611, 0, 1000000), # bottomwear dex 30
+(2040612, 0, 300000), # bottomwear dex 10
+(2040613, 0, 1000000), # bottomwear dex 60
+(2040614, 0, 1000000), # bottomwear dex 100
 (2040615, 0, 1000), # bottomwear def 65
 (2040616, 0, 1000), # bottomwear def 15
 (2040617, 0, 1000), # bottomwear jump 100
@@ -273,58 +273,58 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2040620, 0, 1000), # bottomwear hp 100
 (2040621, 0, 1000), # bottomwear hp 60
 (2040622, 0, 1000), # bottomwear hp 10
-(2040623, 0, 500000), # bottomwear dex 100
-(2040624, 0, 8000000), # bottomwear dex 70
-(2040625, 0, 10000000), # bottomwear dex 60
-(2040626, 0, 9000000), # bottomwear dex 30
-(2040627, 0, 1000000), # bottomwear dex 10
+(2040623, 0, 1000000), # bottomwear dex 100
+(2040624, 0, 1000000), # bottomwear dex 70
+(2040625, 0, 1000000), # bottomwear dex 60
+(2040626, 0, 1000000), # bottomwear dex 30
+(2040627, 0, 300000), # bottomwear dex 10
 (2040700, 0, 1000), # shoes dex 100
 (2040701, 0, 1000), # shoes dex 60
-(2040702, 0, 500000), # shoes dex 10
+(2040702, 0, 300000), # shoes dex 10
 (2040703, 0, 1000), # shoes jump 100
-(2040704, 0, 7000000), # shoes jump 60
-(2040705, 0, 1000000), # shoes jump 10
+(2040704, 0, 1000000), # shoes jump 60
+(2040705, 0, 300000), # shoes jump 10
 (2040706, 0, 1000), # shoes speed 100
 (2040707, 0, 1000000), # shoes speed 60
-(2040708, 0, 100000), # shoes speed 10
+(2040708, 0, 300000), # shoes speed 10
 (2040709, 0, 1000), # shoes dex 100
 (2040710, 0, 1000), # shoes jump 100
 (2040711, 0, 1000), # shoes speed 100
 (2040712, 0, 1000), # shoes dex 70
-(2040713, 0, 500000), # shoes dex 30
-(2040714, 0, 7000000), # shoes jump 70
-(2040715, 0, 6000000), # shoes jump 30
+(2040713, 0, 1000000), # shoes dex 30
+(2040714, 0, 1000000), # shoes jump 70
+(2040715, 0, 1000000), # shoes jump 30
 (2040716, 0, 1000000), # shoes speed 70
-(2040717, 0, 500000), # shoes speed 30
+(2040717, 0, 1000000), # shoes speed 30
 (2040718, 0, 1000), # shoes dex 65
-(2040719, 0, 500000), # shoes dex 15
-(2040720, 0, 8000000), # shoes jump 65
+(2040719, 0, 1000000), # shoes dex 15
+(2040720, 0, 1000000), # shoes jump 65
 (2040721, 0, 1000000), # shoes jump 15
 (2040722, 0, 1000000), # shoes speed 65
-(2040723, 0, 500000), # shoes speed 15
+(2040723, 0, 1000000), # shoes speed 15
 (2040800, 0, 1000), # gloves dex 100
 (2040801, 0, 1000000), # gloves dex 60
 (2040802, 0, 300000), # gloves dex 10
 (2040803, 0, 1000000), # gloves att 100
-(2040804, 0, 8000000), # gloves att 60
-(2040805, 0, 2000000), # gloves att 10
-(2040806, 0, 10000000), # gloves dex 100
-(2040807, 0, 100000000), # gloves att 100
+(2040804, 0, 1000000), # gloves att 60
+(2040805, 0, 300000), # gloves att 10
+(2040806, 0, 1000000), # gloves dex 100
+(2040807, 0, 1000000), # gloves att 100
 (2040808, 0, 1000000), # gloves dex 70
 (2040809, 0, 1000000), # gloves dex 30
-(2040810, 0, 10000000), # gloves att 70
-(2040811, 0, 10000000), # gloves att 30
+(2040810, 0, 1000000), # gloves att 70
+(2040811, 0, 1000000), # gloves att 30
 (2040812, 0, 1000), # gloves hp 70
 (2040813, 0, 1000), # gloves hp 30
-(2040814, 0, 6000000), # gloves matt 70
-(2040815, 0, 16000000), # gloves matt 30
-(2040816, 0, 1000000), # gloves matt 10
-(2040817, 0, 6000000), # gloves matt 60
+(2040814, 0, 1000000), # gloves matt 70
+(2040815, 0, 1000000), # gloves matt 30
+(2040816, 0, 300000), # gloves matt 10
+(2040817, 0, 1000000), # gloves matt 60
 (2040818, 0, 1000), # gloves matt 100
 (2040819, 0, 1000000), # gloves dex 65
 (2040820, 0, 1000000), # gloves dex 15
-(2040821, 0, 10000000), # gloves att 65
-(2040822, 0, 10000000), # gloves att 15
+(2040821, 0, 1000000), # gloves att 65
+(2040822, 0, 1000000), # gloves att 15
 (2040823, 0, 1000), # gloves hp 100
 (2040824, 0, 1000), # gloves hp 60
 (2040825, 0, 1000), # gloves hp 10
@@ -334,7 +334,7 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2040903, 0, 1000), # shield def 100
 (2040904, 0, 1000), # shield def 70
 (2040905, 0, 1000), # shield def 30
-(2040906, 0, 2000000), # shield luk 70
+(2040906, 0, 1000000), # shield luk 70
 (2040907, 0, 1000000), # shield luk 30
 (2040908, 0, 1000), # shield hp 70
 (2040909, 0, 1000), # shield hp 30
@@ -342,18 +342,18 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2040911, 0, 1000), # shield def 15
 (2040914, 0, 1000), # shield att 60
 (2040912, 0, 1000), # shield def 40
-(2040914, 0, 40000000), # shield att 60
-(2040915, 0, 10000000), # shield att 10
-(2040916, 0, 40000000), # shield att 70
-(2040917, 0, 20000000), # shield att 30
+(2040914, 0, 1000000), # shield att 60
+(2040915, 0, 300000), # shield att 10
+(2040916, 0, 1000000), # shield att 70
+(2040917, 0, 1000000), # shield att 30
 (2040918, 0, 1000000), # shield matt 100
-(2040919, 0, 35000000), # shield matt 60
-(2040920, 0, 10000000), # shield matt 10
-(2040921, 0, 35000000), # shield matt 70
-(2040922, 0, 10000000), # shield matt 50
+(2040919, 0, 1000000), # shield matt 60
+(2040920, 0, 300000), # shield matt 10
+(2040921, 0, 1000000), # shield matt 70
+(2040922, 0, 1000000), # shield matt 50
 (2040923, 0, 1000000), # shield luk 100
-(2040924, 0, 4000000), # shield luk 60
-(2040925, 0, 1000000), # shield luk 10
+(2040924, 0, 1000000), # shield luk 60
+(2040925, 0, 300000), # shield luk 10
 (2040926, 0, 1000), # shield hp 100
 (2040927, 0, 1000), # shield hp 60
 (2040928, 0, 1000), # shield hp 10
@@ -361,7 +361,7 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2040930, 0, 1000000), # shield str 70
 (2040931, 0, 1000000), # shield str 60
 (2040932, 0, 1000000), # shield str 30
-(2040933, 0, 1000000), # shield str 10
+(2040933, 0, 300000), # shield str 10
 (2041000, 0, 1000), # cape mdef 100
 (2041001, 0, 1000), # cape mdef 60
 (2041002, 0, 1000), # cape mdef 10
@@ -375,17 +375,17 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2041010, 0, 1000), # cape mp 60
 (2041011, 0, 1000), # cape mp 10
 (2041012, 0, 1000000), # cape str 100
-(2041013, 0, 2000000), # cape str 60
-(2041014, 0, 1000000), # cape str 10
+(2041013, 0, 1000000), # cape str 60
+(2041014, 0, 300000), # cape str 10
 (2041015, 0, 1000000), # cape int 100
-(2041016, 0, 4000000), # cape int 60
-(2041017, 0, 1000000), # cape int 10
+(2041016, 0, 1000000), # cape int 60
+(2041017, 0, 300000), # cape int 10
 (2041018, 0, 1000000), # cape dex 100
-(2041019, 0, 3000000), # cape dex 60
-(2041020, 0, 1000000), # cape dex 10
+(2041019, 0, 1000000), # cape dex 60
+(2041020, 0, 300000), # cape dex 10
 (2041021, 0, 1000000), # cape luk 100
-(2041022, 0, 3000000), # cape luk 60
-(2041023, 0, 1000000), # cape luk 10
+(2041022, 0, 1000000), # cape luk 60
+(2041023, 0, 300000), # cape luk 10
 (2041024, 0, 1000), # cape mdef 100
 (2041025, 0, 1000), # cape def 100
 (2041026, 0, 1000), # cape mdef 70
@@ -396,13 +396,13 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2041031, 0, 1000), # cape hp 30
 (2041032, 0, 1000), # cape mp 70
 (2041033, 0, 1000), # cape mp 30
-(2041034, 0, 2000000), # cape str 70
+(2041034, 0, 1000000), # cape str 70
 (2041035, 0, 1000000), # cape str 30
-(2041036, 0, 4000000), # cape int 70
+(2041036, 0, 1000000), # cape int 70
 (2041037, 0, 1000000), # cape int 30
-(2041038, 0, 3000000), # cape dex 70
+(2041038, 0, 1000000), # cape dex 70
 (2041039, 0, 1000000), # cape dex 30
-(2041040, 0, 3000000), # cape luk 70
+(2041040, 0, 1000000), # cape luk 70
 (2041041, 0, 1000000), # cape luk 30
 (2041042, 0, 1000), # cape mdef 65
 (2041043, 0, 1000), # cape mdef 15
@@ -412,13 +412,13 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2041047, 0, 1000), # cape hp 15
 (2041048, 0, 1000), # cape mp 65
 (2041049, 0, 1000), # cape mp 15
-(2041050, 0, 2000000), # cape str 65
+(2041050, 0, 1000000), # cape str 65
 (2041051, 0, 1000000), # cape str 15
-(2041052, 0, 4000000), # cape int 65
+(2041052, 0, 1000000), # cape int 65
 (2041053, 0, 1000000), # cape int 15
-(2041054, 0, 3000000), # cape dex 65
+(2041054, 0, 1000000), # cape dex 65
 (2041055, 0, 1000000), # cape dex 15
-(2041056, 0, 3000000), # cape luk 65
+(2041056, 0, 1000000), # cape luk 65
 (2041057, 0, 1000000), # cape luk 15
 (2041059, 0, 1000000), # cape str 20
 (2041060, 0, 1000000), # cape int 20
@@ -426,10 +426,10 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2041062, 0, 1000000), # cape luk 20
 (2043000, 0, 1000), # 1h sword att 100
 (2043001, 0, 1000000), # 1h sword att 60
-(2043002, 0, 100000), # 1h sword att 10
-(2043003, 0, 10000000), # 1h sword att 100
-(2043004, 0, 200000), # 1h sword att 70
-(2043005, 0, 5000000), # 1h sword att 30
+(2043002, 0, 300000), # 1h sword att 10
+(2043003, 0, 1000000), # 1h sword att 100
+(2043004, 0, 1000000), # 1h sword att 70
+(2043005, 0, 1000000), # 1h sword att 30
 (2043006, 0, 1000), # 1h sword matt 70
 (2043007, 0, 1000), # 1h sword matt 30
 (2043008, 0, 1000), # 1h sword matt 10
@@ -446,9 +446,9 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2043100, 0, 1000), # 1h axe att 100
 (2043101, 0, 1000000), # 1h axe att 60
 (2043102, 0, 100000), # 1h axe att 10
-(2043103, 0, 10000000), # 1h axe att 100
-(2043104, 0, 200000), # 1h axe att 70
-(2043105, 0, 5000000), # 1h axe att 30
+(2043103, 0, 1000000), # 1h axe att 100
+(2043104, 0, 1000000), # 1h axe att 70
+(2043105, 0, 1000000), # 1h axe att 30
 (2043106, 0, 1000000), # 1h axe att 65
 (2043107, 0, 1000000), # 1h axe att 15
 (2043108, 0, 1000000), # 1h axe att 40
@@ -459,10 +459,10 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2043114, 0, 100000), # 1h axe acc 10
 (2043200, 0, 1000), # 1h bw att 100
 (2043201, 0, 1000000), # 1h bw att 60
-(2043202, 0, 100000), # 1h bw att 10
-(2043203, 0, 10000000), # 1h bw att 100
-(2043204, 0, 200000), # 1h bw att 70
-(2043205, 0, 5000000), # 1h bw att 30
+(2043202, 0, 300000), # 1h bw att 10
+(2043203, 0, 1000000), # 1h bw att 100
+(2043204, 0, 1000000), # 1h bw att 70
+(2043205, 0, 1000000), # 1h bw att 30
 (2043206, 0, 1000000), # 1h bw att 65
 (2043207, 0, 1000000), # 1h bw att 15
 (2043208, 0, 1000000), # 1h bw att 40
@@ -473,37 +473,37 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2043214, 0, 100000), # 1h bw acc 10
 (2043300, 0, 1000), # dagger att 100
 (2043301, 0, 1000000), # dagger att 60
-(2043302, 0, 100000), # dagger att 10
-(2043303, 0, 10000000), # dagger att 100
-(2043304, 0, 200000), # dagger att 70
-(2043305, 0, 5000000), # dagger att 30
+(2043302, 0, 300000), # dagger att 10
+(2043303, 0, 1000000), # dagger att 100
+(2043304, 0, 1000000), # dagger att 70
+(2043305, 0, 1000000), # dagger att 30
 (2043306, 0, 1000000), # dagger att 65
 (2043307, 0, 1000000), # dagger att 15
 (2043308, 0, 1000000), # dagger att 40
 (2043700, 0, 1000), # wand matt 100
 (2043701, 0, 1000000), # wand matt 60
-(2043702, 0, 100000), # wand matt 10
-(2043703, 0, 10000000), # wand matt 100
-(2043704, 0, 200000), # wand matt 70
-(2043705, 0, 5000000), # wand matt 30
+(2043702, 0, 300000), # wand matt 10
+(2043703, 0, 1000000), # wand matt 100
+(2043704, 0, 1000000), # wand matt 70
+(2043705, 0, 1000000), # wand matt 30
 (2043706, 0, 1000000), # wand matt 65
 (2043707, 0, 1000000), # wand matt 15
 (2043708, 0, 1000000), # wand matt 40
 (2043800, 0, 1000), # staff matt 100
 (2043801, 0, 1000000), # staff matt 60
-(2043802, 0, 100000), # staff matt 10
-(2043803, 0, 10000000), # staff matt 100
-(2043804, 0, 200000), # staff matt 70
-(2043805, 0, 5000000), # staff matt 30
+(2043802, 0, 300000), # staff matt 10
+(2043803, 0, 1000000), # staff matt 100
+(2043804, 0, 1000000), # staff matt 70
+(2043805, 0, 1000000), # staff matt 30
 (2043806, 0, 1000000), # staff matt 65
 (2043807, 0, 1000000), # staff matt 15
 (2043808, 0, 1000000), # staff matt 40
 (2044000, 0, 1000), # 2h sword att 100
 (2044001, 0, 1000000), # 2h sword att 60
-(2044002, 0, 100000), # 2h sword att 10
-(2044003, 0, 10000000), # 2h sword att 100
-(2044004, 0, 200000), # 2h sword att 70
-(2044005, 0, 5000000), # 2h sword att 30
+(2044002, 0, 300000), # 2h sword att 10
+(2044003, 0, 1000000), # 2h sword att 100
+(2044004, 0, 1000000), # 2h sword att 70
+(2044005, 0, 1000000), # 2h sword att 30
 (2044006, 0, 1000000), # 2h sword att 65
 (2044007, 0, 1000000), # 2h sword att 15
 (2044008, 0, 1000000), # 2h sword att 40
@@ -514,10 +514,10 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2044014, 0, 100000), # 2h sword acc 10
 (2044100, 0, 1000), # 2h axe att 100
 (2044101, 0, 1000000), # 2h axe att 60
-(2044102, 0, 100000), # 2h axe att 10
-(2044103, 0, 10000000), # 2h axe att 100
-(2044104, 0, 200000), # 2h axe att 70
-(2044105, 0, 5000000), # 2h axe att 30
+(2044102, 0, 300000), # 2h axe att 10
+(2044103, 0, 1000000), # 2h axe att 100
+(2044104, 0, 1000000), # 2h axe att 70
+(2044105, 0, 1000000), # 2h axe att 30
 (2044106, 0, 1000000), # 2h axe att 65
 (2044107, 0, 1000000), # 2h axe att 15
 (2044108, 0, 1000000), # 2h axe att 40
@@ -528,10 +528,10 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2044114, 0, 100000), # 2h axe acc 10
 (2044200, 0, 1000), # 2h bw att 100
 (2044201, 0, 1000000), # 2h bw att 60
-(2044202, 0, 100000), # 2h bw att 10
-(2044203, 0, 10000000), # 2h bw att 100
-(2044204, 0, 200000), # 2h bw att 70
-(2044205, 0, 5000000), # 2h bw att 30
+(2044202, 0, 300000), # 2h bw att 10
+(2044203, 0, 1000000), # 2h bw att 100
+(2044204, 0, 1000000), # 2h bw att 70
+(2044205, 0, 1000000), # 2h bw att 30
 (2044206, 0, 1000000), # 2h bw att 65
 (2044207, 0, 1000000), # 2h bw att 15
 (2044208, 0, 1000000), # 2h bw att 40
@@ -542,10 +542,10 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2044214, 0, 100000), # 2h bw acc 10
 (2044300, 0, 1000), # spear att 100
 (2044301, 0, 1000000), # spear att 60
-(2044302, 0, 100000), # spear att 10
-(2044303, 0, 10000000), # spear att 100
-(2044304, 0, 200000), # spear att 70
-(2044305, 0, 5000000), # spear att 30
+(2044302, 0, 300000), # spear att 10
+(2044303, 0, 1000000), # spear att 100
+(2044304, 0, 1000000), # spear att 70
+(2044305, 0, 1000000), # spear att 30
 (2044306, 0, 1000000), # spear att 65
 (2044307, 0, 1000000), # spear att 15
 (2044308, 0, 1000000), # spear att 40
@@ -556,10 +556,10 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2044314, 0, 100000), # spear acc 10
 (2044400, 0, 1000), # pole arm att 100
 (2044401, 0, 1000000), # pole arm att 60
-(2044402, 0, 100000), # pole arm att 10
-(2044403, 0, 10000000), # pole arm att 100
-(2044404, 0, 200000), # pole arm att 70
-(2044405, 0, 5000000), # pole arm att 30
+(2044402, 0, 300000), # pole arm att 10
+(2044403, 0, 1000000), # pole arm att 100
+(2044404, 0, 1000000), # pole arm att 70
+(2044405, 0, 1000000), # pole arm att 30
 (2044406, 0, 1000000), # pole arm att 65
 (2044407, 0, 1000000), # pole arm att 15
 (2044408, 0, 1000000), # pole arm att 40
@@ -570,28 +570,28 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2044414, 0, 100000), # pole arm acc 10
 (2044500, 0, 1000), # bow att 100
 (2044501, 0, 1000000), # bow att 60
-(2044502, 0, 100000), # bow att 10
-(2044503, 0, 10000000), # bow att 100
-(2044504, 0, 200000), # bow att 70
-(2044505, 0, 5000000), # bow att 30
+(2044502, 0, 300000), # bow att 10
+(2044503, 0, 1000000), # bow att 100
+(2044504, 0, 1000000), # bow att 70
+(2044505, 0, 1000000), # bow att 30
 (2044506, 0, 1000000), # bow att 65
 (2044507, 0, 1000000), # bow att 15
 (2044508, 0, 1000000), # bow att 40
 (2044600, 0, 1000), # crossbow att 100
 (2044601, 0, 1000000), # crossbow att 60
-(2044602, 0, 100000), # crossbow att 10
-(2044603, 0, 10000000), # crossbow att 100
-(2044604, 0, 200000), # crossbow att 70
-(2044605, 0, 5000000), # crossbow att 30
+(2044602, 0, 300000), # crossbow att 10
+(2044603, 0, 1000000), # crossbow att 100
+(2044604, 0, 1000000), # crossbow att 70
+(2044605, 0, 1000000), # crossbow att 30
 (2044606, 0, 1000000), # crossbow att 65
 (2044607, 0, 1000000), # crossbow att 15
 (2044608, 0, 1000000), # crossbow att 40
 (2044700, 0, 1000), # claw att 100
 (2044701, 0, 1000000), # claw att 60
-(2044702, 0, 100000), # claw att 10
-(2044703, 0, 10000000), # claw att 100
-(2044704, 0, 200000), # claw att 70
-(2044705, 0, 5000000), # claw att 30
+(2044702, 0, 300000), # claw att 10
+(2044703, 0, 1000000), # claw att 100
+(2044704, 0, 1000000), # claw att 70
+(2044705, 0, 1000000), # claw att 30
 (2044706, 0, 1000000), # claw att 65
 (2044707, 0, 1000000), # claw att 15
 (2044708, 0, 1000000), # claw att 40
@@ -608,9 +608,9 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2044810, 0, 100000), # knuckler att 40
 (2044900, 0, 1000), # gun att 100
 (2044901, 0, 1000000), # gun att 60
-(2044902, 0, 100000), # gun att 10
+(2044902, 0, 300000), # gun att 10
 (2044903, 0, 1000000), # gun att 70
-(2044904, 0, 100000), # gun att 30
+(2044904, 0, 1000000), # gun att 30
 (2044905, 0, 1000000), # gun att 40
 (2048000, 0, 10000), # pet equip speed 100
 (2048001, 0, 10000), # pet equip speed 60
@@ -622,15 +622,15 @@ INSERT IGNORE INTO `marketitems` (`itemid`, `quantity`, `basePrice`) VALUES
 (2048007, 0, 10000), # pet equip speed 15
 (2048008, 0, 10000), # pet equip jump 65
 (2048009, 0, 10000), # pet equip jump 15
-(2048010, 0, 40000000), # pet equip str 60
-(2048011, 0, 40000000), # pet equip int 60
-(2048012, 0, 40000000), # pet equip dex 60
-(2048013, 0, 40000000), # pet equip luk 60
+(2048010, 0, 1000000), # pet equip str 60
+(2048011, 0, 1000000), # pet equip int 60
+(2048012, 0, 1000000), # pet equip dex 60
+(2048013, 0, 1000000), # pet equip luk 60
 (2049000, 0, 1000000), # clean slate 1
 (2049001, 0, 1000000), # clean slate 3
 (2049002, 0, 1000000), # clean slate 5
 (2049003, 0, 1000000), # clean slate 20
-(2049100, 0, 50000000), # chaos 60
+(2049100, 0, 2000000), # chaos 60
 (2049101, 0, 1000000), # liar tree sap 100
 (2049102, 0, 1000000), # maple syrup 100
 (2049104, 0, 1000000), # agent scroll 100
