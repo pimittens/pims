@@ -520,8 +520,8 @@ public class CharacterBot {
                 }
                 if (getPlayer().getSkillLevel(BlazeWizard.METEOR_SHOWER) > 0) {
                     mobAttack = BlazeWizard.METEOR_SHOWER;
-                } else if (getPlayer().getSkillLevel(BlazeWizard.FLAME_GEAR) > 0) {
-                    mobAttack = BlazeWizard.FLAME_GEAR;
+                } else if (getPlayer().getSkillLevel(BlazeWizard.FIRE_STRIKE) > 0) {
+                    mobAttack = BlazeWizard.FIRE_STRIKE;
                 } else {
                     mobAttack = BlazeWizard.FIRE_PILLAR;
                 }
