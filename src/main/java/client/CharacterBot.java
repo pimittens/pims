@@ -114,6 +114,15 @@ public class CharacterBot {
     lv71to75Maps = {
             101030108, // tomb 4
             101030109 // tomb 5
+    },
+    lv76to80Maps = {
+            211040200, // ice valley 2
+    },
+    lv81to85Maps = {
+            600020300, // wolf spiders
+    },
+    lv86to90Maps = {
+            220060201, // unbalanced time
     };
 
     private static final Map<Job, int[][]> skillOrders = new HashMap<>();
@@ -1484,55 +1493,55 @@ public class CharacterBot {
         } else if (getPlayer().getLevel() < 76) {
             changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)]));
         } else if (getPlayer().getLevel() < 81) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv76to80Maps[Randomizer.nextInt(lv76to80Maps.length)]));
         } else if (getPlayer().getLevel() < 86) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv81to85Maps[Randomizer.nextInt(lv81to85Maps.length)]));
         } else if (getPlayer().getLevel() < 91) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)]));
         } else if (getPlayer().getLevel() < 96) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 101) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 106) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 111) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 116) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 121) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 126) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 131) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 136) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 141) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 146) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 151) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 156) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 161) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 166) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 171) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 176) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 181) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 186) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 191) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else if (getPlayer().getLevel() < 196) {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         } else {
-            changeMap(c.getChannelServer().getMapFactory().getMap(lv71to75Maps[Randomizer.nextInt(lv71to75Maps.length)])); // todo: add maps for this range and update this
+            changeMap(c.getChannelServer().getMapFactory().getMap(lv86to90Maps[Randomizer.nextInt(lv86to90Maps.length)])); // todo: add maps for this range and update this
         }
     }
 
