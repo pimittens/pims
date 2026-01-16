@@ -43,6 +43,7 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 
 ## Planned Features
 
+* 4th job advancement is not implemented yet for bots. Currently they will become inactive if they reach lv 119.
 * Bot modes: bosses, socializing (hang out in Henesys, maybe play minigames).
 * More realistic bot actions (movement and attacks). Currently bots ignore footholds/ladders/jumping since this is too much work, and packets are sometimes sent too quickly.
 * Bots creating/joining guilds.
