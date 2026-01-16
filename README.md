@@ -17,7 +17,7 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 * The ManageBotLoginsTask runs 1 minute after launch and every 15 minutes thereafter. This task first logs out bots if more than 5 are logged in within the same 5 level bracket (for example levels 16 to 20). Next, bots are logged in up to 5 in each 5 level bracket. The brackets 1-5 and 6-10 are ignored until the end, at which point bots level 10 and under are logged in until there are 200 total bots online.
 * The UpdateBotsTask runs every 500 milliseconds and attempts to update each bot depending on what they are doing.
 * There is a task that creates a party and starts a KPQ instance every 30 minutes. Other PQs are not yet implemented.
-* Bots have several modes. They can manage their inventory (create space if needed and equips items that are better than what they are currently using), kill monsters (maps are chosen randomly from premade lists), or do PQs (currently only KPQ and LPQ are implemented). More modes are planned.
+* Bots have several modes. They can manage their inventory (create space if needed and equips items that are better than what they are currently using), kill monsters (maps are chosen randomly from premade lists), or do PQs (currently only KPQ, LPQ, and LMPQ are implemented). More modes are planned.
 * Bots will gain equipment as if buying them from an npc at lower levels.
 
 ### Followers
@@ -39,6 +39,7 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 * Players can receive a medal with bonus stats based on the number of monster cards they have collected. Medals are given by the Agent E npc (this npc has some other leftover custom features which still need to be changed/removed). The stats of the medals scale linearly up to +1000 all stat, +10000 hp/mp, +100 att/m.att (might be changed). The main purpose of the medals is to remove the need for hp washing and assigning points to secondary stats.
 * PQ rewards have been changed, removing some useless items and adding useful scrolls. Some notable examples: LMPQ has shield att. and shield m. att. scrolls.
 * @shop command which allows players to access the nlc shop from anywhere.
+* Projectiles are not consumed when attacking (might later adjust the drop rate of throwing stars because of this).
 
 ## Planned Features
 
@@ -46,11 +47,11 @@ pims is a Maplestory server emulator based on Cosmic (v83 GMS). The primary goal
 * More realistic bot actions (movement and attacks). Currently bots ignore footholds/ladders/jumping since this is too much work, and packets are sometimes sent too quickly.
 * Bots creating/joining guilds.
 * Random bot chat messages and smegas.
-* Free market (in progress, currently all items collected by bots and not equipped are sold and will appear in fm shops).
+* Free market (in progress, currently all items collected by bots and not equipped are sold and will appear in fm shops). Bots should buy and use scrolls and craft new equipment as if by maker to improve their gear.
 * Include a way for bots to get random cash item equips and wear them.
-* Bots should use maker to create high level equipment and use scrolls.
 * Currently there is no way to gain nx cash. The planned system is gaining fame when defeating bosses and exchanging fame as a currency for nx cash and other items.
 * Some kind of system for combining equipment which has been scrolled into a single more powerful piece of equipment.
+* Add currently unobtainable rings and face/eye accessories as pq rewards.
 
 ## Known Issues
 
